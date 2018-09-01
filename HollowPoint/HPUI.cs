@@ -20,11 +20,6 @@ namespace HollowPoint
         Text ammo;
         Text magazine;
 
-        String ammoName = "9mm";
-        static public int currentAmmo = 20;
-        static public int currentMagazine = 5;
-        static public int maxAmmo = 20;
-
         public void Awake()
         {         
 
@@ -48,9 +43,9 @@ namespace HollowPoint
 
         public void OnGUI()
         {
-            caliber.text = "CAL: " + ammoName ;// + ammoName;
-            ammo.text = "AMM: " + currentAmmo;// + currentAmmo;
-            magazine.text = "MAG: " + currentMagazine;// + currentMagazine;
+            caliber.text = "CAL: "; //+ //ammoName ;// + ammoName;
+            ammo.text = "AMM: "; //+ currentAmmo;// + currentAmmo;
+            magazine.text = "MAG: "; //+ currentMagazine;// + currentMagazine;
         }
 
     }
