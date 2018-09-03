@@ -13,6 +13,13 @@ namespace HollowPoint
     {
         public override string GetVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
+        HollowPointMain()
+        {
+            FieldInfo field = typeof(Mod).GetField
+                ("Name", BindingFlags.Instance | BindingFlags.Public);
+            field?.SetValue(this, "Hollow Point");
+        }
+
         public override void Initialize()
         {
             ModHooks.Instance.AfterSavegameLoadHook += SaveGame;
