@@ -18,12 +18,12 @@ namespace HollowPoint
 {
     class HPControl : MonoBehaviour
     {
-        bool reloading;
-        GameObject _fireball;
-        PlayMakerFSM _fireballFSM;
-        PlayMakerFSM _fireballControlFSM;
-        System.Random recoilNum;
-        float recoilVal;
+        private bool reloading;
+        private GameObject fireball;
+        private PlayMakerFSM fireballFSM;
+        private PlayMakerFSM fireballControlFSM;
+        private readonly System.Random recoilNum = new System.Random();
+        private float recoilVal;
 
         AttackDirection ad;
 
@@ -51,8 +51,6 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
-            recoilNum = new System.Random();
-  
             Modding.Logger.Log("Initialized");           
         }
 
