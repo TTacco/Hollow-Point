@@ -34,7 +34,7 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
-            ammoArray = Ammunition.CreateInstanceAmmunitionArray();
+            ammoArray = Ammo.CreateInstanceAmmunitionArray();
             Modding.Logger.Log("Create Ammo Instance!");
 
             currAmmoType = ammoArray[0];
