@@ -12,6 +12,7 @@ using Modding;
 using ModCommon;
 using ModCommon.Util;
 using GlobalEnums;
+using Object = UnityEngine.Object;
 
 
 namespace HollowPoint
@@ -38,10 +39,22 @@ namespace HollowPoint
         {
             ModHooks.Instance.AttackHook += Attack_Hook;
             On.NailSlash.StartSlash += Start_Slash;
-            ModHooks.Instance.HitInstanceHook += SpellDam;
-
+            On.HealthManager.TakeDamage += spellDam;
 
             StartCoroutine(CoroutineTest());
+        }
+
+        private void spellDam(On.HealthManager.orig_TakeDamage orig, HealthManager self, HitInstance hitInstance)
+        {
+            if (hitInstance.AttackType == AttackTypes.Spell && hitInstance.Source.name.StartsWith("bullet"))
+            {
+                Log("Bullet impact with name " + hitInstance.Source.name);
+                hitEnemy(self, AmmunitionControl.currAmmoType.Damage, AttackTypes.Spell, hitInstance.Source);
+            }
+            else
+            {
+                orig(self, hitInstance);
+            }
         }
 
         public IEnumerator CoroutineTest()
@@ -106,39 +119,39 @@ namespace HollowPoint
     
         public void Schutz(AttackDirection ad)
         {
-            _fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
+            fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
 
-            _fireball.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+            fireball.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
 
-            _fireballFSM = _fireball.LocateMyFSM("Fireball Cast");
+            fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
-            _fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
+            fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
 
             //Shooting toward the right, removes audio and shake
             if (HeroController.instance.cState.facingRight && ad == AttackDirection.normal)
             {
-                _fireball.transform.position += new Vector3(0.80f, -0.5f, 0f);
-                _fireballFSM.GetAction<SendEventByName>("Cast Right", 1).sendEvent = "";
-                _fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6).volume = 0;
-                _fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, 0, 0);
+                fireball.transform.position += new Vector3(0.80f, -0.5f, 0f);
+                fireballFSM.GetAction<SendEventByName>("Cast Right", 1).sendEvent = "";
+                fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6).volume = 0;
+                fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, 0, 0);
 
                 //add bullet deviation/recoil
                 recoilVal = recoilNum.Next(-7, 7);
-                _fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                _fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal;
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal;
             }
             //Shooting toward the left, removes audio and shake
             else if (!HeroController.instance.cState.facingRight && ad == AttackDirection.normal)
             {
-                _fireball.transform.position += new Vector3(-0.80f, -0.5f, 0f);
-                _fireballFSM.GetAction<SendEventByName>("Cast Left", 1).sendEvent = "";
-                _fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Left", 3).volume = 0;
-                _fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
+                fireball.transform.position += new Vector3(-0.80f, -0.5f, 0f);
+                fireballFSM.GetAction<SendEventByName>("Cast Left", 1).sendEvent = "";
+                fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Left", 3).volume = 0;
+                fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
 
                 //add bullet deviation
                 recoilVal = recoilNum.Next(-7, 7);
-                _fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                _fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal;
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal;
             }
         }
 
@@ -148,25 +161,15 @@ namespace HollowPoint
             {
                 yield return null;
             }
-            while (_fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
+            while (fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
             //_fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).storeObject.Value == null || _fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).storeObject.Value == null          
 
-            _fireballControlFSM = _fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
+            fireballControlFSM = fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
 
             Log("Wall Impact reached");
-            _fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
+            fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
 
             yield return null;
-        }
-
-        public HitInstance SpellDam(Fsm owner, HitInstance hit)
-        {
-            if (hit.AttackType == AttackTypes.Spell)
-            {
-                //hit.DamageDealt = 8;
-            }
-
-            return hit;
         }
 
         //BULLET SIZE CHANGES
@@ -186,25 +189,92 @@ namespace HollowPoint
             go.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.2f, 1f);
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
             go.LocateMyFSM("Fireball Control").GetAction<SetFsmInt>("Set Damage", 2).setValue = 1;
+            go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             yield return null;
             //go.LocateMyFSM("Fireball Control").GetAction<DamageEnemies>().
+        }
+        
+        public static void hitEnemy(HealthManager targetHP, int expectedDamage, AttackTypes damageType, GameObject source)
+        {
+            int realDamage = expectedDamage;
+            
+            // TODO: Add possible optional damage multiplier information below.
+            
+            /*
+            double multiplier = 1;
+            if (PlayerData.instance.GetBool("equippedCharm_25"))
+            {
+                multiplier *= 1.5;
+            }
+            if (PlayerData.instance.GetBool("equippedCharm_6") && PlayerData.instance.GetInt("health") == 1)
+            {
+                multiplier *= 1.75f;
+            }
+
+            if (gng_bindings.hasNailBinding())
+            {
+                multiplier *= 0.3;
+            }
+            realDamage = (int) Math.Round(realDamage * multiplier);
+            
+            */
+            
+            if (realDamage <= 0)
+            {
+                return;
+            }
+            
+            if (targetHP == null) return;
+            
+            targetHP.hp -= realDamage;
+            if (targetHP.hp <= 0f)
+            {
+                targetHP.Die(0f, AttackTypes.Nail, true);
+                return;
+            }
+            
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
+            
+            FSMUtility.SendEventToGameObject(source, "HIT LANDED", false);
+            if ((Object) targetHP.gameObject.GetComponent<DontClinkGates>() != (Object) null) return;
+            
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);    
+            GameManager.instance.FreezeMoment(1);
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+        }
+        
+        private static HealthManager getHealthManagerRecursive(GameObject target)
+        {
+            HealthManager targetHP = target.GetComponent<HealthManager>();
+            int i = 6;
+            while (targetHP == null && i > 0)
+            {
+                targetHP = target.GetComponent<HealthManager>();
+                if (target.transform.parent == null)
+                {
+                    return targetHP;
+                }
+                target = target.transform.parent.gameObject;
+                i--;
+            }
+            return targetHP;
         }
 
        
         //MISC
-        public void Log(String s)
+        public void Log(string s)
         {
-            Modding.Logger.Log(s);
+            Modding.Logger.Log("[Hollow Point]" + s);
         }
 
         public void OnDestroy()
         {
             ModHooks.Instance.AttackHook -= Attack_Hook;
             On.NailSlash.StartSlash -= Start_Slash;
-            ModHooks.Instance.HitInstanceHook -= SpellDam;
-            Destroy(_fireball);
-            Destroy(_fireballFSM);
-            Destroy(_fireballControlFSM);
+            On.HealthManager.TakeDamage -= spellDam;
+            Destroy(fireball);
+            Destroy(fireballFSM);
+            Destroy(fireballControlFSM);
         }
 
     }
