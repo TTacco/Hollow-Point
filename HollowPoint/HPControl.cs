@@ -29,7 +29,6 @@ namespace HollowPoint
 
         AttackDirection ad;
 
-
         //INTIALIZATION
         public void Awake()
         {
@@ -79,7 +78,6 @@ namespace HollowPoint
             Modding.Logger.Log("Initialized");           
         }
 
-
         //SHOOT/FIRE METHOD
         public void Attack_Hook(AttackDirection ad)
         {
@@ -90,7 +88,7 @@ namespace HollowPoint
         {
             if ((ad != AttackDirection.downward && !AmmunitionControl.reloading) && !AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
             {
-                StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));
+                StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));               
                 if (AmmunitionControl.currAmmoType.AmmoName.Contains("9MM"))
                 {
                     StartCoroutine(BurstFire(5));
@@ -332,8 +330,7 @@ namespace HollowPoint
             }
             return targetHP;
         }
-
-       
+      
         //MISC
         public static void Log(string s)
         {

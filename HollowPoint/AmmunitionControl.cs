@@ -32,13 +32,10 @@ namespace HollowPoint
 
         public void Update()
         {
-
-
-
             //RELOADING METHODS 
             if (0 > time && reloading)
             {
-                time = 0.02f; //time should be reloadTime next... time
+                time = currAmmoType.ReloadTime; //time should be reloadTime next... time
                 currAmmoType.CurrAmmo++;
             }
             else if (reloading)
@@ -52,13 +49,11 @@ namespace HollowPoint
                 currAmmoType.CurrAmmo = currAmmoType.MaxAmmo;
             }
 
-
             //Handles Ammo Changing
             if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.down.WasPressed) && !reloading)
             {
                 tap++;
             }
-
 
             //SWAP AMMO
             if (tap == 1 && !tapStart)
@@ -99,33 +94,3 @@ namespace HollowPoint
 
     }
 }
-
-/*
-            IEnumerator ReloadWeapon()
-            {
-                Modding.Logger.Log("RELOADING NOW");
-                float reloadSpeed = 0;
-                do
-                {
-                    currAmmoType.CurrAmmo = (int)(1 * (reloadSpeed / currAmmoType.MaxAmmo));
-                    reloadSpeed += Time.deltaTime;
-                }
-                while (reloadSpeed < 20);
-
-                currAmmoType.CurrAmmo = currAmmoType.MaxAmmo;
-                currAmmoType.CurrMag--;
-
-                reloading = false;
-
-                yield return null;
-            }
-
-
-                for (float reloadSpeed = 0; reloadSpeed < 15; reloadSpeed += Time.deltaTime)
-            {
-                Modding.Logger.Log(reloadSpeed);
-                currAmmoType.CurrAmmo = (int)(1 * (reloadSpeed / currAmmoType.MaxAmmo));
-            }
-
-
-    */

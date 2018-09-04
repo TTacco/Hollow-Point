@@ -22,8 +22,6 @@ namespace HollowPoint
 
         public void Awake()
         {         
-
-
             CanvasUtil.CreateFonts();
             canvas = CanvasUtil.CreateCanvas(RenderMode.ScreenSpaceOverlay, new Vector2(1920, 1080));
             UnityEngine.Object.DontDestroyOnLoad(canvas);
@@ -61,7 +59,6 @@ namespace HollowPoint
             {
                 ammo.text = "AMM: " + AmmunitionControl.currAmmoType.CurrAmmo;
             }
-
 
             //Current MAGAZINES
             if (AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
