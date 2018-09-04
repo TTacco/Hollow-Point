@@ -36,7 +36,7 @@ namespace HollowPoint
 
 
             //RELOADING METHODS 
-            if(0 > time && reloading)
+            if (0 > time && reloading)
             {
                 time = 0.02f; //time should be reloadTime next... time
                 currAmmoType.CurrAmmo++;

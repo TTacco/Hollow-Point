@@ -31,18 +31,17 @@ namespace HollowPoint
             PierceNumber = pierceNumber;
         }
     }
-    
-    
+
+
     static class Ammo
     {
         public static readonly Ammunition[] ammoTypes = new[]
         {
-            Ammunition[] am = new Ammunition[3];
-
-            am[0] = new Ammunition("45ACP", 10, 10, 5, 5, 8, 0.40f);
-            am[1] = new Ammunition("5.56", 20, 20, 5, 5, 15, 0.40f);
-            am[2] = new Ammunition("9MM", 30, 30, 5, 5, 3, 0.40f);
-
+            new Ammunition("Nail", 0, 0, 0, 0, 0, 0),
+            new Ammunition("45ACP", 10, 5, 8, 0.40f, 15, 0),
+            new Ammunition("5.56", 20, 5, 15, 0.40f, 5, 2),
+            new Ammunition("9MM", 30, 5, 3, 0.40f, 2, 1)
+        };
 
     }
 }
