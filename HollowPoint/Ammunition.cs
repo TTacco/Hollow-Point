@@ -49,32 +49,15 @@ namespace HollowPoint
 
         public static Ammunition[] CreateInstanceAmmunitionArray()
         {
-            Ammunition[] am = new Ammunition[3];
+            Ammunition[] am = new Ammunition[4];
 
-            am[0] = new Ammunition("45ACP", 10, 10, 5, 5, 8, 0.40f);
-            am[1] = new Ammunition("5.56", 20, 20, 5, 5, 15, 0.40f);
-            am[2] = new Ammunition("9MM", 30, 30, 5, 5, 3, 0.40f);
+            am[0] = new Ammunition("Nail", 0, 0, 0, 0, 0, 0.40f);
+            am[1] = new Ammunition("45ACP", 10, 10, 5, 5, 8, 0.40f);
+            am[2] = new Ammunition("5.56", 20, 20, 5, 5, 15, 0.40f);
+            am[3] = new Ammunition("9MM", 30, 30, 5, 5, 3, 0.40f);
 
             return am;
         }
 
     }
 }
-
-/*
-ammoInstance[1].AmmoName = "5.56";
-ammoInstance[1].CurrAmmo = 10;
-ammoInstance[1].MaxAmmo = 10;
-ammoInstance[1].CurrMag = 5;
-ammoInstance[1].MaxMag = 5;
-ammoInstance[1].Damage = 8;
-ammoInstance[1].Firerate = 0.40f;
-
-ammoInstance[2].AmmoName = "5.56";
-ammoInstance[2].CurrAmmo = 10;
-ammoInstance[2].MaxAmmo = 10;
-ammoInstance[2].CurrMag = 5;
-ammoInstance[2].MaxMag = 5;
-ammoInstance[2].Damage = 8;
-ammoInstance[2].Firerate = 0.40f;
-*/

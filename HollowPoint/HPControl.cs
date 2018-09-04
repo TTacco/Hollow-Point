@@ -65,7 +65,7 @@ namespace HollowPoint
 
         public void Start_Slash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
-            if (ad != AttackDirection.downward && !AmmunitionControl.reloading)
+            if ((ad != AttackDirection.downward && !AmmunitionControl.reloading) && !AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
             {
                 StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));
                 if (AmmunitionControl.currAmmoType.AmmoName.Contains("9MM"))

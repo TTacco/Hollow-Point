@@ -45,12 +45,17 @@ namespace HollowPoint
 
         public void OnGUI()
         {
+            //Current CALIBER
+            caliber.text = "CAL: " + AmmunitionControl.currAmmoType.AmmoName;
 
-            caliber.text = "CAL: " + AmmunitionControl.currAmmoType.AmmoName; // + AmmunitionControl.Ammo.AmmoName;
-
+            //Current AMMO
             if (AmmunitionControl.reloading)
             {
-                ammo.text = "AMM: RELOADING " + AmmunitionControl.currAmmoType.CurrAmmo + "%"; //+ currentAmmo;// + currentAmmo;
+                ammo.text = "AMM: RELOADING " + AmmunitionControl.currAmmoType.CurrAmmo + "%"; 
+            }
+            else if(AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
+            {
+                ammo.text = "AMM: N/A";
             }
             else
             {
@@ -58,8 +63,15 @@ namespace HollowPoint
             }
 
 
-
-            magazine.text = "MAG: " + new String('|', AmmunitionControl.currAmmoType.CurrMag);  //+ currentMagazine;// + currentMagazine;
+            //Current MAGAZINES
+            if (AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
+            {
+                magazine.text = "MAG: N/A"; 
+            }
+            else
+            {
+                magazine.text = "MAG: " + new String('|', AmmunitionControl.currAmmoType.CurrMag);
+            }
         }
 
     }

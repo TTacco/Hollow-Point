@@ -10,9 +10,6 @@ namespace HollowPoint
 {
     class AmmunitionControl : MonoBehaviour
     {
-        //public static Ammunition[] ammoInstance = new Ammunition[3];
-
-        List<Ammunition> ammoList;
         Ammunition[] ammoArray;
         public static Ammunition currAmmoType;
         int currAmmoIndex;
@@ -42,8 +39,6 @@ namespace HollowPoint
 
         public void Update()
         {
-
-
 
             //RELOADING METHODS 
             if(0 > time && reloading)
