@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HollowPoint</RootNamespace>
     <AssemblyName>HollowPoint</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
@@ -72,6 +72,7 @@
   <ItemGroup>
     <Compile Include="Ammunition.cs" />
     <Compile Include="AmmunitionControl.cs" />
+    <Compile Include="BulletBehavior.cs" />
     <Compile Include="HollowPointMain.cs" />
     <Compile Include="HPControl.cs" />
     <Compile Include="HPUI.cs" />

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Modding;
+﻿using Modding;
 using System.Reflection;
 
 
@@ -13,7 +8,7 @@ namespace HollowPoint
     {
         public override string GetVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
-        HollowPointMain()
+        public HollowPointMain()
         {
             FieldInfo field = typeof(Mod).GetField
                 ("Name", BindingFlags.Instance | BindingFlags.Public);

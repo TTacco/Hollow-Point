@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections;
 using UnityEngine;
 
 namespace HollowPoint
@@ -12,8 +7,6 @@ namespace HollowPoint
     {
         //public static Ammunition[] ammoInstance = new Ammunition[3];
 
-        List<Ammunition> ammoList;
-        Ammunition[] ammoArray;
         public static Ammunition currAmmoType;
         int currAmmoIndex;
         int tap = 0;
@@ -34,10 +27,7 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
-            ammoArray = Ammo.CreateInstanceAmmunitionArray();
-            Modding.Logger.Log("Create Ammo Instance!");
-
-            currAmmoType = ammoArray[0];
+            currAmmoType = Ammo.ammoTypes[0];
         }
 
         public void Update()
@@ -82,12 +72,12 @@ namespace HollowPoint
                 Modding.Logger.Log("SWITCH AMMO!");
                 currAmmoIndex++;
 
-                if (currAmmoIndex >= ammoArray.Length)
+                if (currAmmoIndex >= Ammo.ammoTypes.Length)
                 {
                     currAmmoIndex = 0;
                 }
 
-                currAmmoType = ammoArray[currAmmoIndex];
+                currAmmoType = Ammo.ammoTypes[currAmmoIndex];
 
                 tap = 0;
                 tapTimer = 0;
