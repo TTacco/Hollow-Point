@@ -14,7 +14,6 @@ namespace HollowPoint
         public bool enemyHit()
         {
             if (!canHitEnemy) return false;
-            
             canHitEnemy = false;
             StartCoroutine(enemyCooldown());
             enemiesHit++;

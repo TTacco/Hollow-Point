@@ -99,6 +99,8 @@ namespace HollowPoint
                 }
                 else
                 {
+                    HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>()
+                        .PlayOneShot(LoadAssets.bulletSoundFX);
                     AmmunitionControl.currAmmoType.CurrAmmo--;
                     Schutz(ad);
                 }
