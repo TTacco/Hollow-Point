@@ -76,7 +76,12 @@
     <Compile Include="HollowPointMain.cs" />
     <Compile Include="HPControl.cs" />
     <Compile Include="HPUI.cs" />
+    <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WavUtility.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\wowwow.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

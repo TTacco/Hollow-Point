@@ -19,6 +19,7 @@ namespace HollowPoint
         {
             ModHooks.Instance.AfterSavegameLoadHook += SaveGame;
             ModHooks.Instance.NewGameHook += NewGame;
+            LoadAssets.LoadBulletSounds();
         }
 
         public void NewGame()
