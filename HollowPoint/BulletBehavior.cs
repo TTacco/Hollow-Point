@@ -39,5 +39,6 @@ namespace HollowPoint
             yield return new WaitForSeconds(bulletType.hitCooldown);
             canHitEnemy = true;
         }
+
     }
 }

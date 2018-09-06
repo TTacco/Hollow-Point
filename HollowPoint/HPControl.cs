@@ -99,6 +99,15 @@ namespace HollowPoint
                 {
                     StartCoroutine(BurstFire(3));
                 }
+                else if (AmmunitionControl.currAmmoType.AmmoName.Contains("Gauge"))
+                {
+                    AmmunitionControl.currAmmoType.CurrAmmo--;
+                    Schutz(ad);
+                    Schutz(ad);
+                    Schutz(ad);
+                    Schutz(ad);
+                    Schutz(ad);
+                }
                 else
                 {
                     AmmunitionControl.currAmmoType.CurrAmmo--;
@@ -150,7 +159,7 @@ namespace HollowPoint
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, 0, 0);
 
                 //add bullet deviation/recoil
-                recoilVal = recoilNum.Next(-7, 7);
+                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal;
             }
@@ -162,8 +171,8 @@ namespace HollowPoint
                 fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Left", 3).volume = 0;
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
 
-                //add bullet deviation
-                recoilVal = recoilNum.Next(-7, 7);
+                //add bullet deviation depending on the current ammo's stat
+                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal;
             }
@@ -315,7 +324,7 @@ namespace HollowPoint
              */
 
             //GameManager.instance.FreezeMoment(1);
-            //GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
         }
         
         private static HealthManager getHealthManagerRecursive(GameObject target)
