@@ -49,7 +49,7 @@ namespace HollowPoint
             //Current AMMO
             if (AmmunitionControl.reloading)
             {
-                ammo.text = "AMM: RELOADING " + AmmunitionControl.currAmmoType.CurrAmmo + "%"; 
+                ammo.text = "AMM: RELOADING " + AmmunitionControl.reloadPercent + "%"; 
             }
             else if(AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
             {

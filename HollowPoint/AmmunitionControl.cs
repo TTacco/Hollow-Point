@@ -12,6 +12,7 @@ namespace HollowPoint
         int tap = 0;
         bool tapStart = true;
         public static bool reloading = false;
+        public static float reloadPercent = 0;
         float tapTimer = 0;
         float time = 0;
 
@@ -36,17 +37,20 @@ namespace HollowPoint
             if (0 > time && reloading)
             {
                 time = currAmmoType.ReloadTime; //time should be reloadTime next... time
-                currAmmoType.CurrAmmo++;
+                reloadPercent++;
             }
             else if (reloading)
             {
                 time -= Time.deltaTime;
             }
 
-            if (currAmmoType.CurrAmmo > 100)
+            if (reloadPercent > 100 && reloading)
             {
-                reloading = false;
+                Modding.Logger.Log("Reload Complete");
                 currAmmoType.CurrAmmo = currAmmoType.MaxAmmo;
+                currAmmoType.CurrMag--;
+                reloading = false;
+                reloadPercent = 0;
             }
 
             //Handles Ammo Changing
@@ -65,6 +69,9 @@ namespace HollowPoint
             if (tap >= 2)
             {
                 Modding.Logger.Log("SWITCH AMMO!");
+
+                Ammo.ammoTypes[currAmmoIndex] = currAmmoType;
+
                 currAmmoIndex++;
 
                 if (currAmmoIndex >= Ammo.ammoTypes.Length)

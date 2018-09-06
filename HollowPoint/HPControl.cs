@@ -88,8 +88,10 @@ namespace HollowPoint
         {
             if ((ad != AttackDirection.downward && !AmmunitionControl.reloading) && !AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
             {
-                StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));               
-                if (AmmunitionControl.currAmmoType.AmmoName.Contains("9MM"))
+                //This coroutine starts a loop that will continue until the fireball object is instantiated, once it is it can then alter the fireball fsm if needed
+                StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));
+
+                if (AmmunitionControl.currAmmoType.AmmoName.Contains("9mm"))
                 {
                     StartCoroutine(BurstFire(5));
                 }
@@ -99,8 +101,6 @@ namespace HollowPoint
                 }
                 else
                 {
-                    HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>()
-                        .PlayOneShot(LoadAssets.bulletSoundFX);
                     AmmunitionControl.currAmmoType.CurrAmmo--;
                     Schutz(ad);
                 }
@@ -131,6 +131,8 @@ namespace HollowPoint
     
         public void Schutz(AttackDirection aDir)
         {
+            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX); // Play Sound
+
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
             
             fireball.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
@@ -200,7 +202,7 @@ namespace HollowPoint
             yield return new WaitForEndOfFrame();
             go.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.2f, 1f);
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
-            go.LocateMyFSM("Fireball Control").GetAction<SetFsmInt>("Set Damage", 2).setValue = 1;
+            go.LocateMyFSM("Fireball Control").GetAction<SetFsmInt>("Set Damage", 2).setValue = AmmunitionControl.currAmmoType.Damage;
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
         }

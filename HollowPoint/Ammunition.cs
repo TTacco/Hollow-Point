@@ -39,12 +39,14 @@ namespace HollowPoint
 
     static class Ammo
     {
-        public static readonly Ammunition[] ammoTypes = new[]
+        public static Ammunition[] ammoTypes = new[]
         {
             new Ammunition("Nail", 0, 0, 0, 0, 0, 0, 0),
-            new Ammunition("45ACP", 10, 5, 8, 0.40f, 0.04f, 15, 0),
-            new Ammunition("5.56", 20, 5, 15, 0.40f, 0.40f,5, 2),
-            new Ammunition("9MM", 30, 5, 3, 0.40f, 0.30f, 2, 1)
+            new Ammunition(".45ACP", 10, 5, 8, 0.40f, 0.01f, 15, 0),
+            new Ammunition("9mm", 30, 5, 3, 0.40f, 0.04f, 2, 1),
+            new Ammunition("12 Gauge", 4, 5, 3, 0.40f, 0.06f, 2, 3),
+            new Ammunition("5.56", 20, 5, 15, 0.40f, 0.04f, 5, 2),
+            new Ammunition("7.62", 5, 5, 40, 0.80f, 0.05f, 0, 0),
         };
 
     }
