@@ -211,7 +211,6 @@ namespace HollowPoint
             yield return new WaitForEndOfFrame();
             go.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.2f, 1f);
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
-            go.LocateMyFSM("Fireball Control").GetAction<SetFsmInt>("Set Damage", 2).setValue = AmmunitionControl.currAmmoType.Damage;
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
         }
@@ -255,8 +254,7 @@ namespace HollowPoint
              * Mostly code copied from the healthmanager class itself.
              */
 
-            int cardinalDirection =
-                DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             
             

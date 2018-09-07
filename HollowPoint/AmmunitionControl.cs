@@ -9,7 +9,8 @@ namespace HollowPoint
 
         public static Ammunition currAmmoType;
         int currAmmoIndex;
-        int tap = 0;
+        int tapUp = 0;
+        int tapDown = 0;
         bool tapStart = true;
         public static bool reloading = false;
         public static float reloadPercent = 0;
@@ -54,34 +55,53 @@ namespace HollowPoint
             }
 
             //Handles Ammo Changing
+            if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.up.WasPressed) && !reloading)
+            {
+                tapUp++;
+            }
+
             if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.down.WasPressed) && !reloading)
             {
-                tap++;
+                tapDown++;
             }
 
             //SWAP AMMO
-            if (tap == 1 && !tapStart)
+            if ((tapUp == 1 || tapDown == 1) && !tapStart)
             {
                 tapTimer = 0.4f;
                 tapStart = true;
             }
 
-            if (tap >= 2)
+            if (tapUp >= 2 || tapDown >= 2)
             {
                 Modding.Logger.Log("SWITCH AMMO!");
 
                 Ammo.ammoTypes[currAmmoIndex] = currAmmoType;
 
-                currAmmoIndex++;
+                //If player taps up twice, cycle up, if player taps down twice, cycle down
+                if (tapUp >= 2)
+                {
+                    currAmmoIndex++;
+                }
+                else if (tapDown >= 2)
+                {
+                    currAmmoIndex--;
+                }
 
+                //Prevents null pointer exceptions, also allowing them to cycle through the entire weapon index
                 if (currAmmoIndex >= Ammo.ammoTypes.Length)
                 {
                     currAmmoIndex = 0;
                 }
+                else if (currAmmoIndex < 0)
+                {
+                    currAmmoIndex = Ammo.ammoTypes.Length - 1;
+                }
 
                 currAmmoType = Ammo.ammoTypes[currAmmoIndex];
 
-                tap = 0;
+                tapUp = 0;
+                tapDown = 0;
                 tapTimer = 0;
                 tapStart = false;
             }
@@ -92,7 +112,7 @@ namespace HollowPoint
             }
             else
             {
-                tap = 0;
+                tapUp = 0;
                 tapTimer = 0;
                 tapStart = false;
             }
