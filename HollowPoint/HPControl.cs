@@ -20,7 +20,6 @@ namespace HollowPoint
 {
     class HPControl : MonoBehaviour
     {
-        private bool reloading;
         private GameObject fireball;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;
@@ -150,8 +149,9 @@ namespace HollowPoint
 
             fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
 
-            //Shooting toward the right, removes audio and shake
-            if (HeroController.instance.cState.facingRight && aDir == AttackDirection.normal)
+            //This block removes the audio and shake when the fireball hits a wall
+            //Firing Right
+            if (HeroController.instance.cState.facingRight)
             {
                 fireball.transform.position += new Vector3(0.80f, -0.5f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Right", 1).sendEvent = "";
@@ -160,11 +160,12 @@ namespace HollowPoint
 
                 //add bullet deviation/recoil
                 recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
-                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal;
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal + FireAtDiagonal()));
+
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal + FireAtDiagonal();
             }
-            //Shooting toward the left, removes audio and shake
-            else if (!HeroController.instance.cState.facingRight && aDir == AttackDirection.normal)
+            //Firing Left
+            else if (!HeroController.instance.cState.facingRight)
             {
                 fireball.transform.position += new Vector3(-0.80f, -0.5f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Left", 1).sendEvent = "";
@@ -172,11 +173,34 @@ namespace HollowPoint
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
 
                 //add bullet deviation depending on the current ammo's stat
+
                 recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
-                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal;
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
+
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal - FireAtDiagonal();
             }
         }
+
+
+        public float FireAtDiagonal()
+        {
+            if (InputHandler.Instance.inputActions.right.IsPressed && InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                Log("UP AND RIGHT");
+                return 45;
+            }
+            else if (InputHandler.Instance.inputActions.left.IsPressed && InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                Log("UP AND LEFT");
+                return 45;
+            }
+            else if (InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                return 89.99f;
+            }
+            return 0;
+        }
+
 
         public IEnumerator CheckIfNull(bool facingRight)
         {
@@ -214,6 +238,8 @@ namespace HollowPoint
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
         }
+
+
 
         // This function does damage to the enemy using the damage numbers given by the weapon type
         public static void hitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
