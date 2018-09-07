@@ -113,6 +113,7 @@ namespace HollowPoint
             else
             {
                 tapUp = 0;
+                tapDown = 0;
                 tapTimer = 0;
                 tapStart = false;
             }
