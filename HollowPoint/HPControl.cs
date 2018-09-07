@@ -323,6 +323,14 @@ namespace HollowPoint
 
             //GameManager.instance.FreezeMoment(1);
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+
+            SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
+
+            if (f != null)
+            {
+                f.flashWhiteQuick();
+            }
+
         }
         
         private static HealthManager getHealthManagerRecursive(GameObject target)
