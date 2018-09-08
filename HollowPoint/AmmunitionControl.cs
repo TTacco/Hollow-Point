@@ -112,6 +112,8 @@ namespace HollowPoint
                 }
 
                 currAmmoType = Ammo.ammoTypes[currAmmoIndex];
+                HeroController.instance.ATTACK_COOLDOWN_TIME = currAmmoType.Firerate;
+                HeroController.instance.ATTACK_COOLDOWN_TIME_CH = currAmmoType.Firerate;
 
                 tapUp = 0;
                 tapDown = 0;

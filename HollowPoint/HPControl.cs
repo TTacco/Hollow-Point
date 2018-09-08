@@ -20,7 +20,6 @@ namespace HollowPoint
 {
     class HPControl : MonoBehaviour
     {
-        private bool reloading;
         private GameObject fireball;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;

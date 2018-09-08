@@ -49,10 +49,10 @@ namespace HollowPoint
         public static Ammunition[] ammoTypes = new[]
         {
             new Ammunition("Nail", 0, 0, 0, 0, 0, 0, 0, 0, 0),
-            new Ammunition(".45ACP", 10, 5, 8, 0.40f, 0.01f, 3, 1, 15, 1),
-            new Ammunition("9mm", 30, 5, 3, 0.40f, 0.02f, 20, 1, 2, 1),
-            new Ammunition("12 Gauge", 4, 5, 3, 0.40f, 0.03f, 20, 20, 5, 3),
-            new Ammunition("5.56", 20, 5, 15, 0.40f, 0.04f, 10, 1, 5, 2),
+            new Ammunition(".45ACP", 10, 5, 8, 0.30f, 0.01f, 3, 1, 15, 1),
+            new Ammunition("9mm", 30, 5, 3, 0.50f, 0.02f, 20, 1, 2, 1),
+            new Ammunition("12 Gauge", 4, 5, 3, 0.60f, 0.03f, 20, 20, 5, 3),
+            new Ammunition("5.56", 20, 5, 15, 0.50f, 0.04f, 10, 1, 5, 2),
             new Ammunition("7.62", 5, 5, 40, 0.80f, 0.05f, 0, 0, 0, 1),
         };
 
