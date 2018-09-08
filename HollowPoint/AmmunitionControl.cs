@@ -16,6 +16,7 @@ namespace HollowPoint
         public static float reloadPercent = 0;
         float tapTimer = 0;
         float time = 0;
+        float recoilTime = 0;
 
         public void Start()
         {
@@ -54,6 +55,17 @@ namespace HollowPoint
                 reloadPercent = 0;
             }
 
+            //Handles how much recoil is accumulated, if its great than 0 then tick it down slowly
+            if (currAmmoType.CurrRecoilDeviation > 0 && recoilTime <= 0)
+            {
+                recoilTime = 0.20f;
+                currAmmoType.CurrRecoilDeviation--;
+            }
+            else if (currAmmoType.CurrRecoilDeviation > 0)
+            {
+                recoilTime -= Time.deltaTime;
+            }
+
             //Handles Ammo Changing
             if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.up.WasPressed) && !reloading)
             {
@@ -64,6 +76,7 @@ namespace HollowPoint
             {
                 tapDown++;
             }
+
 
             //SWAP AMMO
             if ((tapUp == 1 || tapDown == 1) && !tapStart)

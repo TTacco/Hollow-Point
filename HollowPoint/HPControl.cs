@@ -137,6 +137,11 @@ namespace HollowPoint
             yield return null;
         }
     
+        public void IncreaseRecoil()
+        {
+
+        }
+
         public void Schutz(AttackDirection aDir)
         {
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX); // Play Sound
@@ -149,31 +154,81 @@ namespace HollowPoint
 
             fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
 
-            //Shooting toward the right, removes audio and shake
-            if (HeroController.instance.cState.facingRight && aDir == AttackDirection.normal)
+            //This block removes the default audio and wall hit shake
+
+            //Shooting toward the right
+            if (HeroController.instance.cState.facingRight)
             {
                 fireball.transform.position += new Vector3(0.80f, -0.5f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Right", 1).sendEvent = "";
                 fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6).volume = 0;
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, 0, 0);
 
-                //add bullet deviation/recoil
-                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
-                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal;
+                //Deviation/Recoil
+                RecoilIncrease();
+                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal + FireAtDiagonal()));
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal + FireAtDiagonal();
             }
-            //Shooting toward the left, removes audio and shake
-            else if (!HeroController.instance.cState.facingRight && aDir == AttackDirection.normal)
+            //Shooting toward the left
+            else if (!HeroController.instance.cState.facingRight)
             {
                 fireball.transform.position += new Vector3(-0.80f, -0.5f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Left", 1).sendEvent = "";
                 fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Left", 3).volume = 0;
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
 
-                //add bullet deviation depending on the current ammo's stat
-                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.RecoilDegreeDeviation, AmmunitionControl.currAmmoType.RecoilDegreeDeviation);
-                fireball.transform.Rotate(new Vector3(0, 0, recoilVal));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal;
+                //Deviation/Recoil
+                RecoilIncrease();
+                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
+                fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal - FireAtDiagonal();
+            }
+        }
+
+        public float FireAtDiagonal()
+        {
+            //SHOOT UP AND RIGHT
+            if (InputHandler.Instance.inputActions.right.IsPressed && InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                Log("UP AND RIGHT");
+                return 45;
+            }
+            //SHOOT UP AND LEFT
+            else if (InputHandler.Instance.inputActions.left.IsPressed && InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                return 45;
+            }
+            else if (InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                return 90f;
+            }
+            return 0;
+        }
+
+        public void RecoilIncrease()
+        {
+            if(AmmunitionControl.currAmmoType.MaxDegreeDeviation <= AmmunitionControl.currAmmoType.CurrRecoilDeviation)
+            {
+                return;
+            }
+
+            //Should i turn this into a case switch instead???
+            if (AmmunitionControl.currAmmoType.AmmoName.Contains("9mm"))
+            {
+                AmmunitionControl.currAmmoType.CurrRecoilDeviation += 2;
+            }          
+            else if (AmmunitionControl.currAmmoType.AmmoName.Contains("12 Gauge"))
+            {
+                AmmunitionControl.currAmmoType.CurrRecoilDeviation = AmmunitionControl.currAmmoType.MaxDegreeDeviation; //because why would a shotgun increase recoil as you keep firing it?
+            }
+            else if (AmmunitionControl.currAmmoType.AmmoName.Contains("7.62"))
+            {
+                AmmunitionControl.currAmmoType.CurrRecoilDeviation = 0;
+            }
+            else
+            {
+                AmmunitionControl.currAmmoType.CurrRecoilDeviation += 1;
             }
         }
 
@@ -183,12 +238,9 @@ namespace HollowPoint
             {
                 yield return null;
             }
-            while (fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
-            //_fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).storeObject.Value == null || _fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).storeObject.Value == null          
+            while (fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);        
 
             fireballControlFSM = fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
-
-            Log("Wall Impact reached");
             fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
 
             yield return null;
