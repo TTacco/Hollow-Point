@@ -181,7 +181,6 @@ namespace HollowPoint
                 RecoilIncrease();
                 recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
-
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = CheckIfRightAngle(180 + recoilVal - FireAtDiagonal());
             }
         }
@@ -277,7 +276,7 @@ namespace HollowPoint
         public IEnumerator ShrinkBooletSize(GameObject go)
         {
             yield return new WaitForEndOfFrame();
-            go.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.2f, 1f);
+            go.GetComponent<Transform>().localScale = AmmunitionControl.currAmmoType.BulletSize;
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
