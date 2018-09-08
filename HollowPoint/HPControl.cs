@@ -168,7 +168,7 @@ namespace HollowPoint
                 RecoilIncrease();
                 recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal + FireAtDiagonal()));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 0 + recoilVal + FireAtDiagonal();
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = CheckIfRightAngle(0 + recoilVal + FireAtDiagonal());
             }
             //Shooting toward the left
             else if (!HeroController.instance.cState.facingRight)
@@ -182,7 +182,8 @@ namespace HollowPoint
                 RecoilIncrease();
                 recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
-                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 180 + recoilVal - FireAtDiagonal();
+
+                fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = CheckIfRightAngle(180 + recoilVal - FireAtDiagonal());
             }
         }
 
@@ -201,7 +202,7 @@ namespace HollowPoint
             }
             else if (InputHandler.Instance.inputActions.up.IsPressed)
             {
-                return 90f;
+                return 89f;
             }
             return 0;
         }
@@ -230,6 +231,23 @@ namespace HollowPoint
             {
                 AmmunitionControl.currAmmoType.CurrRecoilDeviation += 1;
             }
+        }
+
+        public float CheckIfRightAngle(float rv)
+        {
+            if(rv == 90)
+            {
+                if (HeroController.instance.cState.facingRight)
+                {
+                    return rv = 89f; //Spawning fireballs at a 90 degree angle destroys the go on cast, for some reason
+                }
+                else if (!HeroController.instance.cState.facingRight)
+                {
+                    return rv = 91f;
+                }
+            }
+
+            return rv;
         }
 
         public IEnumerator CheckIfNull(bool facingRight)
