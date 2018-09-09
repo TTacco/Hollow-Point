@@ -21,7 +21,7 @@ namespace HollowPoint
         Text magazine;
 
         public void Awake()
-        {         
+        {
             CanvasUtil.CreateFonts();
             canvas = CanvasUtil.CreateCanvas(RenderMode.ScreenSpaceOverlay, new Vector2(1920, 1080));
             UnityEngine.Object.DontDestroyOnLoad(canvas);

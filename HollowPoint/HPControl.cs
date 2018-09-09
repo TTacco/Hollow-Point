@@ -160,6 +160,15 @@ namespace HollowPoint
 
             fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
 
+            // Destroy the old camera shake actions and replace with a simple small shake.
+            FsmState fbState = fireballFSM.GetState("Cast Right");
+            fbState.Actions = fbState.Actions.Where(action => !(action is SendEventByName)).ToArray();
+            fbState = fireballFSM.GetState("Cast Left");
+            fbState.Actions = fbState.Actions.Where(action => !(action is SendEventByName)).ToArray();
+
+            // Shake screen
+            GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+
             //This block removes the default audio and wall hit shake
 
             //Shooting toward the right
