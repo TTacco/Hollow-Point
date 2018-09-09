@@ -99,6 +99,7 @@ namespace HollowPoint
                 }
                 else if (AmmunitionControl.currAmmoType.AmmoName.Contains("Gauge"))
                 {
+                    PlaySound();
                     AmmunitionControl.currAmmoType.CurrAmmo--;
                     Schutz(ad);
                     Schutz(ad);
@@ -108,6 +109,7 @@ namespace HollowPoint
                 }
                 else
                 {
+                    PlaySound(); 
                     AmmunitionControl.currAmmoType.CurrAmmo--;
                     Schutz(ad);
                 }
@@ -129,11 +131,17 @@ namespace HollowPoint
             for(int i = x; i > 0 && AmmunitionControl.currAmmoType.CurrAmmo > 0; i--)
             {
                 Schutz(ad);
+                PlaySound();
                 AmmunitionControl.currAmmoType.CurrAmmo--;
                 yield return new WaitForSeconds(0.10f);
             }
 
             yield return null;
+        }
+
+        public void PlaySound()
+        {
+            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX[AmmunitionControl.currAmmoIndex - 1]);
         }
     
         public void IncreaseRecoil()
@@ -142,8 +150,7 @@ namespace HollowPoint
         }
 
         public void Schutz(AttackDirection aDir)
-        {
-            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX); // Play Sound
+        { 
 
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
             

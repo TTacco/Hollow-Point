@@ -21,7 +21,7 @@ namespace HollowPoint
             ModHooks.Instance.NewGameHook += NewGame;
             LoadAssets.LoadBulletSounds();
         }
-
+        
         public void NewGame()
         {
             GameManager.instance.gameObject.AddComponent<HPControl>();

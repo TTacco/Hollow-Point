@@ -90,7 +90,11 @@
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\wowwow.wav" />
+    <EmbeddedResource Include="assets\1_pistol.wav" />
+    <EmbeddedResource Include="assets\2_submachine.wav" />
+    <EmbeddedResource Include="assets\3_shotgun.wav" />
+    <EmbeddedResource Include="assets\4_assault.wav" />
+    <EmbeddedResource Include="assets\5_sniper.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

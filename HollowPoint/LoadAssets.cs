@@ -6,10 +6,11 @@ namespace HollowPoint
 {
     public static class LoadAssets
     {
-        public static AudioClip bulletSoundFX;
+        public static AudioClip[] bulletSoundFX = new AudioClip[5];
 
         public static void LoadBulletSounds()
         {
+            int count = 0;
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {
                 if (res.EndsWith(".wav"))
@@ -21,7 +22,8 @@ namespace HollowPoint
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
-                        bulletSoundFX = WavUtility.ToAudioClip(buffer);
+                        bulletSoundFX[count] = WavUtility.ToAudioClip(buffer);
+                        count++;
                     }
                 }
             }

@@ -8,7 +8,7 @@ namespace HollowPoint
         //public static Ammunition[] ammoInstance = new Ammunition[3];
 
         public static Ammunition currAmmoType;
-        int currAmmoIndex;
+        public static int currAmmoIndex;
         int tapUp = 0;
         int tapDown = 0;
         bool tapStart = true;
