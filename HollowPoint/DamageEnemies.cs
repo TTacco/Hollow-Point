@@ -137,7 +137,7 @@ namespace HollowPoint
              * Uncomment below for a sick looking enter the gungeon style freeze frame or for camera shake.
              */
             //GameManager.instance.FreezeMoment(1);
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            //GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
 
             try{
                 SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();

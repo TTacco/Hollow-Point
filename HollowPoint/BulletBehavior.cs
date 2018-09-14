@@ -40,12 +40,7 @@ namespace HollowPoint
             canHitEnemy = true;
         }
         
-        /*
-        public void OnTriggerEnter(Collider other)
-        {
-            Modding.Logger.Log(other.name);
-        }
-        */
+        
 
     }
 }

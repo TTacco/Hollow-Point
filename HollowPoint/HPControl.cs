@@ -251,7 +251,7 @@ namespace HollowPoint
             }
             else
             {
-                AmmunitionControl.currAmmoType.CurrRecoilDeviation += 1;
+                AmmunitionControl.currAmmoType.CurrRecoilDeviation += 2;
             }
         }
 

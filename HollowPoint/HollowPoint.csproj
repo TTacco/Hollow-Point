@@ -81,12 +81,14 @@
     <Compile Include="Ammunition.cs" />
     <Compile Include="AmmunitionControl.cs" />
     <Compile Include="BulletBehavior.cs" />
+    <Compile Include="CharmControl.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HollowPointMain.cs" />
     <Compile Include="HPControl.cs" />
     <Compile Include="HPUI.cs" />
     <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SpellControl.cs" />
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
