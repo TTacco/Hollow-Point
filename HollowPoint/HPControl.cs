@@ -43,6 +43,17 @@ namespace HollowPoint
             StartCoroutine(CoroutineTest());
         }
 
+        public IEnumerator CoroutineTest()
+        {
+            do
+            {
+                yield return null;
+            }
+            while (HeroController.instance == null || GameManager.instance == null);
+            Modding.Logger.Log("Initialized");
+        }
+
+        //Modify the damage
         public void spellDam(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
             if (hitInstance.AttackType == AttackTypes.Spell && hitInstance.Source.name.StartsWith("bullet"))
@@ -63,22 +74,11 @@ namespace HollowPoint
                 }
                 */
                 DamageEnemies.hitEnemy(self, b.bulletType.Damage, hitInstance, b.bulletType.SoulGain);
-
             }
             else
             {
                 orig(self, hitInstance);
             }
-        }
-
-        public IEnumerator CoroutineTest()
-        {
-            do
-            {
-                yield return null;
-            }
-            while (HeroController.instance == null || GameManager.instance == null);
-            Modding.Logger.Log("Initialized");           
         }
 
         //SHOOT/FIRE METHOD
@@ -291,7 +291,7 @@ namespace HollowPoint
         {
             if (go.name.Contains("Fireball") || go.name.StartsWith("bullet"))
             {
-                Log("Fireball");
+                Log("its a fireball, so start coroutine");
                 StartCoroutine(ShrinkBooletSize(go));
             }
             return go;
