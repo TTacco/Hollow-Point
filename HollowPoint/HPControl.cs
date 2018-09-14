@@ -93,7 +93,7 @@ namespace HollowPoint
             {
                 //This coroutine starts a loop that will continue until the fireball object is instantiated, once it is it can then alter the fireball fsm if needed
                 StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));
-
+                AmmunitionControl.firing = true;
                 if (AmmunitionControl.currAmmoType.AmmoName.Contains("9mm"))
                 {
                     StartCoroutine(BurstFire(5));
@@ -111,16 +111,17 @@ namespace HollowPoint
                     Schutz(ad);
                     Schutz(ad);
                     Schutz(ad);
+                    AmmunitionControl.firing = false;
                 }
                 else
                 {
                     PlaySound(); 
                     AmmunitionControl.currAmmoType.CurrAmmo--;
+                    AmmunitionControl.firing = false;
                     Schutz(ad);
                 }
 
-
-                if(AmmunitionControl.currAmmoType.CurrAmmo <= 0)
+                if (AmmunitionControl.currAmmoType.CurrAmmo <= 0)
                 {
                     Modding.Logger.Log("START RELOADING NOW");
                     AmmunitionControl.reloading = true;
@@ -142,6 +143,7 @@ namespace HollowPoint
                 yield return new WaitForSeconds(0.10f);
             }
 
+            AmmunitionControl.firing = false;
             yield return null;
         }
 

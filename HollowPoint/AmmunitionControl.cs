@@ -13,6 +13,7 @@ namespace HollowPoint
         int tapDown = 0;
         bool tapStart = true;
         public static bool reloading = false;
+        public static bool firing = false;
         public static float reloadPercent = 0;
         float tapTimer = 0;
         float time = 0;
@@ -67,12 +68,12 @@ namespace HollowPoint
             }
 
             //Handles Ammo Changing
-            if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.up.WasPressed) && !reloading)
+            if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.up.WasPressed) && !reloading && !firing)
             {
                 tapUp++;
             }
 
-            if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.down.WasPressed) && !reloading)
+            if ((HeroController.instance.cState.onGround && InputHandler.Instance.inputActions.down.WasPressed) && !reloading && !firing)
             {
                 tapDown++;
             }
