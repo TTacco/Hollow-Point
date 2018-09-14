@@ -39,6 +39,13 @@ namespace HollowPoint
             yield return new WaitForSeconds(bulletType.hitCooldown);
             canHitEnemy = true;
         }
+        
+        /*
+        public void OnTriggerEnter(Collider other)
+        {
+            Modding.Logger.Log(other.name);
+        }
+        */
 
     }
 }

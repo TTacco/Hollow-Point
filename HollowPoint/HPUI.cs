@@ -19,6 +19,8 @@ namespace HollowPoint
         Text caliber;
         Text ammo;
         Text magazine;
+        char bulletIcon = '\u204d';
+
 
         public void Awake()
         {
@@ -44,7 +46,7 @@ namespace HollowPoint
         public void OnGUI()
         {
             //Current CALIBER
-            caliber.text = "CAL: " + AmmunitionControl.currAmmoType.AmmoName;
+            caliber.text = "CAL:  " + AmmunitionControl.currAmmoType.AmmoName;
 
             //Current AMMO
             if (AmmunitionControl.reloading)
@@ -63,7 +65,7 @@ namespace HollowPoint
             //Current MAGAZINES
             if (AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
             {
-                magazine.text = "MAG: N/A"; 
+                magazine.text = "MAG: N/A"; //+ bulletIcon; 
             }
             else
             {

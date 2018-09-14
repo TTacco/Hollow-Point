@@ -47,8 +47,11 @@ namespace HollowPoint
         {
             if (hitInstance.AttackType == AttackTypes.Spell && hitInstance.Source.name.StartsWith("bullet"))
             {
+                BulletBehavior b;
                 Log("Bullet impact with name " + hitInstance.Source.name);
-                BulletBehavior b = fireball.GetComponent<BulletBehavior>();
+                
+                b = fireball.GetComponent<BulletBehavior>();
+                /*
                 if (!b.enemyHit())
                     return;
                 if (self.IsBlockingByDirection(
@@ -58,7 +61,9 @@ namespace HollowPoint
                     orig(self, hitInstance);
                     return;
                 }
+                */
                 DamageEnemies.hitEnemy(self, b.bulletType.Damage, hitInstance, b.bulletType.SoulGain);
+
             }
             else
             {
@@ -114,6 +119,7 @@ namespace HollowPoint
                     Schutz(ad);
                 }
 
+
                 if(AmmunitionControl.currAmmoType.CurrAmmo <= 0)
                 {
                     Modding.Logger.Log("START RELOADING NOW");
@@ -158,14 +164,16 @@ namespace HollowPoint
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
-            fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 70;
+            fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = AmmunitionControl.currAmmoType.BulletVelocity;
 
             // Destroy the old camera shake actions and replace with a simple small shake.
+            /*
             FsmState fbState = fireballFSM.GetState("Cast Right");
             fbState.Actions = fbState.Actions.Where(action => !(action is SendEventByName)).ToArray();
             fbState = fireballFSM.GetState("Cast Left");
             fbState.Actions = fbState.Actions.Where(action => !(action is SendEventByName)).ToArray();
-
+            */ 
+             
             // Shake screen
             GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
 
