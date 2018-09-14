@@ -27,6 +27,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HPControl>();
             GameManager.instance.gameObject.AddComponent<HPUI>();
             GameManager.instance.gameObject.AddComponent<AmmunitionControl>();
+            GameManager.instance.gameObject.AddComponent<SpellControl>();
         }
 
         public void SaveGame(SaveGameData sgd)
@@ -34,6 +35,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HPControl>();
             GameManager.instance.gameObject.AddComponent<HPUI>();
             GameManager.instance.gameObject.AddComponent<AmmunitionControl>();
+            GameManager.instance.gameObject.AddComponent<SpellControl>();
         }
 
         public void Unload()
