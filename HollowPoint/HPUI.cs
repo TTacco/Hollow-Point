@@ -38,8 +38,7 @@ namespace HollowPoint
             magazine = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-560, 745), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
             magazine.color = new Color(0.420f, 0.420f, 0.420f, 1f);
             magazine.text = "";
-
-            Modding.Logger.Log("UI LOADED");
+            Modding.Logger.Log("[HOLLOW POINT] HPUI.cs sucessfully initialized!");
         }
 
 

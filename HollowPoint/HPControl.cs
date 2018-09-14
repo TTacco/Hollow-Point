@@ -50,7 +50,7 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
-            Modding.Logger.Log("Initialized");
+            Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
 
         //Modify the damage
@@ -293,7 +293,6 @@ namespace HollowPoint
         {
             if (go.name.Contains("Fireball") || go.name.StartsWith("bullet"))
             {
-                Log("its a fireball, so start coroutine");
                 StartCoroutine(ShrinkBooletSize(go));
             }
             return go;
@@ -311,7 +310,7 @@ namespace HollowPoint
         //MISC
         public static void Log(string s)
         {
-            Modding.Logger.Log("[Hollow Point] " + s);
+            Modding.Logger.Log("[HOLLOW POINT] " + s);
         }
 
         public void OnDestroy()

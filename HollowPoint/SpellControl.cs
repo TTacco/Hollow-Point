@@ -31,7 +31,7 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
             FSMInitialization();
-            Modding.Logger.Log("[Hollow Point] Succesfully initialized Spell Control");
+            Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
 
         public void FSMInitialization()

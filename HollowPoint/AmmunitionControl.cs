@@ -32,6 +32,7 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
             currAmmoType = Ammo.ammoTypes[0];
+            Modding.Logger.Log("[HOLLOW POINT] AmmunitionControl.cs sucessfully initialized!");
         }
 
         public void Update()
@@ -49,7 +50,6 @@ namespace HollowPoint
 
             if (reloadPercent > 100 && reloading)
             {
-                Modding.Logger.Log("Reload Complete");
                 currAmmoType.CurrAmmo = currAmmoType.MaxAmmo;
                 currAmmoType.CurrMag--;
                 reloading = false;
@@ -88,8 +88,6 @@ namespace HollowPoint
 
             if (tapUp >= 2 || tapDown >= 2)
             {
-                Modding.Logger.Log("SWITCH AMMO!");
-
                 Ammo.ammoTypes[currAmmoIndex] = currAmmoType;
 
                 //If player taps up twice, cycle up, if player taps down twice, cycle down

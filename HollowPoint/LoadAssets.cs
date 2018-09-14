@@ -17,7 +17,7 @@ namespace HollowPoint
             {
                 if (res.EndsWith(".wav"))
                 {
-                    Modding.Logger.Log("Found sound effect! Saving it.");
+                    Modding.Logger.Log("[HOLLOW POINT] Found sound effect! Saving it.");
                     Stream audioStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(res);
                     if(audioStream != null && res.Contains("support"))
                     {
