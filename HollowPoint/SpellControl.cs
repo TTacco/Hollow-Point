@@ -87,7 +87,7 @@ namespace HollowPoint
             yield return new WaitForSeconds(0.2f);
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.airStrikeSoundFX[0]);
             yield return new WaitForSeconds(0.3f);
-            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.airStrikeSoundFX[2]);
+            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.airStrikeSoundFX[1]);
             yield return new WaitForSeconds(1.5f);
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.airStrikeSoundFX[0]);
             Log("AirStrike has ended");

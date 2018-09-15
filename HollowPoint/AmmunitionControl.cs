@@ -48,12 +48,13 @@ namespace HollowPoint
                 time -= Time.deltaTime;
             }
 
-            if (reloadPercent > 100 && reloading)
+            if ((reloadPercent > 100 && reloading) || CharmControl.resupplied)
             {
                 currAmmoType.CurrAmmo = currAmmoType.MaxAmmo;
                 currAmmoType.CurrMag--;
                 reloading = false;
                 reloadPercent = 0;
+                CharmControl.resupplied = false;
             }
 
             //Handles how much recoil is accumulated, if its great than 0 then tick it down slowly

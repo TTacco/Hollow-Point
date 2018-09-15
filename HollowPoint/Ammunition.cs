@@ -46,7 +46,9 @@ namespace HollowPoint
             BulletSize = bulletSize;
             BulletVelocity = bulletVelocity;
         }
+
     }
+
 
 
     //reloadtime are of course still subjected to changes, add in 12gauge (shotgun), 7.62 (sniper rifle), .50 (anti materiel) and more if needed next time

@@ -151,11 +151,6 @@ namespace HollowPoint
         {
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX[AmmunitionControl.currAmmoIndex - 1]);
         }
-    
-        public void IncreaseRecoil()
-        {
-
-        }
 
         public void Schutz(AttackDirection aDir)
         { 
