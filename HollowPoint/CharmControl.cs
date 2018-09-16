@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using Modding;
+using static HollowPoint.AmmunitionControl;
 
 namespace HollowPoint
 {
@@ -19,8 +20,8 @@ namespace HollowPoint
         public void RestockAmmunition(PlayerData pd, HeroController hc)
         {
             resupplied = true;
-            AmmunitionControl.currAmmoType.CurrAmmo = Ammo.ammoTypes[AmmunitionControl.currAmmoIndex].MaxAmmo;
-            AmmunitionControl.currAmmoType.CurrMag = Ammo.ammoTypes[AmmunitionControl.currAmmoIndex].MaxMag;
+            currAmmoType.CurrAmmo = Ammo.ammoTypes[currAmmoIndex].MaxAmmo;
+            currAmmoType.CurrMag = Ammo.ammoTypes[currAmmoIndex].MaxMag;
 
             for (int i = 1; i<Ammo.ammoTypes.Length-1; i++)
             {

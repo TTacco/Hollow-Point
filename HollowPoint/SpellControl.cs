@@ -13,12 +13,19 @@ namespace HollowPoint
 {
     class SpellControl : MonoBehaviour
     {
-        public GameObject airStrikeBullet;
         public static bool airStrikeInProgress = false;
         private System.Random random;
 
+        GameObject grenade;
+        Texture2D grenadeTexture;
+        float speed;
+
+
         public void Start()
         {
+            grenade.AddComponent<Rigidbody2D>();
+            grenade.AddComponent<SpriteRenderer>();
+            grenade.AddComponent<Transform>();
             StartCoroutine(SpellInitialize());
         }
 
@@ -60,8 +67,18 @@ namespace HollowPoint
         {
             Modding.Logger.Log("[Hollow Point] Tried using regular fireball");
             HeroController.instance.spellControl.SetState("Cancel All");
+            ThrowGrenade();
+
 
             //This should be when the knight can throw a grenade, also manually remove soul
+        }
+
+        public void ThrowGrenade()
+        {
+            GameObject grenadeClone = Instantiate(grenade, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
+            grenadeClone.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.5f, 0.5f);
+            grenadeClone.GetComponent<SpriteRenderer>().color = Color.red;
+
         }
 
         public void RemoveScreamTransition()
@@ -76,7 +93,7 @@ namespace HollowPoint
         {
             Log("CALL IN AN AIRSTRIKE");
             airStrikeInProgress = true;
-            airStrikeBullet = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position, new Quaternion(0, 0, 0, 0));
+            //airStrikeBullet = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position, new Quaternion(0, 0, 0, 0));
 
             StartCoroutine(AirStrikeOnProgress());
 

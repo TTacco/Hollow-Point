@@ -157,7 +157,7 @@ namespace HollowPoint
 
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
             
-            fireball.transform.localScale = new Vector3(0.15f, 0.15f, 0.15f);
+            fireball.transform.localScale = new Vector3(0.01f, 0.25f, 0.01f);
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
