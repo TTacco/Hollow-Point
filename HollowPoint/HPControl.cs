@@ -25,6 +25,7 @@ namespace HollowPoint
         private PlayMakerFSM fireballControlFSM;
         private readonly System.Random recoilNum = new System.Random();
         private float recoilVal;
+        private GunSpriteRenderer gunSpriteControl;
 
         AttackDirection ad;
 
@@ -50,6 +51,11 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
+            
+            GameObject go = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
+            go.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            go.transform.localPosition = new Vector3(0, 0, -0.0001f);
+            go.SetActive(true);
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
 

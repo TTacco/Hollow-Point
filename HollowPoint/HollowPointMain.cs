@@ -21,25 +21,19 @@ namespace HollowPoint
             ModHooks.Instance.NewGameHook += NewGame;
             LoadAssets.LoadBulletSounds();
         }
-        
-        public void NewGame()
+
+        private static void NewGame()
         {
             GameManager.instance.gameObject.AddComponent<HPControl>();
             GameManager.instance.gameObject.AddComponent<HPUI>();
             GameManager.instance.gameObject.AddComponent<AmmunitionControl>();
             GameManager.instance.gameObject.AddComponent<SpellControl>();
             GameManager.instance.gameObject.AddComponent<CharmControl>();
-            GameManager.instance.gameObject.AddComponent<GunSpriteRenderer>();
         }
 
-        public void SaveGame(SaveGameData sgd)
+        private static void SaveGame(SaveGameData sgd)
         {
-            GameManager.instance.gameObject.AddComponent<HPControl>();
-            GameManager.instance.gameObject.AddComponent<HPUI>();
-            GameManager.instance.gameObject.AddComponent<AmmunitionControl>();
-            GameManager.instance.gameObject.AddComponent<SpellControl>();
-            GameManager.instance.gameObject.AddComponent<CharmControl>();
-            GameManager.instance.gameObject.AddComponent<GunSpriteRenderer>();
+            NewGame();
         }
 
         public void Unload()

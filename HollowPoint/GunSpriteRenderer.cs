@@ -1,30 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Collections;
-using System.Reflection;
+﻿using System.Collections;
 using UnityEngine;
-using GlobalEnums;
-using SetSpriteRendererSprite = HutongGames.PlayMaker.Actions.SetSpriteRendererSprite;
 using static Modding.Logger;
-
-using System.IO;
 
 
 namespace HollowPoint
 {
     class GunSpriteRenderer : MonoBehaviour
     {
-        Sprite gunSprite;
         SpriteRenderer gunRenderer;
+        private const int PIXELS_PER_UNIT = 50;
 
         public void Start()
         {
-            StartCoroutine(CheckForInstance());
+            gunRenderer = gameObject.GetComponent<SpriteRenderer>();
+            StartCoroutine(setupGun());
         }
 
-        public IEnumerator CheckForInstance()
+        private IEnumerator setupGun()
         {
             do
             {
@@ -33,53 +25,29 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
             Log("[HOLLOW POINT] Creating Sprite");
-
-
-            Assembly asm = Assembly.GetExecutingAssembly();
-            foreach (string res in asm.GetManifestResourceNames())
-            {
-                if (!res.EndsWith(".png"))
-                {
-                    //Steal 56's Lightbringer code :weary:
-                    continue;
-                }
-
-                using (Stream s = asm.GetManifestResourceStream(res))
-                {
-                    if (s == null) continue;
-                    byte[] buffer = new byte[s.Length];
-                    s.Read(buffer, 0, buffer.Length);
-                    s.Dispose();
-                    //Create texture from bytes 
-                    Texture2D tex = new Texture2D(1, 1);
-                    tex.LoadImage(buffer);
-                    //Create sprite from texture 
-                    gunSprite = Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
-                    Log("Created sprite from embedded image: " + res);
-                }
-            }
-
-            if(gunSprite == null)
-            {
-                Log("Sprite empty");
-            }
-
             gunRenderer = GameManager.instance.gameObject.GetComponent<SpriteRenderer>();
+            gunRenderer.sprite = Sprite.Create(LoadAssets.gunSprites[0],
+                new Rect(0, 0, LoadAssets.gunSprites[0].width, LoadAssets.gunSprites[0].height),
+                new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
+        }
 
-
-            if (gunRenderer== null)
+        public void switchGuns(int gunNumber)
+        {
+            if (HeroController.instance == null || GameManager.instance == null)
             {
-                Log("renderer Sprite empty");
+                Modding.Logger.Log("[Hollow Point] Unable to switch guns because hero not loaded.");
+                return;
             }
 
-            gunRenderer.GetComponent<SpriteRenderer>().sprite = gunSprite;
+            if (gunNumber >= LoadAssets.gunSprites.Length)
+            {
+                Modding.Logger.Log("[Hollow Point] Gun out of range! Gun loaded is " + gunNumber);
+                return;
+            }
+            
+            gunRenderer.sprite = Sprite.Create(LoadAssets.gunSprites[gunNumber],
+                new Rect(0, 0, LoadAssets.gunSprites[0].width, LoadAssets.gunSprites[0].height),
+                new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
         }
-
-        public void Update()
-        { 
-            gunRenderer.transform.localPosition = HeroController.instance.transform.localPosition;
-            gunRenderer.transform.position = HeroController.instance.transform.position;
-        }
-
     }
 }
