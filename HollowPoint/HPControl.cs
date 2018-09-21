@@ -156,7 +156,7 @@ namespace HollowPoint
         { 
 
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
-            
+
             fireball.transform.localScale = new Vector3(0.01f, 0.25f, 0.01f);
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
@@ -275,7 +275,7 @@ namespace HollowPoint
             {
                 yield return null;
             }
-            while (fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);        
+            while (fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
 
             fireballControlFSM = fireballFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
             fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
@@ -288,6 +288,8 @@ namespace HollowPoint
         {
             if (go.name.Contains("Fireball") || go.name.StartsWith("bullet"))
             {
+                //Let the 2nd parameter of float be the distance the bullet can travel before it dissipates, this can then be used as a bullet range
+                Destroy(go, 0.23f);
                 StartCoroutine(ShrinkBooletSize(go));
             }
             return go;
@@ -301,7 +303,18 @@ namespace HollowPoint
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
         }
-      
+
+        //When a bullet hits an enemy
+        public void OnCollisionEnter(Collision collision)
+        {
+            Log("BULLET COLLIDER REACHED NORMAL EDITION");
+        }
+
+        public void OnCollisionEnter2D(Collision2D col)
+        {
+            Log("BULLET COLLIDER REACHED 2D EDITION");
+        }
+
         //MISC
         public static void Log(string s)
         {

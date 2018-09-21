@@ -22,7 +22,7 @@ namespace HollowPoint
         char bulletIcon = '\u204d';
 
 
-        public void Awake()
+        public void Start()
         {
             CanvasUtil.CreateFonts();
             canvas = CanvasUtil.CreateCanvas(RenderMode.ScreenSpaceOverlay, new Vector2(1920, 1080));

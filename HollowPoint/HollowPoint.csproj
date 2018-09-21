@@ -57,6 +57,10 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
@@ -87,6 +91,7 @@
     <Compile Include="BulletBehavior.cs" />
     <Compile Include="CharmControl.cs" />
     <Compile Include="DamageEnemies.cs" />
+    <Compile Include="GunSpriteRenderer.cs" />
     <Compile Include="HollowPointMain.cs" />
     <Compile Include="HPControl.cs" />
     <Compile Include="HPUI.cs" />
@@ -108,6 +113,9 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\call_air_support_1.wav" />
     <EmbeddedResource Include="assets\call_air_support_2.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\assault.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -40,7 +40,6 @@ namespace HollowPoint
             canHitEnemy = true;
         }
         
-        
 
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using System.Reflection;
 using System.Collections;
 using ModCommon.Util;
 using HutongGames.PlayMaker;
@@ -23,9 +24,6 @@ namespace HollowPoint
 
         public void Start()
         {
-            grenade.AddComponent<Rigidbody2D>();
-            grenade.AddComponent<SpriteRenderer>();
-            grenade.AddComponent<Transform>();
             StartCoroutine(SpellInitialize());
         }
 
@@ -38,7 +36,27 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
             FSMInitialization();
-            Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
+
+#region init
+
+            grenade.AddComponent<Rigidbody2D>();
+            grenade.AddComponent<SpriteRenderer>();
+            grenade.AddComponent<Transform>();
+
+#endregion
+
+            Assembly asm = Assembly.GetExecutingAssembly();
+            foreach (string res in asm.GetManifestResourceNames())
+            {
+                if (!res.EndsWith(".png"))
+                {
+                    //Steal 56's Lightbringer code :weary:
+                    continue;
+                }
+            }
+
+
+            Modding.Logger.Log("[HOLLOW POINT] SpellControl.cs sucessfully initialized!");
         }
 
         public void FSMInitialization()
@@ -68,13 +86,12 @@ namespace HollowPoint
             Modding.Logger.Log("[Hollow Point] Tried using regular fireball");
             HeroController.instance.spellControl.SetState("Cancel All");
             ThrowGrenade();
-
-
             //This should be when the knight can throw a grenade, also manually remove soul
         }
 
         public void ThrowGrenade()
         {
+            Log("Throwing nade");
             GameObject grenadeClone = Instantiate(grenade, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
             grenadeClone.GetComponent<Transform>().localScale = new Vector3(0.5f, 0.5f, 0.5f);
             grenadeClone.GetComponent<SpriteRenderer>().color = Color.red;
