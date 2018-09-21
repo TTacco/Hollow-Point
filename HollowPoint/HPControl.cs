@@ -50,11 +50,11 @@ namespace HollowPoint
             {
                 yield return null;
             }
-            while (HeroController.instance == null || GameManager.instance == null);
+            while (HeroController.instance == null || GameManager.instance == null || HeroController.instance.spellControl == null);
             
             GameObject go = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             go.transform.parent = HeroController.instance.spellControl.gameObject.transform;
-            go.transform.localPosition = new Vector3(0, 0, -0.0001f);
+            go.transform.localPosition = new Vector3(0, -0.6f, -0.0001f);
             go.SetActive(true);
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }

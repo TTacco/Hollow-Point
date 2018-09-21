@@ -13,22 +13,12 @@ namespace HollowPoint
         public void Start()
         {
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
-            StartCoroutine(setupGun());
-        }
-
-        private IEnumerator setupGun()
-        {
-            do
-            {
-                yield return null;
-            }
-            while (HeroController.instance == null || GameManager.instance == null);
-
             Log("[HOLLOW POINT] Creating Sprite");
-            gunRenderer = GameManager.instance.gameObject.GetComponent<SpriteRenderer>();
             gunRenderer.sprite = Sprite.Create(LoadAssets.gunSprites[0],
                 new Rect(0, 0, LoadAssets.gunSprites[0].width, LoadAssets.gunSprites[0].height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
+            gunRenderer.color = Color.white;
+            Log("[HOLLOW POINT] Created sprite!");
         }
 
         public void switchGuns(int gunNumber)
