@@ -21,7 +21,18 @@ namespace HollowPoint
 
         public void Start()
         {
-            StartCoroutine(CreateAmmoInstance());
+
+        currAmmoIndex = 0;
+        tapUp = 0;
+        tapDown = 0;
+        tapStart = true;
+        reloading = false;
+        firing = false;
+        reloadPercent = 0;
+        tapTimer = 0;
+        time = 0;
+        recoilTime = 0;
+        StartCoroutine(CreateAmmoInstance());
         }
 
         public IEnumerator CreateAmmoInstance()
@@ -134,6 +145,11 @@ namespace HollowPoint
             }
         }
 
+        public void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<AmmunitionControl>());
+            Destroy(this);
+        }
 
     }
 }

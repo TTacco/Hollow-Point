@@ -29,5 +29,12 @@ namespace HollowPoint
                 Ammo.ammoTypes[i].CurrMag = Ammo.ammoTypes[i].MaxMag;
             }
         }
+
+        public void OnDestroy()
+        {
+            ModHooks.Instance.CharmUpdateHook -= RestockAmmunition;
+            Destroy(gameObject.GetComponent<CharmControl>());
+            Destroy(this);
+        }
     }
 }

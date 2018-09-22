@@ -32,11 +32,12 @@ namespace HollowPoint
         //INTIALIZATION
         public void Awake()
         {
-            ModHooks.Instance.ObjectPoolSpawnHook += BooletSize;
+
         }
 
         public void Start()
         {
+            ModHooks.Instance.ObjectPoolSpawnHook += BooletSize;
             ModHooks.Instance.AttackHook += Attack_Hook;
             On.NailSlash.StartSlash += Start_Slash;
             On.HealthManager.Hit += spellDam;
@@ -54,7 +55,7 @@ namespace HollowPoint
             
             GameObject go = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             go.transform.parent = HeroController.instance.spellControl.gameObject.transform;
-            go.transform.localPosition = new Vector3(0, -0.6f, -0.0001f);
+            go.transform.localPosition = new Vector3(0, -0.75f, -0.0001f);
             go.SetActive(true);
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
@@ -163,7 +164,7 @@ namespace HollowPoint
 
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
 
-            fireball.transform.localScale = new Vector3(0.01f, 0.25f, 0.01f);
+            fireball.transform.localScale = new Vector3(0.01f, 0.15f, 0.01f);
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
@@ -295,7 +296,7 @@ namespace HollowPoint
             if (go.name.Contains("Fireball") || go.name.StartsWith("bullet"))
             {
                 //Let the 2nd parameter of float be the distance the bullet can travel before it dissipates, this can then be used as a bullet range
-                Destroy(go, 0.23f);
+                //Destroy(go, 0.23f);
                 StartCoroutine(ShrinkBooletSize(go));
             }
             return go;
@@ -329,12 +330,16 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
+            Log("Destroying Stuff");
+            ModHooks.Instance.ObjectPoolSpawnHook -= BooletSize;
             ModHooks.Instance.AttackHook -= Attack_Hook;
             On.NailSlash.StartSlash -= Start_Slash;
             On.HealthManager.Hit -= spellDam;
+            Destroy(gameObject.GetComponent<HPControl>());
             Destroy(fireball);
             Destroy(fireballFSM);
             Destroy(fireballControlFSM);
+            Destroy(this);
         }
 
     }

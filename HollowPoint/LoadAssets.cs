@@ -13,8 +13,8 @@ namespace HollowPoint
 
         public static void LoadBulletSounds()
         {
-            int count = 0;
-            int airCount = 0;
+            int bulletCount = 0;
+            int airsupportCount = 0;
             int gunCount = 0;
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {
@@ -27,14 +27,14 @@ namespace HollowPoint
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
-                        airStrikeSoundFX[airCount++] = WavUtility.ToAudioClip(buffer);
+                        airStrikeSoundFX[airsupportCount++] = WavUtility.ToAudioClip(buffer);
                     }
                     else if (audioStream != null)
                     {
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
-                        bulletSoundFX[count++] = WavUtility.ToAudioClip(buffer);
+                        bulletSoundFX[bulletCount++] = WavUtility.ToAudioClip(buffer);
                     }
                 } else if (res.EndsWith(".png"))
                 {

@@ -38,7 +38,8 @@ namespace HollowPoint
 
         public void Unload()
         {
-
+            ModHooks.Instance.AfterSavegameLoadHook -= SaveGame;
+            ModHooks.Instance.NewGameHook -= NewGame;
         }
 
     }

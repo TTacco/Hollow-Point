@@ -72,5 +72,11 @@ namespace HollowPoint
             }
         }
 
+        public void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HPUI>());
+            Destroy(canvas);
+        }
+
     }
 }

@@ -37,13 +37,9 @@ namespace HollowPoint
 
             FSMInitialization();
 
-#region init
-
             grenade.AddComponent<Rigidbody2D>();
             grenade.AddComponent<SpriteRenderer>();
             grenade.AddComponent<Transform>();
-
-#endregion
 
             Assembly asm = Assembly.GetExecutingAssembly();
             foreach (string res in asm.GetManifestResourceNames())
@@ -136,6 +132,13 @@ namespace HollowPoint
         private void Log(String s)
         {
             Modding.Logger.Log("[HOLLOW POINT] " + s);
+        }
+
+
+        public void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<SpellControl>());
+            Destroy(grenade);
         }
     }
 }
