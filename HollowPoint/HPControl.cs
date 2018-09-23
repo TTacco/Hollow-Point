@@ -24,10 +24,11 @@ namespace HollowPoint
         private GameObject gunSpriteGO;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;
+        private GunSpriteRenderer gunSpriteControl;
         private readonly System.Random recoilNum = new System.Random();
         private float recoilVal;
-        private GunSpriteRenderer gunSpriteControl;
-        private bool fluctuateUp = true;
+        private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.81f, -0.0001f);
+
 
         AttackDirection ad;
 
@@ -59,7 +60,7 @@ namespace HollowPoint
             
             gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
-            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.83f, -0.0001f);
+            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.81f, -0.0001f);
             gunSpriteGO.SetActive(true);
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
@@ -68,26 +69,44 @@ namespace HollowPoint
         //Give the weapon a shake when moving
         public void Update()
         {
+
+            if (HeroController.instance.cState.wallSliding || (HeroController.instance.cState.superDashOnWall))
+            {
+                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(-0.2f, 0.1f, 0f);
+                return;
+            }
+            if (HeroController.instance.cState.superDashing)
+            {
+                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.4f, 0f);
+                return;
+            }
+
             if (AmmunitionControl.firing)
             {
                 gunSpriteGO.transform.SetRotationZ(0);
+                gunSpriteGO.transform.localPosition = defaultWeaponPos;
             }
             else if (AmmunitionControl.reloading)
             {
                 gunSpriteGO.transform.SetRotationZ(45);
+                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
             }
             else if (HeroController.instance.hero_state == ActorStates.running)
             {
                 gunSpriteGO.transform.SetRotationZ(15);
+                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
             }
             else if (HeroController.instance.hero_state == ActorStates.airborne)
             {
                 gunSpriteGO.transform.SetRotationZ(20);
+                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
             }
             else
             {
                 gunSpriteGO.transform.SetRotationZ(0);
+                gunSpriteGO.transform.localPosition = defaultWeaponPos;
             }
+
 
         }
         #endregion 

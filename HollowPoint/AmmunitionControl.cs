@@ -121,6 +121,7 @@ namespace HollowPoint
                     currAmmoIndex = Ammo.ammoTypes.Length - 1;
                 }
 
+                GunSpriteRenderer.switchGuns(currAmmoIndex);
                 currAmmoType = Ammo.ammoTypes[currAmmoIndex];
                 HeroController.instance.ATTACK_COOLDOWN_TIME = currAmmoType.Firerate;
                 HeroController.instance.ATTACK_COOLDOWN_TIME_CH = currAmmoType.Firerate;

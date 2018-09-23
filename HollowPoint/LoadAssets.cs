@@ -9,7 +9,7 @@ namespace HollowPoint
         public static AudioClip[] bulletSoundFX = new AudioClip[5];
         public static AudioClip[] airStrikeSoundFX = new AudioClip[3];
         
-        public static Texture2D[] gunSprites = new Texture2D[1];
+        public static Texture2D[] gunSprites = new Texture2D[5];
 
         public static void LoadBulletSounds()
         {
