@@ -21,7 +21,6 @@ namespace HollowPoint
 
         public void Start()
         {
-
         currAmmoIndex = 0;
         tapUp = 0;
         tapDown = 0;

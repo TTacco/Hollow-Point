@@ -21,11 +21,13 @@ namespace HollowPoint
     class HPControl : MonoBehaviour
     {
         private GameObject fireball;
+        private GameObject gunSpriteGO;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;
         private readonly System.Random recoilNum = new System.Random();
         private float recoilVal;
         private GunSpriteRenderer gunSpriteControl;
+        private bool fluctuateUp = true;
 
         AttackDirection ad;
 
@@ -42,10 +44,12 @@ namespace HollowPoint
             On.NailSlash.StartSlash += Start_Slash;
             On.HealthManager.Hit += spellDam;
 
-            StartCoroutine(CoroutineTest());
+            StartCoroutine(InitializationCoroutine());
         }
 
-        public IEnumerator CoroutineTest()
+
+        //IF POSSIBLE MOVE ALL THE WEAPON RENDERER STUFF ON ANOTHER CLASS
+        public IEnumerator InitializationCoroutine()
         {
             do
             {
@@ -53,12 +57,40 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null || HeroController.instance.spellControl == null);
             
-            GameObject go = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
-            go.transform.parent = HeroController.instance.spellControl.gameObject.transform;
-            go.transform.localPosition = new Vector3(0, -0.75f, -0.0001f);
-            go.SetActive(true);
+            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
+            gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.83f, -0.0001f);
+            gunSpriteGO.SetActive(true);
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
+
+        #region Temporary Weapon Rotation
+        //Give the weapon a shake when moving
+        public void Update()
+        {
+            if (AmmunitionControl.firing)
+            {
+                gunSpriteGO.transform.SetRotationZ(0);
+            }
+            else if (AmmunitionControl.reloading)
+            {
+                gunSpriteGO.transform.SetRotationZ(45);
+            }
+            else if (HeroController.instance.hero_state == ActorStates.running)
+            {
+                gunSpriteGO.transform.SetRotationZ(15);
+            }
+            else if (HeroController.instance.hero_state == ActorStates.airborne)
+            {
+                gunSpriteGO.transform.SetRotationZ(20);
+            }
+            else
+            {
+                gunSpriteGO.transform.SetRotationZ(0);
+            }
+
+        }
+        #endregion 
 
         //Modify the damage
         public void spellDam(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
@@ -111,14 +143,7 @@ namespace HollowPoint
                 }
                 else if (AmmunitionControl.currAmmoType.AmmoName.Contains("Gauge"))
                 {
-                    PlaySound();
-                    AmmunitionControl.currAmmoType.CurrAmmo--;
-                    Schutz(ad);
-                    Schutz(ad);
-                    Schutz(ad);
-                    Schutz(ad);
-                    Schutz(ad);
-                    AmmunitionControl.firing = false;
+                    StartCoroutine(ShotgunFire(5));
                 }
                 else
                 {
@@ -154,6 +179,18 @@ namespace HollowPoint
             yield return null;
         }
 
+        public IEnumerator ShotgunFire(int x)
+        {
+            PlaySound();
+            for (int i = x; i > 0; i--)
+            {
+                Schutz(ad);
+            }
+            AmmunitionControl.firing = false;
+            AmmunitionControl.currAmmoType.CurrAmmo--;
+            yield return null;
+        }
+
         public void PlaySound()
         {
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX[AmmunitionControl.currAmmoIndex - 1]);
@@ -164,7 +201,7 @@ namespace HollowPoint
 
             fireball = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
 
-            fireball.transform.localScale = new Vector3(0.01f, 0.15f, 0.01f);
+            fireball.transform.localScale = new Vector3(1f, 0.1f, 0.01f);
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
@@ -186,7 +223,7 @@ namespace HollowPoint
             //Shooting toward the right
             if (HeroController.instance.cState.facingRight)
             {
-                fireball.transform.position += new Vector3(0.80f, -0.5f, 0f);
+                fireball.transform.position += new Vector3(0.80f, -0.8f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Right", 1).sendEvent = "";
                 fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Right", 6).volume = 0;
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, 0, 0);
@@ -200,7 +237,7 @@ namespace HollowPoint
             //Shooting toward the left
             else if (!HeroController.instance.cState.facingRight)
             {
-                fireball.transform.position += new Vector3(-0.80f, -0.5f, 0f);
+                fireball.transform.position += new Vector3(-0.80f, -0.8f, 0f);
                 fireballFSM.GetAction<SendEventByName>("Cast Left", 1).sendEvent = "";
                 fireballFSM.GetAction<AudioPlayerOneShotSingle>("Cast Left", 3).volume = 0;
                 fireballFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, 0, 0);
@@ -211,6 +248,8 @@ namespace HollowPoint
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = CheckIfRightAngle(180 + recoilVal - FireAtDiagonal());
             }
+
+            //Destroy(fireball, 0.25f);
         }
 
         public float FireAtDiagonal()
@@ -309,17 +348,6 @@ namespace HollowPoint
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
             go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
             fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
-        }
-
-        //When a bullet hits an enemy
-        public void OnCollisionEnter(Collision collision)
-        {
-            Log("BULLET COLLIDER REACHED NORMAL EDITION");
-        }
-
-        public void OnCollisionEnter2D(Collision2D col)
-        {
-            Log("BULLET COLLIDER REACHED 2D EDITION");
         }
 
         //MISC
