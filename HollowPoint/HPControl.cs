@@ -24,11 +24,9 @@ namespace HollowPoint
         private GameObject gunSpriteGO;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;
-        private GunSpriteRenderer gunSpriteControl;
         private readonly System.Random recoilNum = new System.Random();
         private float recoilVal;
         private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.81f, -0.0001f);
-
 
         AttackDirection ad;
 
@@ -43,7 +41,7 @@ namespace HollowPoint
             ModHooks.Instance.ObjectPoolSpawnHook += BooletSize;
             ModHooks.Instance.AttackHook += Attack_Hook;
             On.NailSlash.StartSlash += Start_Slash;
-            On.HealthManager.Hit += spellDam;
+            //On.HealthManager.Hit += spellDam;
 
             StartCoroutine(InitializationCoroutine());
         }
@@ -57,11 +55,12 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null || HeroController.instance.spellControl == null);
-            
+
             gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.81f, -0.0001f);
             gunSpriteGO.SetActive(true);
+
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
         }
 
@@ -69,7 +68,7 @@ namespace HollowPoint
         //Give the weapon a shake when moving
         public void Update()
         {
-
+            //Hat control
             if (HeroController.instance.cState.wallSliding || (HeroController.instance.cState.superDashOnWall))
             {
                 gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(-0.2f, 0.1f, 0f);
@@ -147,72 +146,14 @@ namespace HollowPoint
 
         public void Start_Slash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
-            if ((ad != AttackDirection.downward && !AmmunitionControl.reloading) && !AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
-            {
-                //This coroutine starts a loop that will continue until the fireball object is instantiated, once it is it can then alter the fireball fsm if needed
-                StartCoroutine(CheckIfNull(HeroController.instance.cState.facingRight));
-                AmmunitionControl.firing = true;
-                if (AmmunitionControl.currAmmoType.AmmoName.Contains("9mm"))
-                {
-                    StartCoroutine(BurstFire(5));
-                }
-                else if (AmmunitionControl.currAmmoType.AmmoName.Contains("5.56"))
-                {
-                    StartCoroutine(BurstFire(3));
-                }
-                else if (AmmunitionControl.currAmmoType.AmmoName.Contains("Gauge"))
-                {
-                    StartCoroutine(ShotgunFire(5));
-                }
-                else
-                {
-                    PlaySound(); 
-                    AmmunitionControl.currAmmoType.CurrAmmo--;
-                    AmmunitionControl.firing = false;
-                    Schutz(ad);
-                }
-
-                if (AmmunitionControl.currAmmoType.CurrAmmo <= 0)
-                {
-                    Modding.Logger.Log("START RELOADING NOW");
-                    AmmunitionControl.reloading = true;
-                }
-            }
-            else
-            {
-                orig(self);
-            }
-        }
-
-        public IEnumerator BurstFire(int x)
-        {
-            for(int i = x; i > 0 && AmmunitionControl.currAmmoType.CurrAmmo > 0; i--)
-            {
-                Schutz(ad);
-                PlaySound();
-                AmmunitionControl.currAmmoType.CurrAmmo--;
-                yield return new WaitForSeconds(0.10f);
-            }
-
-            AmmunitionControl.firing = false;
-            yield return null;
-        }
-
-        public IEnumerator ShotgunFire(int x)
-        {
             PlaySound();
-            for (int i = x; i > 0; i--)
-            {
-                Schutz(ad);
-            }
-            AmmunitionControl.firing = false;
-            AmmunitionControl.currAmmoType.CurrAmmo--;
-            yield return null;
+            AmmunitionControl.gunHeat += 5;
+            Schutz(ad);
         }
 
         public void PlaySound()
         {
-            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX[AmmunitionControl.currAmmoIndex - 1]);
+            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.bulletSoundFX);
         }
 
         public void Schutz(AttackDirection aDir)
@@ -224,7 +165,7 @@ namespace HollowPoint
 
             fireballFSM = fireball.LocateMyFSM("Fireball Cast");
 
-            fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = AmmunitionControl.currAmmoType.BulletVelocity;
+            fireballFSM.FsmVariables.GetFsmFloat("Fire Speed").Value = 40;
 
             // Destroy the old camera shake actions and replace with a simple small shake.
             /*
@@ -249,7 +190,7 @@ namespace HollowPoint
 
                 //Deviation/Recoil
                 RecoilIncrease();
-                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
+                recoilVal = recoilNum.Next(0, 0);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal + FireAtDiagonal()));
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = CheckIfRightAngle(0 + recoilVal + FireAtDiagonal());
             }
@@ -263,7 +204,7 @@ namespace HollowPoint
 
                 //Deviation/Recoil
                 RecoilIncrease();
-                recoilVal = recoilNum.Next(-AmmunitionControl.currAmmoType.CurrRecoilDeviation, AmmunitionControl.currAmmoType.CurrRecoilDeviation);
+                recoilVal = recoilNum.Next(0,0);
                 fireball.transform.Rotate(new Vector3(0, 0, recoilVal - FireAtDiagonal()));
                 fireballFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = CheckIfRightAngle(180 + recoilVal - FireAtDiagonal());
             }
@@ -293,6 +234,7 @@ namespace HollowPoint
 
         public void RecoilIncrease()
         {
+            /*
             if(AmmunitionControl.currAmmoType.MaxDegreeDeviation <= AmmunitionControl.currAmmoType.CurrRecoilDeviation)
             {
                 return;
@@ -315,6 +257,7 @@ namespace HollowPoint
             {
                 AmmunitionControl.currAmmoType.CurrRecoilDeviation += 2;
             }
+            */
         }
 
         public float CheckIfRightAngle(float rv)
@@ -363,10 +306,10 @@ namespace HollowPoint
         public IEnumerator ShrinkBooletSize(GameObject go)
         {
             yield return new WaitForEndOfFrame();
-            go.GetComponent<Transform>().localScale = AmmunitionControl.currAmmoType.BulletSize;
+            go.GetComponent<Transform>().localScale = new Vector3(0.30f, 0.30f, 0.30f);
             go.LocateMyFSM("Fireball Control").GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
-            go.name = "bullet" + AmmunitionControl.currAmmoType.AmmoName;
-            fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
+            go.name = "bullet";
+            //fireball.GetOrAddComponent<BulletBehavior>().bulletType = AmmunitionControl.currAmmoType;
         }
 
         //MISC

@@ -31,45 +31,13 @@ namespace HollowPoint
             caliber.color = new Color(0.420f, 0.420f, 0.420f, 1f);
             caliber.text = "";
 
-            ammo = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-560, 775), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
-            ammo.color = new Color(0.420f, 0.420f, 0.420f, 1f);
-            ammo.text = "";
-
-            magazine = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-560, 745), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
-            magazine.color = new Color(0.420f, 0.420f, 0.420f, 1f);
-            magazine.text = "";
-            Modding.Logger.Log("[HOLLOW POINT] HPUI.cs sucessfully initialized!");
         }
 
 
         public void OnGUI()
         {
             //Current CALIBER
-            caliber.text = "CAL:  " + AmmunitionControl.currAmmoType.AmmoName;
-
-            //Current AMMO
-            if (AmmunitionControl.reloading)
-            {
-                ammo.text = "AMM: RELOADING " + AmmunitionControl.reloadPercent + "%"; 
-            }
-            else if(AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
-            {
-                ammo.text = "AMM: N/A";
-            }
-            else
-            {
-                ammo.text = "AMM: " + AmmunitionControl.currAmmoType.CurrAmmo;
-            }
-
-            //Current MAGAZINES
-            if (AmmunitionControl.currAmmoType.AmmoName.Contains("Nail"))
-            {
-                magazine.text = "MAG: N/A"; //+ bulletIcon; 
-            }
-            else
-            {
-                magazine.text = "MAG: " + new String('|', AmmunitionControl.currAmmoType.CurrMag);
-            }
+            caliber.text = "HEAT: " + AmmunitionControl.gunHeat + " %";
         }
 
         public void OnDestroy()

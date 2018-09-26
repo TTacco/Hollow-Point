@@ -84,21 +84,13 @@
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\1_pistol.wav" />
-    <EmbeddedResource Include="assets\2_submachine.wav" />
-    <EmbeddedResource Include="assets\3_shotgun.wav" />
     <EmbeddedResource Include="assets\4_assault.wav" />
-    <EmbeddedResource Include="assets\5_sniper.wav" />
     <EmbeddedResource Include="assets\call_air_support_end.wav" />
     <EmbeddedResource Include="assets\call_air_support_1.wav" />
     <EmbeddedResource Include="assets\call_air_support_2.wav" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\wep1pistol.png" />
-    <EmbeddedResource Include="assets\wep2smg.png" />
-    <EmbeddedResource Include="assets\wep3shotgun.png" />
-    <EmbeddedResource Include="assets\wep4assault.png" />
-    <EmbeddedResource Include="assets\wep5sniper.png" />
+    <Content Include="assets\AssaultRifle.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
