@@ -29,6 +29,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<AmmunitionControl>();
             GameManager.instance.gameObject.AddComponent<SpellControl>();
             GameManager.instance.gameObject.AddComponent<CharmControl>();
+            GameManager.instance.gameObject.AddComponent<BulletObject>();
         }
 
         private static void SaveGame(SaveGameData sgd)

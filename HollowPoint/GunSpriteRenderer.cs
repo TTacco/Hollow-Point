@@ -22,12 +22,6 @@ namespace HollowPoint
             gunRenderer.enabled = true;
         }
 
-        public static void switchGuns(int gunNumber)
-        {
-
-        }
-
-
         public void OnDestroy()
         {
             Destroy(gunRenderer);

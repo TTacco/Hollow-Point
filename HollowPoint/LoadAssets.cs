@@ -10,6 +10,7 @@ namespace HollowPoint
         public static AudioClip[] airStrikeSoundFX = new AudioClip[3];
 
         public static Texture2D gunSprite;
+        public static Texture2D bulletSprite;
         public static void LoadBulletSounds()
         {
             int bulletCount = 0;
@@ -43,9 +44,18 @@ namespace HollowPoint
                         s.Read(buffer, 0, buffer.Length);
                         s.Dispose();
                         //Create texture from bytes 
-                        gunSprite = new Texture2D(1, 1);
-                        gunSprite.LoadImage(buffer);
-                        gunSprite.Apply();
+                        if (res.Contains("bullet"))
+                        {
+                            bulletSprite = new Texture2D(1, 1);
+                            bulletSprite.LoadImage(buffer);
+                            bulletSprite.Apply();
+                        }
+                        else
+                        {
+                            gunSprite = new Texture2D(1, 1);
+                            gunSprite.LoadImage(buffer);
+                            gunSprite.Apply();
+                        }
                         Modding.Logger.Log("[HOLLOW POINT] Created sprite from embedded image: " + res);
                     }
                 }

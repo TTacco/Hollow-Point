@@ -72,6 +72,7 @@
     <Compile Include="Ammunition.cs" />
     <Compile Include="AmmunitionControl.cs" />
     <Compile Include="BulletBehavior.cs" />
+    <Compile Include="BulletObject.cs" />
     <Compile Include="CharmControl.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="GunSpriteRenderer.cs" />
@@ -90,7 +91,10 @@
     <EmbeddedResource Include="assets\call_air_support_2.wav" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="assets\AssaultRifle.png" />
+    <EmbeddedResource Include="assets\bullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\AssaultRifleAlter.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

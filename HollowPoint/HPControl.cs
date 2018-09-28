@@ -22,11 +22,15 @@ namespace HollowPoint
     {
         private GameObject fireball;
         private GameObject gunSpriteGO;
+        private GameObject bulletGO;
         private PlayMakerFSM fireballFSM;
         private PlayMakerFSM fireballControlFSM;
         private readonly System.Random recoilNum = new System.Random();
+        private readonly System.Random shakeNum = new System.Random();
         private float recoilVal;
         private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.81f, -0.0001f);
+
+        float recoiler = 0;
 
         AttackDirection ad;
 
@@ -58,54 +62,42 @@ namespace HollowPoint
 
             gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
-            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.81f, -0.0001f);
+            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.85f, -0.0001f);
             gunSpriteGO.SetActive(true);
 
             Modding.Logger.Log("[HOLLOW POINT] HPControl.cs sucessfully initialized!");
+
         }
 
         #region Temporary Weapon Rotation
         //Give the weapon a shake when moving
         public void Update()
         {
-            //Hat control
-            if (HeroController.instance.cState.wallSliding || (HeroController.instance.cState.superDashOnWall))
-            {
-                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(-0.2f, 0.1f, 0f);
-                return;
-            }
-            if (HeroController.instance.cState.superDashing)
-            {
-                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.4f, 0f);
-                return;
-            }
 
-            if (AmmunitionControl.firing)
+            /*
+            if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
             {
-                gunSpriteGO.transform.SetRotationZ(0);
-                gunSpriteGO.transform.localPosition = defaultWeaponPos;
+                gunSpriteGO.transform.localPosition = defaultWeaponPos + UnityEngine.Random.insideUnitSphere;
             }
-            else if (AmmunitionControl.reloading)
+            */
+            
+
+            if (AmmunitionControl.gunHeatBreak)
             {
-                gunSpriteGO.transform.SetRotationZ(45);
-                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
+                gunSpriteGO.transform.SetRotationZ(-23); // 23
+                gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.84f, 0.0001f);
+                if (HeroController.instance.hero_state == ActorStates.running)
+                {
+                    gunSpriteGO.transform.SetRotationZ(-12);
+                }
             }
-            else if (HeroController.instance.hero_state == ActorStates.running)
-            {
-                gunSpriteGO.transform.SetRotationZ(15);
-                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
-            }
-            else if (HeroController.instance.hero_state == ActorStates.airborne)
-            {
-                gunSpriteGO.transform.SetRotationZ(20);
-                gunSpriteGO.transform.localPosition = defaultWeaponPos - new Vector3(0f, 0.1f, 0f);
-            }
+            /*
             else
             {
                 gunSpriteGO.transform.SetRotationZ(0);
-                gunSpriteGO.transform.localPosition = defaultWeaponPos;
+                gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.81f, -0.0001f);
             }
-
+            */
 
         }
         #endregion 
@@ -146,10 +138,47 @@ namespace HollowPoint
 
         public void Start_Slash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
-            PlaySound();
-            AmmunitionControl.gunHeat += 5;
-            Schutz(ad);
+            if (!AmmunitionControl.gunHeatBreak)
+            {
+                recoiler = 0;
+                AmmunitionControl.firing = true;
+                AmmunitionControl.gunHeat += 20;
+                StartCoroutine(GunRecoil());
+                PlaySound();
+                //Schutz(ad);
+            }
+            else
+            {
+                orig(self);
+            }
         }
+
+        IEnumerator GunRecoil()
+        {
+            recoiler = -0.53f;
+
+
+            //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0.07f, 0.10f, -0.0000001f);
+
+            do
+            {
+                recoiler -= 0.01f;
+                gunSpriteGO.transform.localPosition = new Vector3(0f, recoiler, -0.0001f);
+                gunSpriteGO.transform.SetRotationZ(shakeNum.Next(-1, 14));
+                Log(recoiler + "");
+                yield return new WaitForEndOfFrame();
+            }
+            while (recoiler > -0.84);
+
+            //-0.2f, -0.85f, -0.0001f
+            recoiler = 0;
+            gunSpriteGO.transform.localPosition = defaultWeaponPos;
+            gunSpriteGO.transform.SetRotationZ(0);
+            Log("Finished routine");
+
+           yield return null;
+        }
+
 
         public void PlaySound()
         {
