@@ -12,7 +12,13 @@ namespace HollowPoint
 
         public static float gunHeat = 0;
         public static bool gunHeatBreak = false;
-        private float heatTimer;      
+        public static float lowerGunTimer;
+        private float heatTimer;
+
+        public static bool gunIsActive = true;
+        bool swapWeaponStart = false;
+        float swapWeaponTimer = 0f;
+        int tapDown;
 
         public void Start()
         {
@@ -66,6 +72,46 @@ namespace HollowPoint
             if(gunHeatBreak && gunHeat <= 0)
             {
                 gunHeatBreak = false;
+                GunSpriteController.DefaultWeaponPos();
+            }
+
+
+            if ((InputHandler.Instance.inputActions.down.WasPressed))
+            {
+                tapDown++;
+            }
+
+            if ((tapDown == 1) && !swapWeaponStart)
+            {
+                swapWeaponTimer = 0.4f;
+                swapWeaponStart = true;
+            }
+            else if (swapWeaponStart)
+            {
+                swapWeaponTimer -= Time.deltaTime;
+
+                if (swapWeaponTimer < 0)
+                {
+                    swapWeaponStart = false;
+                    tapDown = 0;
+                }
+            }
+
+            if (tapDown >= 2)
+            {
+                if (gunIsActive)
+                {
+                    gunIsActive = false;
+                }
+                else
+                {
+                    gunIsActive = true;
+                    GunSpriteController.DefaultWeaponPos();
+                }
+
+                tapDown = 0;
+                swapWeaponTimer = 0;
+                swapWeaponStart = false;
             }
 
         }

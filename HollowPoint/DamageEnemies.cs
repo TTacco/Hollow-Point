@@ -8,7 +8,7 @@ namespace HollowPoint
     public static class DamageEnemies
     {
         // This function does damage to the enemy using the damage numbers given by the weapon type
-        public static void hitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
+        public static void HitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
         {
             int realDamage = expectedDamage;
 
@@ -65,11 +65,13 @@ namespace HollowPoint
 
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
 
+
                 if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
                     targetHP.GetComponent<Recoil>().RecoilByDirection(cardinalDirection, hitInstance.MagnitudeMultiplier);
 
                 FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
                 FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
+
 
             }
             catch (Exception e)

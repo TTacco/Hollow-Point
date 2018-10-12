@@ -11,6 +11,9 @@ namespace HollowPoint
 
         public static Texture2D gunSprite;
         public static Texture2D bulletSprite;
+        public static Texture2D flash;
+        public static Texture2D muzzleFlash;
+
         public static void LoadBulletSounds()
         {
             int bulletCount = 0;
@@ -50,11 +53,23 @@ namespace HollowPoint
                             bulletSprite.LoadImage(buffer);
                             bulletSprite.Apply();
                         }
-                        else
+                        else if(res.Contains("Rifle"))
                         {
                             gunSprite = new Texture2D(1, 1);
                             gunSprite.LoadImage(buffer);
                             gunSprite.Apply();
+                        }
+                        else if (res.Contains("glow"))
+                        {
+                            flash = new Texture2D(1, 1);
+                            flash.LoadImage(buffer);
+                            flash.Apply();
+                        }
+                        else if (res.Contains("muzzleflash"))
+                        {
+                            muzzleFlash = new Texture2D(1, 1);
+                            muzzleFlash.LoadImage(buffer);
+                            muzzleFlash.Apply();
                         }
                         Modding.Logger.Log("[HOLLOW POINT] Created sprite from embedded image: " + res);
                     }
