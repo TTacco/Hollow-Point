@@ -45,94 +45,84 @@ namespace HollowPoint
              * Mostly code copied from the healthmanager class itself.
              */
 
-            try
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
+            GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
+            if (sendHitGO != null)
             {
-                int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-                GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
-                if (sendHitGO != null)
-                {
-                    FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-                }
-
-                GameObject fireballHitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
-                Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-
-                if (fireballHitPrefab != null && effectOrigin != null)
-                {
-                    fireballHitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-                }
-
-                FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
-
-
-                if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
-                    targetHP.GetComponent<Recoil>().RecoilByDirection(cardinalDirection, hitInstance.MagnitudeMultiplier);
-
-                FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
-                FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
-
-
             }
-            catch (Exception e)
+
+            //GameObject fireballHitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
+            //Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+
+            //if (fireballHitPrefab != null && effectOrigin != null)
+            //{
+            //    fireballHitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+            //}
+
+
+            GameObject HitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
+            Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+
+            if (HitPrefab != null && effectOrigin != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 50~ " + e);
+                HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
+
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
+
+
+            //if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
+            //    targetHP.GetComponent<Recoil>().RecoilByDirection(cardinalDirection, hitInstance.MagnitudeMultiplier);
+
+            FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
+            FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
 
             // Actually do damage to target.
+
+
             try
             {
-                if (targetHP.damageOverride)
-                {
-                    targetHP.hp -= 1;
-                }
-                else
-                {
-                    targetHP.hp -= realDamage;
-                    HeroController.instance.AddMPCharge(soulGain);
-                }
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.AudioDictionary["enemyhurt"]);
             }
-            catch (Exception e)
+            catch(Exception e)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 80~ at the Actually Do Damage section " + e);
+                Modding.Logger.Log("Enemy Hurt Exception Thrown " + e);
+            }
+
+            if (targetHP.damageOverride)
+            {
+                targetHP.hp -= 1;
+            }
+            else
+            {
+                targetHP.hp -= realDamage;
+                HeroController.instance.AddMPCharge(soulGain);
             }
 
             // Trigger Kill animation
-            try
+            if (targetHP.hp <= 0f)
             {
-                if (targetHP.hp <= 0f)
-                {
-                    targetHP.Die(0f, AttackTypes.Nail, true);
-                    return;
-                }
-
-
-                bool? hasAlternateHitAnimation = targetHP.GetAttr<bool?>("hasAlternateHitAnimation");
-                string alternateHitAnimation = targetHP.GetAttr<string>("alternateHitAnimation");
-                if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
-                {
-                    targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
-                }
-
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 100~ at the Trigger Kill Animation section" + e);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.AudioDictionary["enemydead"]);
+                targetHP.Die(0f, AttackTypes.Spell, true);
+                return;
             }
 
 
-            try
+            bool? hasAlternateHitAnimation = targetHP.GetAttr<bool?>("hasAlternateHitAnimation");
+            string alternateHitAnimation = targetHP.GetAttr<string>("alternateHitAnimation");
+            if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
             {
-                PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component =>
-                    component.FsmName == "Stun Control" || component.FsmName == "Stun");
-                if (stunControlFSM != null)
-                {
-                    stunControlFSM.SendEvent("STUN DAMAGE");
-                }
+                targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
             }
-            catch (Exception e)
+
+
+            PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component =>
+                component.FsmName == "Stun Control" || component.FsmName == "Stun");
+            if (stunControlFSM != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 120~ at the Stun Damage" + e);
+                stunControlFSM.SendEvent("STUN DAMAGE");
             }
 
             /*
@@ -140,41 +130,27 @@ namespace HollowPoint
              */
             //GameManager.instance.FreezeMoment(1);
             //GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-
-            try{
-                SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
-                if (f != null)
-                {
-                    f.flashWhiteQuick();
-                }
-            }
-            catch (Exception e)
+            SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
+            if (f != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 140~ at the flash quick" + e);
+                f.flashWhiteQuick();
             }
 
         }
 
         private static HealthManager getHealthManagerRecursive(GameObject target)
         {
-                HealthManager targetHP = target.GetComponent<HealthManager>();
-            try
+            HealthManager targetHP = target.GetComponent<HealthManager>();
+            int i = 6;
+            while (targetHP == null && i > 0)
             {
-                int i = 6;
-                while (targetHP == null && i > 0)
+                targetHP = target.GetComponent<HealthManager>();
+                if (target.transform.parent == null)
                 {
-                    targetHP = target.GetComponent<HealthManager>();
-                    if (target.transform.parent == null)
-                    {
-                        return targetHP;
-                    }
-                    target = target.transform.parent.gameObject;
-                    i--;
+                    return targetHP;
                 }
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 150~ at the getHealthManagerRecursive" + e);
+                target = target.transform.parent.gameObject;
+                i--;
             }
 
             return targetHP;

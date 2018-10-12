@@ -104,5 +104,11 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\rifle_fire_1.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemyhurt1.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemydead1.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

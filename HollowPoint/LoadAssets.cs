@@ -1,5 +1,6 @@
 using System.IO;
 using System.Reflection;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace HollowPoint
@@ -14,6 +15,8 @@ namespace HollowPoint
         public static Texture2D flash;
         public static Texture2D muzzleFlash;
 
+        public static Dictionary<string, AudioClip> AudioDictionary = new Dictionary<string, AudioClip>();
+
         public static void LoadBulletSounds()
         {
             int bulletCount = 0;
@@ -22,7 +25,7 @@ namespace HollowPoint
             {
                 if (res.EndsWith(".wav"))
                 {
-                    Modding.Logger.Log("[HOLLOW POINT] Found sound effect! Saving it.");
+                    Modding.Logger.Log("[HOLLOW POINT] Found sound effect! Saving it. [NAME]: " + res);
                     Stream audioStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(res);
                     if(audioStream != null && res.Contains("support"))
                     {
@@ -30,6 +33,20 @@ namespace HollowPoint
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
                         airStrikeSoundFX[airsupportCount++] = WavUtility.ToAudioClip(buffer);
+                    }
+                    else if (audioStream != null && res.Contains("enemyhurt"))
+                    {
+                        byte[] buffer = new byte[audioStream.Length];
+                        audioStream.Read(buffer, 0, buffer.Length);
+                        audioStream.Dispose();                      
+                        AudioDictionary.Add("enemyhurt", WavUtility.ToAudioClip(buffer));
+                    }
+                    else if (audioStream != null && res.Contains("enemydead"))
+                    {
+                        byte[] buffer = new byte[audioStream.Length];
+                        audioStream.Read(buffer, 0, buffer.Length);
+                        audioStream.Dispose();
+                        AudioDictionary.Add("enemydead", WavUtility.ToAudioClip(buffer));
                     }
                     else if (audioStream != null)
                     {
