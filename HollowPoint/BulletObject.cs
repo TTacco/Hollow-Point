@@ -36,8 +36,9 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
 
-            bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(BulletOnHit),
-            typeof(DamageEnemies));
+            bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(BulletOnHit));
+
+            //
             bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(LoadAssets.bulletSprite,
                 new Rect(0, 0, LoadAssets.bulletSprite.width, LoadAssets.bulletSprite.height),
                 new Vector2(0.5f, 0.5f), 22);
@@ -70,26 +71,39 @@ namespace HollowPoint
             GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
 
             //HeroController.instance.spellControl.gameObject.transform.position
-            GameObject bulletClone = Instantiate(bulletPrefab, GunSpriteController.gunSpriteGO.transform.position + new Vector3(0.1f * Direction(), 0, -1), new Quaternion(0, ObjectSpriteRotation(), 0, 0));
+            GameObject bulletClone = Instantiate(bulletPrefab, GunSpriteController.gunSpriteGO.transform.position + new Vector3(0.01f * DirectionX(), 0, -1), new Quaternion(0, ObjectSpriteRotation(), 0, 0));
             Rigidbody2D rd = bulletClone.GetComponent<Rigidbody2D>();
 
-            rd.velocity = new Vector2(Direction() * XVelocity(), YVelocity());
+
+            rd.velocity = new Vector2(DirectionX() * XVelocity(), DirectionY() * YVelocity());
+            Log("Returns " + DirectionY());
+
 
             //Set bullet sprite rotation, so it looks normal when fired diagonally or upwards
-            bulletClone.transform.Rotate(new Vector3(0, 0, SpriteRotation()));
+            bulletClone.transform.Rotate(new Vector3(0, 0, DirectionY() * SpriteRotation()));
 
             //Destroys the fucking object after 1.5f what else do you expect?
             Destroy(bulletClone, 1.5f);
         }
 
         //Returns on what direction the object should be going, -1 will inverse it, which is where the player would look at this left
-        static int Direction()
+        static int DirectionX()
         {
             if (HeroController.instance.cState.facingRight)
             {
                 return 1;
             }
             else if (!HeroController.instance.cState.facingRight)
+            {
+                return -1;
+            }
+
+            return 1;
+        }
+
+        static int DirectionY()
+        {
+            if (InputHandler.Instance.inputActions.down.IsPressed)
             {
                 return -1;
             }
@@ -112,15 +126,15 @@ namespace HollowPoint
             return 0;
         }
 
-        //Changes on the sprite rotation on the go, for firing diagonally
+        //Changes on the sprite rotation on the bullet, for firing diagonally
         static float SpriteRotation()
         {
-            if (InputHandler.Instance.inputActions.up.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            if ((InputHandler.Instance.inputActions.up.IsPressed || InputHandler.Instance.inputActions.down.IsPressed) && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
             {
                 return 90;
             }
 
-            if (InputHandler.Instance.inputActions.up.IsPressed)
+            if (InputHandler.Instance.inputActions.up.IsPressed || InputHandler.Instance.inputActions.down.IsPressed)
             {
                 if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
                 {
@@ -128,8 +142,11 @@ namespace HollowPoint
                 }
             }
 
+
             return 0;
         }
+
+        #region BulletDirection
 
         static float YVelocity()
         {
@@ -137,7 +154,7 @@ namespace HollowPoint
             {
                 return 45;
             }
-            else if (InputHandler.Instance.inputActions.up.IsPressed)
+            else if (InputHandler.Instance.inputActions.up.IsPressed || InputHandler.Instance.inputActions.down.IsPressed)
             {
                 return 45;
             }
@@ -147,7 +164,8 @@ namespace HollowPoint
 
         static float XVelocity()
         {
-            if (InputHandler.Instance.inputActions.up.IsPressed && !((InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))) 
+            //If the player is holding up or down ONLY, do not give X velocity so the bullet will only go straight up or down
+            if ((InputHandler.Instance.inputActions.up.IsPressed || InputHandler.Instance.inputActions.down.IsPressed) && !((InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))) 
             {
                 return 0;
             }
@@ -156,6 +174,8 @@ namespace HollowPoint
                 return 45;
             }
         }
+
+        #endregion
 
         class BulletOnHit : MonoBehaviour
         {

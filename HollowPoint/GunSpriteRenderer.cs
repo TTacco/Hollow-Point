@@ -50,6 +50,8 @@ namespace HollowPoint
             muzzleFlashGO.transform.parent = gunSpriteGO.transform;
             muzzleFlashGO.transform.localPosition = new Vector3(-1.9f, 0, -2f);
             muzzleFlashGO.SetActive(false);
+
+            StartCoroutine(StartFlash());
         }
 
         public void Update()
@@ -74,7 +76,7 @@ namespace HollowPoint
 
         void SprintWeaponShake()
         {
-            //If the player fires, make it so that they put the gun at a straight angle, otherwise make it lower them
+            //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             if (AmmunitionControl.firing)
             {
                 AmmunitionControl.lowerGunTimer -= Time.deltaTime;
@@ -102,9 +104,11 @@ namespace HollowPoint
             {
                 gunSpriteGO.transform.SetRotationZ(-23); // 23
                 gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.84f, 0.0001f);
+               // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f);
+
                 if (HeroController.instance.hero_state == ActorStates.running)
                 {
-                    gunSpriteGO.transform.SetRotationZ(-12);
+                    gunSpriteGO.transform.SetRotationZ(-17);
                 }
             }
         }
@@ -135,7 +139,6 @@ namespace HollowPoint
             {
                 recoiler -= 0.01f;
                 gunSpriteGO.transform.localPosition = new Vector3(0f, recoiler, -0.0001f);
-                //Log(recoiler + "");
                 yield return new WaitForEndOfFrame();
             }
             while (recoiler > -0.84);

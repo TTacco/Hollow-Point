@@ -2,11 +2,13 @@ using System.Linq;
 using ModCommon.Util;
 using UnityEngine;
 using System;
+using System.Collections;
 
 namespace HollowPoint
 {
     public static class DamageEnemies
     {
+        static System.Random soundRandom = new System.Random();
         // This function does damage to the enemy using the damage numbers given by the weapon type
         public static void HitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
         {
@@ -84,7 +86,7 @@ namespace HollowPoint
 
             try
             {
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.AudioDictionary["enemyhurt"]);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0,2)]);
             }
             catch(Exception e)
             {
@@ -104,7 +106,7 @@ namespace HollowPoint
             // Trigger Kill animation
             if (targetHP.hp <= 0f)
             {
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.AudioDictionary["enemydead"]);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyDeadSFX[soundRandom.Next(0, 2)]);
                 targetHP.Die(0f, AttackTypes.Spell, true);
                 return;
             }

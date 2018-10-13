@@ -9,6 +9,8 @@ namespace HollowPoint
     {
         public static AudioClip bulletSoundFX;
         public static AudioClip[] airStrikeSoundFX = new AudioClip[3];
+        public static AudioClip[] enemyHurtSFX = new AudioClip[3];
+        public static AudioClip[] enemyDeadSFX = new AudioClip[3];
 
         public static Texture2D gunSprite;
         public static Texture2D bulletSprite;
@@ -19,8 +21,10 @@ namespace HollowPoint
 
         public static void LoadBulletSounds()
         {
-            int bulletCount = 0;
+            int enemyHurtCount = 0;
             int airsupportCount = 0;
+            int enemyDeadCount = 0;
+
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {
                 if (res.EndsWith(".wav"))
@@ -33,20 +37,21 @@ namespace HollowPoint
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
                         airStrikeSoundFX[airsupportCount++] = WavUtility.ToAudioClip(buffer);
+                        
                     }
                     else if (audioStream != null && res.Contains("enemyhurt"))
                     {
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
-                        audioStream.Dispose();                      
-                        AudioDictionary.Add("enemyhurt", WavUtility.ToAudioClip(buffer));
+                        audioStream.Dispose();
+                        enemyHurtSFX[enemyHurtCount++] = WavUtility.ToAudioClip(buffer);
                     }
                     else if (audioStream != null && res.Contains("enemydead"))
                     {
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
-                        AudioDictionary.Add("enemydead", WavUtility.ToAudioClip(buffer));
+                        enemyDeadSFX[enemyDeadCount++] = WavUtility.ToAudioClip(buffer);
                     }
                     else if (audioStream != null)
                     {
