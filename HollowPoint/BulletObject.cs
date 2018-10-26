@@ -36,7 +36,7 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
 
-            bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(BulletOnHit));
+            bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(BulletBehavior));
 
             //
             bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(LoadAssets.bulletSprite,
@@ -51,7 +51,7 @@ namespace HollowPoint
             //Collider Changes
             bulletPrefab.GetComponent<BoxCollider2D>().enabled = true;
             bulletPrefab.GetComponent<BoxCollider2D>().isTrigger = true;
-            bulletPrefab.GetComponent<BoxCollider2D>().size = bulletPrefab.GetComponent<SpriteRenderer>().size - new Vector2(0f, 0f);
+            bulletPrefab.GetComponent<BoxCollider2D>().size = bulletPrefab.GetComponent<SpriteRenderer>().size - new Vector2(0.15f, 0.15f);
 
             Log(bulletPrefab.GetComponent<SpriteRenderer>().size);
             bulletPrefab.GetComponent<BoxCollider2D>().offset = new Vector2(0, 0);
@@ -179,75 +179,94 @@ namespace HollowPoint
 
         class BulletOnHit : MonoBehaviour
         {
-            HealthManager hm;
+            //HealthManager hm;
 
-            private HitInstance damage = new HitInstance
-            {
-                AttackType = AttackTypes.NailBeam,
-                DamageDealt = 3,
-                Multiplier = 1,
-                IgnoreInvulnerable = true,
+            //private HitInstance damage = new HitInstance
+            //{
+            //    AttackType = AttackTypes.NailBeam,
+            //    DamageDealt = 3,
+            //    Multiplier = 1,
+            //    IgnoreInvulnerable = true,
 
-                CircleDirection = false,
-                IsExtraDamage = false,
-                Direction = 1,
-                MoveAngle = 1,
-                MoveDirection = false,
-                MagnitudeMultiplier = 1,
-                SpecialType = SpecialTypes.None,
+            //    //CircleDirection = false,
+            //    //IsExtraDamage = false,
+            //    //Direction = 1,
+            //    //MoveAngle = 1,
+            //    //MoveDirection = false,
+            //    //MagnitudeMultiplier = 1,
+            //    //SpecialType = SpecialTypes.None,
 
-            };
+            //};
 
-            public void Start()
-            {
-                On.HealthManager.Hit += BulletDamage;
-            }
+            //public void Start()
+            //{
+            //    On.HealthManager.Hit += BulletDamage;
+            //}
 
-            public void Update()
-            {
-            }
+            //public void Update()
+            //{
+            //}
 
-            void OnTriggerEnter2D(Collider2D col)
-            {
-                hm = col.GetComponentInChildren<HealthManager>();
-                damage.Source = gameObject;
-                if (col.gameObject.GetComponentInChildren<HealthManager>() != null)
-                {
-                    //Log("HEALTH MANAGER =  TRUE and it was " + col.name);
-                    hm.Hit(damage);
-                    Destroy(gameObject);
-                }
-                else if (col.gameObject.GetComponentInChildren<HealthManager>() == null)
-                {
-                    //=null && !col.name.Contains("Knight")
-                    //Log("HEALTH MANAGER = FALSE and it was " + col.name);
-                    //Destroy(gameObject);
-                }
-                else if (col.gameObject.GetComponent<HealthManager>() == null)
-                {
-                   // Do nothing
-                }
-            }
+            //void OnTriggerEnter2D(Collider2D col)
+            //{
+            //    hm = col.GetComponentInChildren<HealthManager>();
+            //    damage.Source = gameObject;
 
+            //    if (col.gameObject.GetComponentInChildren<HealthManager>() != null)
+            //    {
+            //        //Log("HEALTH MANAGER =  TRUE and it was " + col.name);
+            //        hm.Hit(damage);
+            //        Destroy(gameObject);
+            //        Log(col.name + " has destroyed the GO");
+            //    }
+            //    else if (!col.name.Contains("Knight") && CloseToKnight(gameObject))
+            //    {
+            //        //=null && !col.name.Contains("Knight")
+            //        //Log("HEALTH MANAGER = FALSE and it was " + col.name);
+            //        Log("GO destroyed at " + gameObject.transform.position);
+            //        Log("Player was at " + HeroController.instance.transform.position);
 
+            //        Destroy(gameObject);
+            //        Log(col.name + " has destroyed the GO");
+            //        //Log("From the Knight");
 
-            public void OnDestroy()
-            {
-                On.HealthManager.Hit -= BulletDamage;
-            }
+            //        // StartCoroutine(ParentRecursion(col));
+            //    }
+            //}
 
+            ////Returns false if the bullet is close enough to the knight, thus making sure the bullet is NOT destroyed by the Knight's own hitbox
+            //bool CloseToKnight(GameObject bulletGO)
+            //{
+            //    Vector3 tempKnightP = HeroController.instance.transform.position;
+            //    Vector3 tempBulletP = bulletGO.transform.position;
 
-            public void BulletDamage(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
-            {
-                if (hitInstance.Source.name.Contains("bullet"))
-                {
-                    DamageEnemies.HitEnemy(self, hitInstance.DamageDealt, hitInstance, 0);
-                }
-                else
-                {
-                    orig(self, hitInstance);
-                }
-            }
+            //    double distance = Math.Pow(tempKnightP.x - tempBulletP.x, 2) + Math.Pow(tempKnightP.y - tempBulletP.y, 2);
+
+            //    //Log("DISTANCE IS " + distance);
+
+            //    if (distance < 2.5)
+            //        return false;
+
+            //    return true;
+            //}
+
+            //public void BulletDamage(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
+            //{
+            //    if (hitInstance.Source.name.Contains("bullet"))
+            //    {
+            //        DamageEnemies.HitEnemy(self, hitInstance.DamageDealt, hitInstance, 0);
+            //    }
+            //    else
+            //    {
+            //        orig(self, hitInstance);
+            //    }
+            //}
+
+            //public void OnDestroy()
+            //{
+            //    On.HealthManager.Hit -= BulletDamage;
+            //}
+
         }
     }
 }

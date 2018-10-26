@@ -21,6 +21,7 @@ namespace HollowPoint
         Texture2D grenadeTexture;
         float speed;
 
+        PlayMakerFSM nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Art");
 
         public void Start()
         {
@@ -57,6 +58,13 @@ namespace HollowPoint
 
         public void FSMInitialization()
         {
+            nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
+
+            if(nailArtFSM == null)
+            {
+                Log("it is null");
+            }
+
             HeroController.instance.spellControl.InsertAction("Fireball Antic", new CallMethod
             {
                 behaviour = GameManager.instance.GetComponent<SpellControl>(),
@@ -70,6 +78,17 @@ namespace HollowPoint
             {
                 behaviour = GameManager.instance.GetComponent<SpellControl>(),
                 methodName = "RemoveScreamTransition",
+                parameters = new FsmVar[0],
+                everyFrame = false
+            }
+            , 1);
+
+
+
+            nailArtFSM.InsertAction("Flash 2", new CallMethod
+            {
+                behaviour = GameManager.instance.GetComponent<SpellControl>(),
+                methodName = "SuperShot",
                 parameters = new FsmVar[0],
                 everyFrame = false
             }
@@ -123,6 +142,32 @@ namespace HollowPoint
             Log("AirStrike has ended");
             //airStrikeInProgress = false;
         }
+
+        public void SuperShot()
+        {
+            Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
+            nailArtFSM.SetState("G Slash End");
+            StartCoroutine("BounceBack");
+        }
+
+        public IEnumerator BounceBack()
+        {
+            Log("" +HeroController.instance.RECOIL_HOR_VELOCITY_LONG);
+            HeroController.instance.RECOIL_HOR_VELOCITY_LONG = 55;
+
+            yield return new WaitForEndOfFrame();
+            // HeroController.instance.ShroomBounce();
+
+            if (HeroController.instance.cState.facingRight)
+            {
+                HeroController.instance.RecoilLeftLong();
+            }
+            else if (!HeroController.instance.cState.facingRight)
+            {
+                HeroController.instance.RecoilRightLong();
+            }
+        }
+
 
         public void Update()
         {

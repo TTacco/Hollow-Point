@@ -152,11 +152,17 @@ namespace HollowPoint
             yield return null;
         }
 
+        //returns the degree of the gun's sprite depending on what the player inputs while shooting
         static float SpriteRotation()
         {
             if (InputHandler.Instance.inputActions.up.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
             {
                 return 90;
+            }
+
+            if (InputHandler.Instance.inputActions.down.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            {
+                return-90;
             }
 
             if (InputHandler.Instance.inputActions.up.IsPressed)
@@ -166,6 +172,14 @@ namespace HollowPoint
                     return 45;
                 }
             }
+            else if(InputHandler.Instance.inputActions.down.IsPressed)
+            {
+                if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+                {
+                    return -45;
+                }
+            }
+
 
             return 0;
         }

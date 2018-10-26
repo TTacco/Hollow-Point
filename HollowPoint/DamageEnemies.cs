@@ -73,6 +73,7 @@ namespace HollowPoint
             }
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
 
 
             //if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
@@ -80,6 +81,7 @@ namespace HollowPoint
 
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
+
 
             // Actually do damage to target.
 

@@ -85,32 +85,32 @@ namespace HollowPoint
         }
 
         //Modify the damage
-        public void spellDam(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
-        {
-            if (hitInstance.AttackType == AttackTypes.Spell && hitInstance.Source.name.StartsWith("bullet"))
-            {
-                BulletBehavior b;
-                Log("Bullet impact with name " + hitInstance.Source.name);
+        //public void spellDam(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
+        //{
+        //    if (hitInstance.AttackType == AttackTypes.Spell && hitInstance.Source.name.StartsWith("bullet"))
+        //    {
+        //        BulletBehavior b;
+        //        Log("Bullet impact with name " + hitInstance.Source.name);
                 
-                b = fireball.GetComponent<BulletBehavior>();
-                /*
-                if (!b.enemyHit())
-                    return;
-                if (self.IsBlockingByDirection(
-                    DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform)),
-                    hitInstance.AttackType))
-                {
-                    orig(self, hitInstance);
-                    return;
-                }
-                */
-                DamageEnemies.HitEnemy(self, b.bulletType.Damage, hitInstance, b.bulletType.SoulGain);
-            }
-            else
-            {
-                orig(self, hitInstance);
-            }
-        }
+        //        b = fireball.GetComponent<BulletBehavior>();
+        //        /*
+        //        if (!b.enemyHit())
+        //            return;
+        //        if (self.IsBlockingByDirection(
+        //            DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform)),
+        //            hitInstance.AttackType))
+        //        {
+        //            orig(self, hitInstance);
+        //            return;
+        //        }
+        //        */
+        //        DamageEnemies.HitEnemy(self, b.bulletType.Damage, hitInstance, b.bulletType.SoulGain);
+        //    }
+        //    else
+        //    {
+        //        orig(self, hitInstance);
+        //    }
+        //}
 
         //SHOOT/FIRE METHOD
         public void Attack_Hook(AttackDirection ad)
@@ -122,6 +122,7 @@ namespace HollowPoint
         {
             if (!AmmunitionControl.gunHeatBreak && AmmunitionControl.gunIsActive)
             {
+
                 GunSpriteController.startShake = true;
                 AmmunitionControl.firing = false;
                 AmmunitionControl.firing = true;
@@ -310,7 +311,7 @@ namespace HollowPoint
             //ModHooks.Instance.ObjectPoolSpawnHook -= BooletSize;
             ModHooks.Instance.AttackHook -= Attack_Hook;
             On.NailSlash.StartSlash -= Start_Slash;
-            On.HealthManager.Hit -= spellDam;
+            //On.HealthManager.Hit -= spellDam;
             Destroy(gameObject.GetComponent<HPControl>());
             Destroy(fireball);
             Destroy(fireballFSM);
