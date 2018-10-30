@@ -90,7 +90,7 @@ namespace HollowPoint
             }
             else if (HeroController.instance.hero_state == ActorStates.running && !AmmunitionControl.firing)
             {
-                gunSpriteGO.transform.SetRotationZ(17);
+                gunSpriteGO.transform.SetRotationZ(25);
             }
             else if (!AmmunitionControl.firing)
             {
@@ -121,7 +121,6 @@ namespace HollowPoint
 
         IEnumerator StartFlash()
         {
-
             flashSpriteGO.SetActive(true);
             muzzleFlashGO.SetActive(true);
             yield return new WaitForSeconds(0.05f);
@@ -147,12 +146,12 @@ namespace HollowPoint
             recoiler = 0;
             gunSpriteGO.transform.localPosition = defaultWeaponPos;
             gunSpriteGO.transform.SetRotationZ(0);
-            //Log("Finished routine");
 
             yield return null;
         }
 
         //returns the degree of the gun's sprite depending on what the player inputs while shooting
+        //basically it just rotates the gun based on shooting direction
         static float SpriteRotation()
         {
             if (InputHandler.Instance.inputActions.up.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))

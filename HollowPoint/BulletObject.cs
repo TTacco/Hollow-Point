@@ -35,10 +35,8 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
-
+            //Prefab instantiation
             bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(BulletBehavior));
-
-            //
             bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(LoadAssets.bulletSprite,
                 new Rect(0, 0, LoadAssets.bulletSprite.width, LoadAssets.bulletSprite.height),
                 new Vector2(0.5f, 0.5f), 22);
@@ -46,7 +44,6 @@ namespace HollowPoint
             bulletPrefab.GetComponent<Rigidbody2D>().isKinematic = true;
 
             bulletPrefab.transform.localScale = new Vector3(1.2f,1.2f,0);
-
 
             //Collider Changes
             bulletPrefab.GetComponent<BoxCollider2D>().enabled = true;
@@ -86,7 +83,7 @@ namespace HollowPoint
             Destroy(bulletClone, 1.5f);
         }
 
-        //Returns on what direction the object should be going, -1 will inverse it, which is where the player would look at this left
+        //Returns on what direction the object should be going, -1 will inverse it, which is where the player would look at his left
         static int DirectionX()
         {
             if (HeroController.instance.cState.facingRight)
@@ -126,7 +123,7 @@ namespace HollowPoint
             return 0;
         }
 
-        //Changes on the sprite rotation on the bullet, for firing diagonally
+        //Changes on the sprite rotation on the bullet, for firing diagonally NOT THE GUN ITSELF (just the bullet, other wise it would look weird when travelling downwards)
         static float SpriteRotation()
         {
             if ((InputHandler.Instance.inputActions.up.IsPressed || InputHandler.Instance.inputActions.down.IsPressed) && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
@@ -267,7 +264,7 @@ namespace HollowPoint
             //    On.HealthManager.Hit -= BulletDamage;
             //}
 
-        }
+        } // Might delete now since most of it is transfered into BulletBehaviour
     }
 }
 

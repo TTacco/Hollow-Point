@@ -21,6 +21,12 @@ namespace HollowPoint
         Texture2D grenadeTexture;
         float speed;
 
+        //Fireball modification
+        GameObject fireballInstance = null;
+        PlayMakerFSM fireballInstanceFSM = null;
+        GameObject fireballControl = null;
+        PlayMakerFSM fireballControlFSM = null;
+
         PlayMakerFSM nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Art");
 
         public void Start()
@@ -88,19 +94,30 @@ namespace HollowPoint
             nailArtFSM.InsertAction("Flash 2", new CallMethod
             {
                 behaviour = GameManager.instance.GetComponent<SpellControl>(),
-                methodName = "SuperShot",
+                methodName = "GreatSlashOverride",
                 parameters = new FsmVar[0],
                 everyFrame = false
             }
             , 1);
 
+            nailArtFSM.InsertAction("Flash", new CallMethod
+            {
+                behaviour = GameManager.instance.GetComponent<SpellControl>(),
+                methodName = "CycloneSpinOverride",
+                parameters = new FsmVar[0],
+                everyFrame = false
+            }
+, 1);
+
         }
+
+        #region FIREBALL FSM CHANGES
 
         public void RemoveFireballTransition()
         {
-            Modding.Logger.Log("[Hollow Point] Tried using regular fireball");
-            HeroController.instance.spellControl.SetState("Cancel All");
-            ThrowGrenade();
+            //Modding.Logger.Log("[Hollow Point] Tried using regular fireball");
+            //HeroController.instance.spellControl.SetState("Cancel All");
+            //ThrowGrenade();
             //This should be when the knight can throw a grenade, also manually remove soul
         }
 
@@ -116,18 +133,18 @@ namespace HollowPoint
         public void RemoveScreamTransition()
         {
             //This should be when the knight can call an airstrike, also manually remove soul
-            Log("Tried calling in an airstrike");
-            CallInAirstrike();
-            HeroController.instance.spellControl.SetState("Cancel All");
+            //Log("Tried calling in an airstrike");
+            //CallInAirstrike();
+            //HeroController.instance.spellControl.SetState("Cancel All");
         }
 
         public void CallInAirstrike()
         {
             Log("CALL IN AN AIRSTRIKE");
-            airStrikeInProgress = true;
+            //airStrikeInProgress = true;
             //airStrikeBullet = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position, new Quaternion(0, 0, 0, 0));
 
-            StartCoroutine(AirStrikeOnProgress());
+            //StartCoroutine(AirStrikeOnProgress());
 
         }
 
@@ -143,31 +160,86 @@ namespace HollowPoint
             //airStrikeInProgress = false;
         }
 
+        #endregion
+
+        #region might transfer all of these in a seperate class
+
+        public void GreatSlashOverride()
+        {
+            if (AmmunitionControl.gunIsActive)
+            {
+                nailArtFSM.SetState("G Slash End");
+                AmmunitionControl.firing = true;
+                AmmunitionControl.lowerGunTimer = 0.5f;
+                AmmunitionControl.gunHeat += 30;
+                SuperShot();
+            }
+        }
+
+        public void CycloneSpinOverride()
+        {
+            if (AmmunitionControl.gunIsActive)
+            {
+                nailArtFSM.SetState("Cyclone End");
+                AmmunitionControl.firing = true;
+                AmmunitionControl.lowerGunTimer = 0.5f;
+                AmmunitionControl.gunHeat += 30;
+                SuperShot();
+            }
+        }
+
         public void SuperShot()
         {
-            Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
-            nailArtFSM.SetState("G Slash End");
-            StartCoroutine("BounceBack");
+            StartCoroutine("BoostUpward");
         }
 
-        public IEnumerator BounceBack()
+        public IEnumerator BoostUpward()
         {
-            Log("" +HeroController.instance.RECOIL_HOR_VELOCITY_LONG);
-            HeroController.instance.RECOIL_HOR_VELOCITY_LONG = 55;
+            fireballInstance = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
+            fireballInstanceFSM = fireballInstance.LocateMyFSM("Fireball Cast");
 
-            yield return new WaitForEndOfFrame();
-            // HeroController.instance.ShroomBounce();
-
-            if (HeroController.instance.cState.facingRight)
+            Log("" + HeroController.instance.transform.position);
+            if ((!InputHandler.Instance.inputActions.up.IsPressed && InputHandler.Instance.inputActions.down.IsPressed) && (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
             {
-                HeroController.instance.RecoilLeftLong();
-            }
-            else if (!HeroController.instance.cState.facingRight)
-            {
-                HeroController.instance.RecoilRightLong();
+                fireballInstance.transform.position += new Vector3(-0.8f, 0f, 0f);
+                if (HeroController.instance.cState.facingRight)
+                {
+                    fireballInstance.transform.Rotate(new Vector3(0, 0, 90.0f));
+                    fireballInstanceFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, -0.5f, 0); //HeroController.instance.transform.position + new Vector3(0, -0.3f, 0);
+                    fireballInstanceFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = -91f;
+                }
+                else if (!HeroController.instance.cState.facingRight)
+                {
+                    fireballInstance.transform.Rotate(new Vector3(0, 0, -90.0f));
+                    fireballInstanceFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, -0.5f, 0); //HeroController.instance.transform.position + new Vector3(0, -0.3f, 0);
+                    fireballInstanceFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = -89f;
+                }
+                yield return new WaitForEndOfFrame();
+                HeroController.instance.ShroomBounce();
             }
         }
 
+        public IEnumerator FireballDirectionChange()
+        {
+            do
+            {
+                yield return null;
+            }
+            while (fireballInstanceFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
+
+            fireballControlFSM = fireballInstanceFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
+            fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
+
+            yield return null;
+        }
+
+        public IEnumerator BoostHorizontal()
+        {
+            yield return null;
+        }
+
+
+        #endregion
 
         public void Update()
         {
