@@ -68,7 +68,7 @@ namespace HollowPoint
             GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
 
             //HeroController.instance.spellControl.gameObject.transform.position
-            GameObject bulletClone = Instantiate(bulletPrefab, GunSpriteController.gunSpriteGO.transform.position + new Vector3(0.01f * DirectionX(), 0, -1), new Quaternion(0, ObjectSpriteRotation(), 0, 0));
+            GameObject bulletClone = Instantiate(bulletPrefab, GunSpriteController.gunSpriteGO.transform.position + new Vector3(0.01f * DirectionX(), 0.20f, -1), new Quaternion(0, ObjectSpriteRotation(), 0, 0));
             Rigidbody2D rd = bulletClone.GetComponent<Rigidbody2D>();
 
 

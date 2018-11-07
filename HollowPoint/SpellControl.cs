@@ -32,6 +32,7 @@ namespace HollowPoint
         public void Start()
         {
             StartCoroutine(SpellInitialize());
+            On.HeroController.DoDoubleJump += DoubleJumpStarted;
         }
 
         public IEnumerator SpellInitialize()
@@ -107,7 +108,7 @@ namespace HollowPoint
                 parameters = new FsmVar[0],
                 everyFrame = false
             }
-, 1);
+            , 1);
 
         }
 
@@ -190,18 +191,30 @@ namespace HollowPoint
 
         public void SuperShot()
         {
-            StartCoroutine("BoostUpward");
+            InputHandler ih = InputHandler.Instance;
+            bool flag = (ih.inputActions.down.IsPressed || ih.inputActions.up.IsPressed);
+            if (flag)
+            {
+                StartCoroutine("BoostVertical");
+            }
+            else
+            {
+                StartCoroutine("BoostHorizontal");
+            }
         }
 
-        public IEnumerator BoostUpward()
+        //Welcome to the "I fucking hate this" section
+        public IEnumerator BoostVertical()
         {
             fireballInstance = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
             fireballInstanceFSM = fireballInstance.LocateMyFSM("Fireball Cast");
 
-            Log("" + HeroController.instance.transform.position);
-            if ((!InputHandler.Instance.inputActions.up.IsPressed && InputHandler.Instance.inputActions.down.IsPressed) && (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            //HOLY FUCK I SHOULD CLEAN THIS INTO SOMETHING THATS ACTUALLY FUCKING READABLE 
+
+            //Launches the player upwards on charge shot
+            if ((InputHandler.Instance.inputActions.down.IsPressed) || ((InputHandler.Instance.inputActions.down.IsPressed) && (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)))
             {
-                fireballInstance.transform.position += new Vector3(-0.8f, 0f, 0f);
+                //fireballInstance.transform.position += new Vector3(-0.8f, 0f, 0f);
                 if (HeroController.instance.cState.facingRight)
                 {
                     fireballInstance.transform.Rotate(new Vector3(0, 0, 90.0f));
@@ -217,33 +230,52 @@ namespace HollowPoint
                 yield return new WaitForEndOfFrame();
                 HeroController.instance.ShroomBounce();
             }
-        }
 
-        public IEnumerator FireballDirectionChange()
-        {
-            do
+            //SHOULD launch the player upwards
+            else if ((InputHandler.Instance.inputActions.up.IsPressed) || ((InputHandler.Instance.inputActions.up.IsPressed) && (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)))
             {
-                yield return null;
+                HeroController.instance.SHROOM_BOUNCE_VELOCITY = -30;
+                if (HeroController.instance.cState.facingRight)
+                {
+                    fireballInstance.transform.Rotate(new Vector3(0, 0, -90.0f));
+                    fireballInstanceFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Right", 7).position = new Vector3(0, -0.5f, 0); //HeroController.instance.transform.position + new Vector3(0, -0.3f, 0);
+                    fireballInstanceFSM.GetAction<SetVelocityAsAngle>("Cast Right", 9).angle = 91f;
+                }
+                else if (!HeroController.instance.cState.facingRight)
+                {
+                    fireballInstance.transform.Rotate(new Vector3(0, 0, 90.0f));
+                    fireballInstanceFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).position = new Vector3(0, -0.5f, 0); //HeroController.instance.transform.position + new Vector3(0, -0.3f, 0);
+                    fireballInstanceFSM.GetAction<SetVelocityAsAngle>("Cast Left", 6).angle = 89f;
+                }
+                yield return new WaitForEndOfFrame();
+                HeroController.instance.ShroomBounce();
+                HeroController.instance.SHROOM_BOUNCE_VELOCITY = 25;
             }
-            while (fireballInstanceFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control") == null);
 
-            fireballControlFSM = fireballInstanceFSM.FsmVariables.GetFsmGameObject("Fireball").Value.LocateMyFSM("Fireball Control");
-            fireballControlFSM.GetAction<SendEventByName>("Wall Impact", 2).sendEvent = "";
-
-            yield return null;
         }
+
+
 
         public IEnumerator BoostHorizontal()
         {
+            fireballInstance = Instantiate(HeroController.instance.spell1Prefab, HeroController.instance.transform.position - new Vector3(0, 0, 0), new Quaternion(0, 0, 0, 0));
+
+            Log("IMMERSE YOURSELF IN LOVE");
             yield return null;
         }
 
 
         #endregion
 
+        public void DoubleJumpStarted(On.HeroController.orig_DoDoubleJump orig, HeroController self)
+        {
+            //Log("WEARY");
+
+            orig(self);
+        }
+
         public void Update()
         {
-
         }
 
         private void Log(String s)
@@ -254,6 +286,7 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
+            On.HeroController.DoDoubleJump -= DoubleJumpStarted;
             Destroy(gameObject.GetComponent<SpellControl>());
             Destroy(grenade);
         }

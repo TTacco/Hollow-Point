@@ -15,10 +15,14 @@ namespace HollowPoint
         System.Random shakeNum = new System.Random();
         static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.81f, -0.0001f);
 
-        float recoiler;
-        public static bool startShake = false;
+        int rotationNum = 0;
 
-        bool walkWeaponShake = true;
+        float spriteRecoilHeight;
+        float spriteSprintDropdownHeight;
+
+        public static bool startShake = false;
+        bool isSprinting = false;
+        bool dropDown = false;
 
         public void Start()
         {
@@ -48,7 +52,7 @@ namespace HollowPoint
 
             muzzleFlashGO = new GameObject("HollowPointMuzzleSprite", typeof(SpriteRenderer), typeof(MuzzleSpriteRenderer));
             muzzleFlashGO.transform.parent = gunSpriteGO.transform;
-            muzzleFlashGO.transform.localPosition = new Vector3(-1.9f, 0, -2f);
+            muzzleFlashGO.transform.localPosition = new Vector3(-1.9f, 0, -0.3f);
             muzzleFlashGO.SetActive(false);
 
             StartCoroutine(StartFlash());
@@ -76,27 +80,36 @@ namespace HollowPoint
 
         void SprintWeaponShake()
         {
-            //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
-            if (AmmunitionControl.firing)
+            if (AmmunitionControl.firing) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             {
+                StopCoroutine("SprintingShake");
                 AmmunitionControl.lowerGunTimer -= Time.deltaTime;
-                //Point gun at the direction you are shooting
-                gunSpriteGO.transform.SetRotationZ(SpriteRotation()*-1);
+                gunSpriteGO.transform.SetRotationZ(SpriteRotation()*-1); //Point gun at the direction you are shooting
 
                 if (AmmunitionControl.lowerGunTimer < 0)
                 {
                     AmmunitionControl.firing = false;
                 }
             }
-            else if (HeroController.instance.hero_state == ActorStates.running && !AmmunitionControl.firing)
+            else if (HeroController.instance.hero_state == ActorStates.running && !AmmunitionControl.firing) //Shake gun a bit while moving
             {
-                gunSpriteGO.transform.SetRotationZ(25);
+               // gunSpriteGO.transform.SetRotationZ(25); 
+                if (!isSprinting && !AmmunitionControl.gunIsActive) //This bool check prevents the couroutine from running multiple times
+                {
+                    StartCoroutine("SprintingShake");
+                    isSprinting = true;
+                }
             }
             else if (!AmmunitionControl.firing)
             {
-                gunSpriteGO.transform.SetRotationZ(0);
+                isSprinting = false;
+                StopCoroutine("SprintingShake");
+                gunSpriteGO.transform.localPosition = defaultWeaponPos;
+                gunSpriteGO.transform.SetRotationZ(20);
             }
         }
+
+
 
         void WeaponBehindBack()
         {
@@ -104,7 +117,7 @@ namespace HollowPoint
             {
                 gunSpriteGO.transform.SetRotationZ(-23); // 23
                 gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.84f, 0.0001f);
-               // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f);
+               // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running)
                 {
@@ -118,6 +131,41 @@ namespace HollowPoint
             gunSpriteGO.transform.localPosition = defaultWeaponPos;
         }
 
+        IEnumerator SprintingShake()
+        {
+            while (true)
+            {
+                //Vector3(-0.2f, -0.81f, -0.0001f);
+
+                if (dropDown)
+                {
+                    //spriteSprintDropdownHeight = -.12f;
+                    //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    //dropDown = !dropDown;
+
+                    while (spriteSprintDropdownHeight > -0.12f)
+                    {
+                        yield return new WaitForSeconds(0.07f);
+                        spriteSprintDropdownHeight -= 0.09f;
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(24,330));
+                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    }
+                    dropDown = !dropDown;
+                }
+                else if (!dropDown)
+                {
+                    while(spriteSprintDropdownHeight < -0.06f)
+                    {
+                        yield return new WaitForSeconds(0.07f);
+                        spriteSprintDropdownHeight += 0.06f;
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(21,27));
+                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    }
+                    dropDown = !dropDown;
+                }
+
+            }
+        }
 
         IEnumerator StartFlash()
         {
@@ -130,20 +178,20 @@ namespace HollowPoint
 
         IEnumerator GunRecoilAnimation()
         {
-            recoiler = -0.53f;
+            spriteRecoilHeight = -0.60f; //-0.53 the lower this is the lower the gun moves during recoil (NOTE THAT THIS IS IN NEGATIVE, -0.20 is greater than -0.50, ttacco you fucking moron
             //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0.07f, 0.10f, -0.0000001f);
             gunSpriteGO.transform.SetRotationZ(15);
 
             do
             {
-                recoiler -= 0.01f;
-                gunSpriteGO.transform.localPosition = new Vector3(0f, recoiler, -0.0001f);
+                spriteRecoilHeight -= 0.01f;
+                gunSpriteGO.transform.localPosition = new Vector3(0f, spriteRecoilHeight, -0.0001f);
                 yield return new WaitForEndOfFrame();
             }
-            while (recoiler > -0.84);
+            while (spriteRecoilHeight > -0.84);
 
             //-0.2f, -0.85f, -0.0001f
-            recoiler = 0;
+            spriteRecoilHeight = 0;
             gunSpriteGO.transform.localPosition = defaultWeaponPos;
             gunSpriteGO.transform.SetRotationZ(0);
 

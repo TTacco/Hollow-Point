@@ -128,7 +128,7 @@ namespace HollowPoint
                 AmmunitionControl.firing = true;
                 AmmunitionControl.gunHeat += 10;
                 PlaySound();
-                AmmunitionControl.lowerGunTimer = 0.5f;
+                AmmunitionControl.lowerGunTimer = 0.3f;
                 BulletObject.FireBullet();
                 //Schutz(ad);
             }
