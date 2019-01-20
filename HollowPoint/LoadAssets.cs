@@ -1,4 +1,4 @@
-using System.IO;
+﻿using System.IO;
 using System.Reflection;
 using System.Collections.Generic;
 using UnityEngine;
@@ -8,9 +8,12 @@ namespace HollowPoint
     public static class LoadAssets
     {
         public static AudioClip bulletSoundFX;
+        public static AudioClip drawSFX = new AudioClip();
+        public static AudioClip holsterSFX = new AudioClip();
         public static AudioClip[] airStrikeSoundFX = new AudioClip[3];
         public static AudioClip[] enemyHurtSFX = new AudioClip[3];
         public static AudioClip[] enemyDeadSFX = new AudioClip[3];
+        public static AudioClip[] surfaceHitSFX = new AudioClip[5];
 
         public static Texture2D gunSprite;
         public static Texture2D bulletSprite;
@@ -24,6 +27,7 @@ namespace HollowPoint
             int enemyHurtCount = 0;
             int airsupportCount = 0;
             int enemyDeadCount = 0;
+            int surfaceHitCount = 0;
 
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {
@@ -31,13 +35,13 @@ namespace HollowPoint
                 {
                     Modding.Logger.Log("[HOLLOW POINT] Found sound effect! Saving it. [NAME]: " + res);
                     Stream audioStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(res);
-                    if(audioStream != null && res.Contains("support"))
+                    if (audioStream != null && res.Contains("support"))
                     {
                         byte[] buffer = new byte[audioStream.Length];
                         audioStream.Read(buffer, 0, buffer.Length);
                         audioStream.Dispose();
                         airStrikeSoundFX[airsupportCount++] = WavUtility.ToAudioClip(buffer);
-                        
+
                     }
                     else if (audioStream != null && res.Contains("enemyhurt"))
                     {
@@ -53,6 +57,27 @@ namespace HollowPoint
                         audioStream.Dispose();
                         enemyDeadSFX[enemyDeadCount++] = WavUtility.ToAudioClip(buffer);
                     }
+                    else if (audioStream != null && res.Contains("impact"))
+                    {
+                        byte[] buffer = new byte[audioStream.Length];
+                        audioStream.Read(buffer, 0, buffer.Length);
+                        audioStream.Dispose();
+                        surfaceHitSFX[surfaceHitCount++] = WavUtility.ToAudioClip(buffer);
+                    }
+                    else if (audioStream != null && res.Contains("draw"))
+                    {
+                        byte[] buffer = new byte[audioStream.Length];
+                        audioStream.Read(buffer, 0, buffer.Length);
+                        audioStream.Dispose();
+                        drawSFX = WavUtility.ToAudioClip(buffer);
+                    }
+                    else if (audioStream != null && res.Contains("holster"))
+                    {
+                        byte[] buffer = new byte[audioStream.Length];
+                        audioStream.Read(buffer, 0, buffer.Length);
+                        audioStream.Dispose();
+                        holsterSFX = WavUtility.ToAudioClip(buffer);
+                    }
                     else if (audioStream != null)
                     {
                         byte[] buffer = new byte[audioStream.Length];
@@ -60,7 +85,9 @@ namespace HollowPoint
                         audioStream.Dispose();
                         bulletSoundFX = WavUtility.ToAudioClip(buffer);
                     }
-                } else if (res.EndsWith(".png"))
+                    
+                }
+                else if (res.EndsWith(".png"))
                 {
                     using (Stream s = Assembly.GetExecutingAssembly().GetManifestResourceStream(res))
                     {
@@ -69,13 +96,13 @@ namespace HollowPoint
                         s.Read(buffer, 0, buffer.Length);
                         s.Dispose();
                         //Create texture from bytes 
-                        if (res.Contains("bullet"))
+                        if (res.Contains("bulletSprite"))
                         {
                             bulletSprite = new Texture2D(1, 1);
                             bulletSprite.LoadImage(buffer);
                             bulletSprite.Apply();
                         }
-                        else if(res.Contains("Rifle"))
+                        else if (res.Contains("Rifle"))
                         {
                             gunSprite = new Texture2D(1, 1);
                             gunSprite.LoadImage(buffer);
@@ -98,7 +125,7 @@ namespace HollowPoint
                 }
             }
         }
-        
+
 
     }
 }

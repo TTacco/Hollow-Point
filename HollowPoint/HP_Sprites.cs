@@ -1,25 +1,31 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using UnityEngine;
+using System.Collections;
 using GlobalEnums;
 using static Modding.Logger;
 
 
 namespace HollowPoint
 {
-    class GunSpriteController : MonoBehaviour
+    class HP_Sprites : MonoBehaviour
     {
         public static GameObject gunSpriteGO;
-        GameObject flashSpriteGO;
-        GameObject muzzleFlashGO;
+        public static GameObject flashSpriteGO;
+        public static GameObject muzzleFlashGO;
 
         System.Random shakeNum = new System.Random();
-        static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.81f, -0.0001f);
+        static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
 
         int rotationNum = 0;
 
+        public static float lowerGunTimer = 0;
         float spriteRecoilHeight;
         float spriteSprintDropdownHeight;
 
+        public static bool isFiring = false;
         public static bool startShake = false;
         bool isSprinting = false;
         bool dropDown = false;
@@ -27,7 +33,6 @@ namespace HollowPoint
         public void Start()
         {
             Log("[HOLLOW POINT] Creating Sprite");
-
             StartCoroutine(SpriteRoutine());
         }
 
@@ -41,12 +46,14 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
             gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
-            gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            //gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            gunSpriteGO.transform.parent = HeroController.instance.transform;
+            gunSpriteGO.transform.position = HeroController.instance.transform.position;
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.85f, -0.0001f);
             gunSpriteGO.SetActive(true);
 
             flashSpriteGO = new GameObject("HollowPointFlashSprite", typeof(SpriteRenderer), typeof(FlashSpriteRenderer));
-            flashSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            flashSpriteGO.transform.parent = HeroController.instance.transform;
             flashSpriteGO.transform.localPosition = new Vector3(0f, 0f, -5f);
             flashSpriteGO.SetActive(false);
 
@@ -63,6 +70,7 @@ namespace HollowPoint
             /*
             if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
             */
+
             RecoilWeaponShake();
             SprintWeaponShake();
             WeaponBehindBack();
@@ -80,27 +88,29 @@ namespace HollowPoint
 
         void SprintWeaponShake()
         {
-            if (AmmunitionControl.firing) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
+            if (isFiring) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             {
                 StopCoroutine("SprintingShake");
-                AmmunitionControl.lowerGunTimer -= Time.deltaTime;
-                gunSpriteGO.transform.SetRotationZ(SpriteRotation()*-1); //Point gun at the direction you are shooting
+                lowerGunTimer -= Time.deltaTime;
+                gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
-                if (AmmunitionControl.lowerGunTimer < 0)
+                if (lowerGunTimer < 0)
                 {
-                    AmmunitionControl.firing = false;
+                    isFiring = false;
+                    isSprinting = false;
+                    Log("Done firing");
                 }
             }
-            else if (HeroController.instance.hero_state == ActorStates.running && !AmmunitionControl.firing) //Shake gun a bit while moving
+            else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
             {
-               // gunSpriteGO.transform.SetRotationZ(25); 
-                if (!isSprinting && !AmmunitionControl.gunIsActive) //This bool check prevents the couroutine from running multiple times
+                // gunSpriteGO.transform.SetRotationZ(25); 
+                if (!isSprinting && HP_Handler.gunActive) //This bool check prevents the couroutine from running multiple times
                 {
                     StartCoroutine("SprintingShake");
                     isSprinting = true;
                 }
             }
-            else if (!AmmunitionControl.firing)
+            else if (!isFiring)
             {
                 isSprinting = false;
                 StopCoroutine("SprintingShake");
@@ -109,15 +119,13 @@ namespace HollowPoint
             }
         }
 
-
-
         void WeaponBehindBack()
         {
-            if (AmmunitionControl.gunHeatBreak || !AmmunitionControl.gunIsActive)
+            if (HP_Handler.gunOverheat || !HP_Handler.gunActive)
             {
                 gunSpriteGO.transform.SetRotationZ(-23); // 23
                 gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.84f, 0.0001f);
-               // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
+                // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running)
                 {
@@ -147,18 +155,18 @@ namespace HollowPoint
                     {
                         yield return new WaitForSeconds(0.07f);
                         spriteSprintDropdownHeight -= 0.09f;
-                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(24,330));
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(15, 24));
                         gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
                     }
                     dropDown = !dropDown;
                 }
                 else if (!dropDown)
                 {
-                    while(spriteSprintDropdownHeight < -0.06f)
+                    while (spriteSprintDropdownHeight < -0.06f)
                     {
                         yield return new WaitForSeconds(0.07f);
                         spriteSprintDropdownHeight += 0.06f;
-                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(21,27));
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(17, 27));
                         gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
                     }
                     dropDown = !dropDown;
@@ -209,7 +217,7 @@ namespace HollowPoint
 
             if (InputHandler.Instance.inputActions.down.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
             {
-                return-90;
+                return -90;
             }
 
             if (InputHandler.Instance.inputActions.up.IsPressed)
@@ -219,7 +227,7 @@ namespace HollowPoint
                     return 45;
                 }
             }
-            else if(InputHandler.Instance.inputActions.down.IsPressed)
+            else if (InputHandler.Instance.inputActions.down.IsPressed)
             {
                 if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
                 {
@@ -233,7 +241,7 @@ namespace HollowPoint
 
     }
 
-    #region SeperateRentererComponents
+    #region SeperateRendererComponents
 
     class GunSpriteRenderer : MonoBehaviour
     {

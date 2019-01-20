@@ -1,14 +1,16 @@
-using System.Linq;
+﻿using System.Linq;
 using ModCommon.Util;
 using UnityEngine;
 using System;
 using System.Collections;
+
 
 namespace HollowPoint
 {
     public static class DamageEnemies
     {
         static System.Random soundRandom = new System.Random();
+
         // This function does damage to the enemy using the damage numbers given by the weapon type
         public static void HitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
         {
@@ -26,7 +28,6 @@ namespace HollowPoint
             {
                 multiplier *= 1.75f;
             }
-
             if (gng_bindings.hasNailBinding())
             {
                 multiplier *= 0.3;
@@ -55,15 +56,6 @@ namespace HollowPoint
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
-            //GameObject fireballHitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
-            //Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-
-            //if (fireballHitPrefab != null && effectOrigin != null)
-            //{
-            //    fireballHitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-            //}
-
-
             GameObject HitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
             Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
 
@@ -75,22 +67,15 @@ namespace HollowPoint
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
 
-
-            //if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
-            //    targetHP.GetComponent<Recoil>().RecoilByDirection(cardinalDirection, hitInstance.MagnitudeMultiplier);
-
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
-
-
+ 
             // Actually do damage to target.
-
-
             try
             {
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0,2)]);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Modding.Logger.Log("Enemy Hurt Exception Thrown " + e);
             }
