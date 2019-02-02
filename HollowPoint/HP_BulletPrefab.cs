@@ -78,7 +78,7 @@ namespace HollowPoint
         private HitInstance damage = new HitInstance
         {
             AttackType = AttackTypes.NailBeam,
-            DamageDealt = 5,
+            DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 2),
             Multiplier = 1,
             IgnoreInvulnerable = true,
 
@@ -115,9 +115,7 @@ namespace HollowPoint
 
         public void FixedUpdate()
         {
-
             bulletRB2D.velocity = new Vector2(xSpeed, ySpeed);
-            //transform.Rotate(120, 0, 0);
         }
 
         //Handles the colliders
@@ -139,7 +137,7 @@ namespace HollowPoint
             {             
                 hm.Hit(damage);
                 Destroy(gameObject);
-                Log(col.name + " has destroyed the GO");
+                //Log(col.name + " has destroyed the GO");
             }
             /*
             else if (!col.name.Contains("Knight") && !col.name.Contains("Particle") && CloseToKnight(gameObject))
