@@ -48,7 +48,7 @@ namespace HollowPoint
             gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
             //gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
             gunSpriteGO.transform.parent = HeroController.instance.transform;
-            gunSpriteGO.transform.position = HeroController.instance.transform.position;
+            //gunSpriteGO.transform.position = HeroController.instance.transform.position;
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.85f, -0.0001f);
             gunSpriteGO.SetActive(true);
 
@@ -98,7 +98,7 @@ namespace HollowPoint
                 {
                     isFiring = false;
                     isSprinting = false;
-                    Log("Done firing");
+                    //Log("Done firing");
                 }
             }
             else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
