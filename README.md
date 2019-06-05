@@ -1,14 +1,11 @@
 # Hollow-Point
 
-A Hollow Knight mod that gives you a gun with varying generic ammo types
+A Hollow Knight mod that makes the knight commit the shcutz
+simply put its a fucking gun mod
 
-Planned stuff
-- Make the knight actually have a gun held at their sprite (Upcoming)
-- Bullet deviation to simulate recoil and promote the use of more ammo types (Added)
-- Add actual gunshot sounds (Added)
-- Do something about the spells and the nail arts 
-- Charm Overhaul
-- (Maybe) be able to buy ammunition from Sly's store
-- Bapanada
+Features:
+* Yes
 
-"Radiance made moths and Radiance made lesser bugs, but Samuel Colt made them equal" - Excerpt from the Elegy of "Why Harry Potter Shouldve Carried a 1911" 
+FAQ:
+Q: Why?
+A: Refer to the Features tab
