@@ -24,12 +24,18 @@ namespace HollowPoint
 
         private static void NewGame()
         {
-            GameManager.instance.gameObject.AddComponent<HP_Handler>();
-            GameManager.instance.gameObject.AddComponent<HP_Sprites>();
+            //GameManager.instance.gameObject.AddComponent<HP_Handler>();
+            //GameManager.instance.gameObject.AddComponent<HP_Sprites>();
+            //GameManager.instance.gameObject.AddComponent<HP_DirectionHandler>();
+            //GameManager.instance.gameObject.AddComponent<HP_BulletPrefab>();
+            //GameManager.instance.gameObject.AddComponent<HP_SwapWeapon>();
+            GameManager.instance.gameObject.AddComponent<HP_AttackHandler>();
             GameManager.instance.gameObject.AddComponent<HP_DirectionHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_BulletPrefab>();
-            GameManager.instance.gameObject.AddComponent<HP_SwapWeapon>();
+            GameManager.instance.gameObject.AddComponent<HP_WeaponHandler>();
+            GameManager.instance.gameObject.AddComponent<HP_WeaponSwapHandler>();
+            GameManager.instance.gameObject.AddComponent<HP_BulletHandler>();
             GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
+            GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             //GameManager.instance.gameObject.AddComponent<SpellControl>();
             //GameManager.instance.gameObject.AddComponent<CharmControl>();
             //GameManager.instance.gameObject.AddComponent<BulletObject>();

@@ -69,11 +69,13 @@ namespace HollowPoint
 
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
- 
+
             // Actually do damage to target.
             try
             {
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
             }
             catch (Exception e)
             {
@@ -93,8 +95,9 @@ namespace HollowPoint
             // Trigger Kill animation
             if (targetHP.hp <= 0f)
             {
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyDeadSFX[soundRandom.Next(0, 2)]);
-                targetHP.Die(0f, AttackTypes.Spell, true);
+                LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
+                targetHP.Die(0f, AttackTypes.Generic, true);
                 return;
             }
 

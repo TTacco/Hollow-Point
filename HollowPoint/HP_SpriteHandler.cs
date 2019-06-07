@@ -32,7 +32,7 @@ namespace HollowPoint
 
         public void Start()
         {
-            Log("[HOLLOW POINT] Creating Sprite");
+            Log("[HOLLOW POINT] Intializing Weapon Sprites");
             StartCoroutine(SpriteRoutine());
         }
 
@@ -45,32 +45,40 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
-            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer));
-            //gunSpriteGO.transform.parent = HeroController.instance.spellControl.gameObject.transform;
+            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer));
+
+            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer));
+
             gunSpriteGO.transform.parent = HeroController.instance.transform;
-            //gunSpriteGO.transform.position = HeroController.instance.transform.position;
-            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.85f, -0.0001f);
-            gunSpriteGO.SetActive(true);
+            gunSpriteGO.transform.position = HeroController.instance.transform.position;
+            //y value was -0.85
+            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -1f, -0.0001f);
 
-            flashSpriteGO = new GameObject("HollowPointFlashSprite", typeof(SpriteRenderer), typeof(FlashSpriteRenderer));
-            flashSpriteGO.transform.parent = HeroController.instance.transform;
-            flashSpriteGO.transform.localPosition = new Vector3(0f, 0f, -5f);
-            flashSpriteGO.SetActive(false);
-
-            muzzleFlashGO = new GameObject("HollowPointMuzzleSprite", typeof(SpriteRenderer), typeof(MuzzleSpriteRenderer));
-            muzzleFlashGO.transform.parent = gunSpriteGO.transform;
-            muzzleFlashGO.transform.localPosition = new Vector3(-1.9f, 0, -0.3f);
-            muzzleFlashGO.SetActive(false);
+            gunSpriteGO.SetActive(false);
 
             StartCoroutine(StartFlash());
         }
 
-        public void Update()
+        public void OnGUI()
         {
             /*
             if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
             */
 
+            /* EXPERIMENTAL
+            Vector3 tpos = gunSpriteGO.transform.position;
+            Log(String.Format("GUNSPRITE POSITION: X = {0}, Y = {1}, Z = {2}",tpos.x, tpos.y, tpos.z ));
+
+            tpos = gunSpriteGO.transform.localPosition;
+            Log(String.Format("GUNSPRITE LOCALPOS: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+
+            tpos = HeroController.instance.transform.position;
+            Log(String.Format("HEROCONTROLLER POSITION: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+
+            tpos = HeroController.instance.transform.localPosition;
+            Log(String.Format("HEROCONTROLLER LOCALPOS: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+
+            */
             RecoilWeaponShake();
             SprintWeaponShake();
             WeaponBehindBack();
@@ -104,7 +112,7 @@ namespace HollowPoint
             else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
             {
                 // gunSpriteGO.transform.SetRotationZ(25); 
-                if (!isSprinting && HP_Handler.gunActive) //This bool check prevents the couroutine from running multiple times
+                if (!isSprinting && !HP_WeaponHandler.currentGun.gunName.Equals("Nail")) //This bool check prevents the couroutine from running multiple times
                 {
                     StartCoroutine("SprintingShake");
                     isSprinting = true;
@@ -115,16 +123,16 @@ namespace HollowPoint
                 isSprinting = false;
                 StopCoroutine("SprintingShake");
                 gunSpriteGO.transform.localPosition = defaultWeaponPos;
-                gunSpriteGO.transform.SetRotationZ(20);
+                gunSpriteGO.transform.SetRotationZ(30);
             }
         }
 
         void WeaponBehindBack()
         {
-            if (HP_Handler.gunOverheat || !HP_Handler.gunActive)
+            if (HP_WeaponHandler.currentGun.gunName.Equals("Nail"))
             {
                 gunSpriteGO.transform.SetRotationZ(-23); // 23
-                gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.84f, 0.0001f);
+                gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.89f, 0.0001f);
                 // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running)
@@ -241,18 +249,18 @@ namespace HollowPoint
 
     }
 
-    #region SeperateRendererComponents
-
-    class GunSpriteRenderer : MonoBehaviour
+    class HP_GunSpriteRenderer : MonoBehaviour
     {
         static SpriteRenderer gunRenderer;
-        private const int PIXELS_PER_UNIT = 50;
+        private const int PIXELS_PER_UNIT = 180;
 
         public void Start()
         {
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
-            gunRenderer.sprite = Sprite.Create(LoadAssets.gunSprite,
-                new Rect(0, 0, LoadAssets.gunSprite.width, LoadAssets.gunSprite.height),
+
+            LoadAssets.spriteDictionary.TryGetValue("AssaultRifleAlter.png", out Texture2D gunSprite);
+            gunRenderer.sprite = Sprite.Create(gunSprite,
+                new Rect(0, 0, gunSprite.width, gunSprite.height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
             gunRenderer.color = Color.white;
             gunRenderer.enabled = true;
@@ -265,51 +273,4 @@ namespace HollowPoint
         }
     }
 
-
-    class FlashSpriteRenderer : MonoBehaviour
-    {
-        static SpriteRenderer flashRenderer;
-        private const int PIXELS_PER_UNIT = 60;
-
-        public void Start()
-        {
-            flashRenderer = gameObject.GetComponent<SpriteRenderer>();
-            flashRenderer.sprite = Sprite.Create(LoadAssets.flash,
-                new Rect(0, 0, LoadAssets.flash.width, LoadAssets.flash.height),
-                new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
-            flashRenderer.color = Color.white;
-            flashRenderer.enabled = true;
-        }
-
-        public void OnDestroy()
-        {
-            Destroy(flashRenderer);
-            Destroy(this);
-        }
-    }
-
-    class MuzzleSpriteRenderer : MonoBehaviour
-    {
-        static SpriteRenderer muzzleFlashRenderer;
-        private const int PIXELS_PER_UNIT = 220;
-
-        public void Start()
-        {
-            muzzleFlashRenderer = gameObject.GetComponent<SpriteRenderer>();
-            muzzleFlashRenderer.sprite = Sprite.Create(LoadAssets.muzzleFlash,
-                new Rect(0, 0, LoadAssets.muzzleFlash.width, LoadAssets.muzzleFlash.height),
-                new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
-            muzzleFlashRenderer.color = Color.white;
-            muzzleFlashRenderer.enabled = true;
-        }
-
-        public void OnDestroy()
-        {
-            Destroy(muzzleFlashRenderer);
-            Destroy(this);
-        }
-    }
-
-
-    #endregion
 }

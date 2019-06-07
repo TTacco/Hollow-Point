@@ -32,19 +32,19 @@ namespace HollowPoint
             gunActiveDisplay.color = new Color(1f, 1f, 1f, 1f);
             gunActiveDisplay.text = "";
 
-
-
             DontDestroyOnLoad(canvas);
         }
 
         public void OnGUI()
         {
-            if (HP_Handler.currentHeat >= 100)
-            {
-                HP_Handler.currentHeat = 100;
-            }
+            //if (HP_AttackHandler.currentHeat >= 100)
+            //{
+            //    HP_AttackHandler.currentHeat = 100;
+            //}
 
-            heatDisplay.text = "HEAT: " + (int) HP_Handler.currentHeat + " %";
+            heatDisplay.text = HP_WeaponHandler.currentGun.gunName;
+
+            //heatDisplay.text = "HEAT: " + (int) HP_AttackHandler.currentHeat + " %";
 
         }
 

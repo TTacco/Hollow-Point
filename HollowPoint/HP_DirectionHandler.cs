@@ -1,72 +1,79 @@
-﻿using System;
+﻿using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using UnityEngine;
+using MonoMod.Utils;
+using MonoMod;
+using HutongGames;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
+using Modding;
+using ModCommon;
+using ModCommon.Util;
+using GlobalEnums;
 
 namespace HollowPoint
 {
-    public class HP_DirectionHandler : MonoBehaviour
+    class HP_DirectionHandler : MonoBehaviour
     {
-        public static bool forwardPressed;
-        public static bool upPressed;
-        public static bool downPressed;
-
-        public static bool diagonalUpwardsPressed;
-        public static bool diagonalDownwardsPressed;
-
-        //The speed the object will travel in the screen, both x and y
-        public static float xVelocity;
-        public static float yVelocity;
+        public static bool up;
+        public static bool down;
+        public static bool right;
+        public static bool left;
+        public static bool facingRight;
+        public static float finalDegreeDirection;
 
         public void Update()
         {
-            forwardPressed = false;
-            upPressed = false;
-            downPressed = false;
-            diagonalDownwardsPressed = false;
-            diagonalUpwardsPressed = false;
+            up = InputHandler.Instance.inputActions.up;
+            down = InputHandler.Instance.inputActions.down;
+            right = InputHandler.Instance.inputActions.right;
+            left = InputHandler.Instance.inputActions.left;
+            facingRight = HeroController.instance.cState.facingRight;
 
-            xVelocity = 35;
-            yVelocity = 0;
-
-
-            if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+            if (facingRight)
             {
-                forwardPressed = true;
+                finalDegreeDirection = 0;
+            }
+            else
+            {
+                finalDegreeDirection = 180;
             }
 
-            if (InputHandler.Instance.inputActions.down.IsPressed)
+            if(up && !(right || left))
             {
-                downPressed = true;
+                finalDegreeDirection = 90;
             }
-
-            if (InputHandler.Instance.inputActions.up.IsPressed)
+            else if (down && !(right || left))
             {
-                upPressed = true;
+                finalDegreeDirection = 270;
             }
-
-            //Checks if the player is pressing the diagonal keys
-            if(forwardPressed)
+            else if (up)
             {
-                if (downPressed)
+                if (right)
                 {
-                    diagonalDownwardsPressed = true;
+                    finalDegreeDirection = 45;
                 }
-                else if (upPressed)
+                else if (left)
                 {
-                    diagonalUpwardsPressed = true;
+                    finalDegreeDirection = 135;
                 }
             }
-
-            //Determines at what direction the bullet should travel
-
-            if (!forwardPressed && (downPressed || upPressed))
+            else if (down)
             {
-                xVelocity = 0;
+                if (right)
+                {
+                    finalDegreeDirection = 315;
+                }
+                else if (left)
+                {
+                    finalDegreeDirection = 225;
+                }
             }
 
-            yVelocity = (upPressed) ? 35f : (downPressed)? -35f : 0f;
+
         }
+
     }
 }
