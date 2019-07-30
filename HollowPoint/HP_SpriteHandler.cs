@@ -6,7 +6,8 @@ using UnityEngine;
 using System.Collections;
 using GlobalEnums;
 using static Modding.Logger;
-
+using ModCommon.Util;
+using System.Reflection;
 
 namespace HollowPoint
 {
@@ -15,6 +16,7 @@ namespace HollowPoint
         public static GameObject gunSpriteGO;
         public static GameObject flashSpriteGO;
         public static GameObject muzzleFlashGO;
+        public static GameObject whiteFlashGO;
 
         System.Random shakeNum = new System.Random();
         static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
@@ -22,13 +24,19 @@ namespace HollowPoint
         int rotationNum = 0;
 
         public static float lowerGunTimer = 0;
-        float spriteRecoilHeight;
-        float spriteSprintDropdownHeight;
+        float spriteRecoilHeight = 0;
+        float spriteSprintDropdownHeight = 0;
 
         public static bool isFiring = false;
-        public static bool startShake = false;
+        public static bool startFiringAnim = false;
+        public static bool idleAnim = true;
+        public static bool isWallClimbing = false;
+
+        public static GameObject transformSlave = new GameObject("slaveTransform", typeof(Transform));
+        public static Transform ts;
+
         bool isSprinting = false;
-        bool dropDown = false;
+        bool? prevFaceRightVal;
 
         public void Start()
         {
@@ -45,56 +53,104 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
-            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer));
+            prevFaceRightVal = HeroController.instance.cState.facingRight;
 
-            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer));
-
-            gunSpriteGO.transform.parent = HeroController.instance.transform;
+            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer), typeof(AudioSource));
             gunSpriteGO.transform.position = HeroController.instance.transform.position;
-            //y value was -0.85
-            gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -1f, -0.0001f);
+            gunSpriteGO.transform.localPosition = new Vector3(0,0,0);
+            gunSpriteGO.SetActive(true);
 
-            gunSpriteGO.SetActive(false);
+            ts = transformSlave.GetComponent<Transform>();
+            //ts.transform.SetParent(HeroController.instance.transform);
+            gunSpriteGO.transform.SetParent(ts);
 
-            StartCoroutine(StartFlash());
+            whiteFlashGO = HeroController.instance.GetAttr<GameObject>("dJumpFlashPrefab");
+
+            LoadAssets.spriteDictionary.TryGetValue("muzzleflash.png", out Texture2D muzzleflashTex);
+            muzzleFlashGO = new GameObject("bulletFadePrefabObject", typeof(SpriteRenderer));
+            muzzleFlashGO.GetComponent<SpriteRenderer>().sprite = Sprite.Create(muzzleflashTex,
+                new Rect(0, 0, muzzleflashTex.width, muzzleflashTex.height),
+                new Vector2(0.5f, 0.5f), 150);
+
+            DontDestroyOnLoad(whiteFlashGO);
+            DontDestroyOnLoad(transformSlave);
+            DontDestroyOnLoad(gunSpriteGO);
+            DontDestroyOnLoad(muzzleFlashGO);
         }
 
-        public void OnGUI()
+        public void LateUpdate()
         {
-            /*
-            if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
-            */
+            //if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
+            isWallClimbing = HeroController.instance.cState.wallSliding;
 
-            /* EXPERIMENTAL
-            Vector3 tpos = gunSpriteGO.transform.position;
-            Log(String.Format("GUNSPRITE POSITION: X = {0}, Y = {1}, Z = {2}",tpos.x, tpos.y, tpos.z ));
+            //This just makes it so the gun is more stretched out on wherever the knight is facing, rather than staying in his center
+            int directionMultiplier = (HeroController.instance.cState.facingRight) ? 1 : -1;
 
-            tpos = gunSpriteGO.transform.localPosition;
-            Log(String.Format("GUNSPRITE LOCALPOS: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+            //Make it so the gun stretches out more on the opposite if the player is wall sliding
+            if (isWallClimbing) directionMultiplier *= -1;
 
-            tpos = HeroController.instance.transform.position;
-            Log(String.Format("HEROCONTROLLER POSITION: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+            //fuck your standard naming conventions, if it works, it fucking works
+            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat) ? 0.20f : 0.35f;
+            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat) ? -0.9f : -1.1f;
 
-            tpos = HeroController.instance.transform.localPosition;
-            Log(String.Format("HEROCONTROLLER LOCALPOS: X = {0}, Y = {1}, Z = {2}", tpos.x, tpos.y, tpos.z));
+            ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
+            //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
+            
 
-            */
-            RecoilWeaponShake();
-            SprintWeaponShake();
-            WeaponBehindBack();
-        }
+            //:TODO: Tentative changes
+            // gunSpriteGO.transform.localPosition = gunSpriteGO.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
+            defaultWeaponPos = gunSpriteGO.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
 
-        void RecoilWeaponShake()
-        {
-            if (startShake)
+            //flips the sprite on player face direction
+            float x = gunSpriteGO.transform.eulerAngles.x;
+            float y = gunSpriteGO.transform.eulerAngles.y;
+            float z = gunSpriteGO.transform.eulerAngles.z;
+            bool faceRight = HeroController.instance.cState.facingRight;
+
+            if (isWallClimbing)
             {
-                startShake = false;
-                StartCoroutine(StartFlash());
-                StartCoroutine(GunRecoilAnimation());
+                gunSpriteGO.transform.eulerAngles = (faceRight) ? new Vector3(x, 0, z) : new Vector3(x, 180, z);
+            }
+            else
+            {
+                gunSpriteGO.transform.eulerAngles = (faceRight) ? new Vector3(x, 180, z) : new Vector3(x, 0, z);
+            }
+
+            //the player starts shooting
+            ShootAnim();
+          
+            //player starts running
+            SprintAnim();
+
+            //weapon in the back when the nail is the current active weapon
+            WeaponBehindBack();
+            /*
+            Log("=============================================");
+            Log("KNIGHT POSITION " + HeroController.instance.transform.position);
+            Log("KNIGHT LOCAL POSITION" + HeroController.instance.transform.localPosition);
+            
+            Log("TS POSITION " + ts.position);
+            Log("TS LOCAL POSITION" + ts.localPosition);
+
+            Log("GUN POSITION " +gunSpriteGO.transform.position);
+            Log("GUN LOCAL POSITION" +gunSpriteGO.transform.localPosition);
+            */
+        }
+
+        public void ShootAnim()
+        {
+            if (startFiringAnim)
+            {
+                //Log("PLAYER IS NOW FIRING");
+                isFiring = true;
+                idleAnim = false;
+                startFiringAnim = false;
+                StartCoroutine(ShootAnimation());
             }
         }
 
-        void SprintWeaponShake()
+        
+        public void SprintAnim()
         {
             if (isFiring) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             {
@@ -102,37 +158,42 @@ namespace HollowPoint
                 lowerGunTimer -= Time.deltaTime;
                 gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f, -0.001f);
+
                 if (lowerGunTimer < 0)
                 {
                     isFiring = false;
                     isSprinting = false;
-                    //Log("Done firing");
                 }
             }
             else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
             {
                 // gunSpriteGO.transform.SetRotationZ(25); 
-                if (!isSprinting && !HP_WeaponHandler.currentGun.gunName.Equals("Nail")) //This bool check prevents the couroutine from running multiple times
+                if (!isSprinting) //This bool check prevents the couroutine from running multiple times && !HP_WeaponHandler.currentGun.gunName.Equals("Nail")
                 {
                     StartCoroutine("SprintingShake");
+                    StartCoroutine("SprintingShakeRotation");
                     isSprinting = true;
                 }
             }
+            //Idle animation/ Knight standing still
             else if (!isFiring)
             {
                 isSprinting = false;
                 StopCoroutine("SprintingShake");
-                gunSpriteGO.transform.localPosition = defaultWeaponPos;
-                gunSpriteGO.transform.SetRotationZ(30);
+                StopCoroutine("SprintingShakeRotation");
+                //gunSpriteGO.transform.localPosition = defaultWeaponPos;
+                gunSpriteGO.transform.SetRotationZ(24);
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0, -0.001f);
             }
         }
 
         void WeaponBehindBack()
         {
-            if (HP_WeaponHandler.currentGun.gunName.Equals("Nail"))
+            if (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat)
             {
-                gunSpriteGO.transform.SetRotationZ(-23); // 23
-                gunSpriteGO.transform.localPosition = new Vector3(-0.07f, -0.89f, 0.0001f);
+                gunSpriteGO.transform.SetRotationZ(-23); // 23 
+                gunSpriteGO.transform.SetPositionZ(0.01f);
                 // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running)
@@ -140,79 +201,64 @@ namespace HollowPoint
                     gunSpriteGO.transform.SetRotationZ(-17);
                 }
             }
+            else
+            {
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, gunSpriteGO.transform.localPosition.y, -0.01f);
+            }
         }
 
-        public static void DefaultWeaponPos()
-        {
-            gunSpriteGO.transform.localPosition = defaultWeaponPos;
-        }
-
+        //================================ ANIMATION COROUTINES ======================================== 
         IEnumerator SprintingShake()
         {
+            spriteSprintDropdownHeight = 0;
+
             while (true)
             {
-                //Vector3(-0.2f, -0.81f, -0.0001f);
-
-                if (dropDown)
-                {
-                    //spriteSprintDropdownHeight = -.12f;
-                    //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
-                    //dropDown = !dropDown;
-
-                    while (spriteSprintDropdownHeight > -0.12f)
-                    {
-                        yield return new WaitForSeconds(0.07f);
-                        spriteSprintDropdownHeight -= 0.09f;
-                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(15, 24));
-                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
-                    }
-                    dropDown = !dropDown;
-                }
-                else if (!dropDown)
-                {
-                    while (spriteSprintDropdownHeight < -0.06f)
-                    {
-                        yield return new WaitForSeconds(0.07f);
-                        spriteSprintDropdownHeight += 0.06f;
-                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(17, 27));
-                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
-                    }
-                    dropDown = !dropDown;
-                }
-
+                yield return new WaitForSeconds(0.02f);
+                float y = Mathf.Sin(Time.time * 16)/100;
+                //gunSpriteGO.transform.SetRotationZ(shakeNum.Next(15, 24));
+                gunSpriteGO.transform.localPosition += new Vector3(0, y, 0);
             }
         }
 
-        IEnumerator StartFlash()
+        IEnumerator SprintingShakeRotation()
         {
-            flashSpriteGO.SetActive(true);
-            muzzleFlashGO.SetActive(true);
-            yield return new WaitForSeconds(0.05f);
-            flashSpriteGO.SetActive(false);
-            muzzleFlashGO.SetActive(false);
-        }
-
-        IEnumerator GunRecoilAnimation()
-        {
-            spriteRecoilHeight = -0.60f; //-0.53 the lower this is the lower the gun moves during recoil (NOTE THAT THIS IS IN NEGATIVE, -0.20 is greater than -0.50, ttacco you fucking moron
-            //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0.07f, 0.10f, -0.0000001f);
-            gunSpriteGO.transform.SetRotationZ(15);
-
-            do
+            /*
+            while (true)
             {
-                spriteRecoilHeight -= 0.01f;
-                gunSpriteGO.transform.localPosition = new Vector3(0f, spriteRecoilHeight, -0.0001f);
-                yield return new WaitForEndOfFrame();
+                yield return new WaitForSeconds(0.09f);
+                if (!HeroController.instance.cState.dashing)
+                {
+                    gunSpriteGO.transform.SetRotationZ(shakeNum.Next(18, 26));
+                }
+                else
+                {
+                    gunSpriteGO.transform.SetRotationZ(shakeNum.Next(26, 40));
+                }
+ 
             }
-            while (spriteRecoilHeight > -0.84);
+            */
 
-            //-0.2f, -0.85f, -0.0001f
-            spriteRecoilHeight = 0;
-            gunSpriteGO.transform.localPosition = defaultWeaponPos;
-            gunSpriteGO.transform.SetRotationZ(0);
-
-            yield return null;
+            while (true)
+            {
+                yield return new WaitForSeconds(0.082f);
+                float y = Mathf.Sin(Time.time * 10) * 8;
+                y += 24;
+                gunSpriteGO.transform.SetRotationZ(y);
+                //gunSpriteGO.transform.localPosition += new Vector3(0, y, 0);
+            }
         }
+
+        IEnumerator ShootAnimation()
+        {
+            float face = (HeroController.instance.cState.facingRight) ? 1 : -1;
+            gunSpriteGO.transform.localPosition = new Vector3(-0.20f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
+            gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + shakeNum.Next(-5,6));
+            yield return new WaitForSeconds(0.1f);
+            gunSpriteGO.transform.localPosition = new Vector3(0, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
+        }
+
+        //==================================Utilities==================================================
 
         //returns the degree of the gun's sprite depending on what the player inputs while shooting
         //basically it just rotates the gun based on shooting direction
@@ -243,27 +289,97 @@ namespace HollowPoint
                 }
             }
 
-
             return 0;
+        }
+
+        public static void StartGunAnims()
+        {
+            startFiringAnim = true;
+            isFiring = false;
+            isFiring = true;
+            lowerGunTimer = 0.4f;
+        }
+
+        public static void StartFlash()
+        {
+            GameObject flash = Instantiate(whiteFlashGO, HeroController.instance.transform.position + new Vector3(0, 0, -1), new Quaternion(0, 0, 0, 0));
+            flash.SetActive(true);
+        }
+
+        public static float SpriteRotationWallSlide()
+        {
+            if (HeroController.instance.cState.wallSliding)
+            {
+                if (InputHandler.Instance.inputActions.up.IsPressed)
+                {
+                    if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+                    {
+                        return 90;
+                    }
+                }
+                else if (InputHandler.Instance.inputActions.down.IsPressed)
+                {
+                    if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+                    {
+                        return -90;
+                    }
+                }
+            }
+            return 0;
+        }
+
+        public void OnDestroy()
+        {
+            Destroy(gunSpriteGO);
         }
 
     }
 
     class HP_GunSpriteRenderer : MonoBehaviour
     {
-        static SpriteRenderer gunRenderer;
+        public static SpriteRenderer gunRenderer;
+        public static Dictionary<String, Sprite> weaponSpriteDicitionary = new Dictionary<String, Sprite>();
+
         private const int PIXELS_PER_UNIT = 180;
 
         public void Start()
         {
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
 
-            LoadAssets.spriteDictionary.TryGetValue("AssaultRifleAlter.png", out Texture2D gunSprite);
-            gunRenderer.sprite = Sprite.Create(gunSprite,
-                new Rect(0, 0, gunSprite.width, gunSprite.height),
+            LoadAssets.spriteDictionary.TryGetValue("Weapon_RifleSprite.png", out Texture2D rifleTextureInit);
+            gunRenderer.sprite = Sprite.Create(rifleTextureInit,
+                new Rect(0, 0, rifleTextureInit.width, rifleTextureInit.height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
+
+            foreach (KeyValuePair<String, Texture2D> wepTexture in LoadAssets.spriteDictionary)
+            {
+                if (wepTexture.Key.Contains("Weapon"))
+                {
+                   Texture2D texture = wepTexture.Value;
+                   Sprite s = Sprite.Create(texture,
+                        new Rect(0, 0, texture.width, texture.height),
+                        new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
+
+                    weaponSpriteDicitionary.Add(wepTexture.Key, s);
+                }
+            }
+
             gunRenderer.color = Color.white;
             gunRenderer.enabled = true;
+        }
+
+        public static void SwapWeapon(String weaponName)
+        {
+            if (weaponName.Equals("Nail")) return;
+            try
+            {
+                weaponSpriteDicitionary.TryGetValue(weaponName, out Sprite swapTheCurrentGunSpriteWithThisOne);
+                gunRenderer.sprite = swapTheCurrentGunSpriteWithThisOne;
+            }
+            catch(Exception e)
+            {
+                Log("No sprite with the name " + weaponName + " was found");
+            }
         }
 
         public void OnDestroy()

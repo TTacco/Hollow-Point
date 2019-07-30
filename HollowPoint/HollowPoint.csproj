@@ -69,6 +69,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HP_AttackHandler.cs" />
     <Compile Include="HP_BulletHandler.cs" />
@@ -79,6 +80,7 @@
     <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="HP_UIHandler.cs" />
+    <Compile Include="SoundHandler.cs" />
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -87,7 +89,7 @@
     <EmbeddedResource Include="assets\call_air_support_2.wav" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\AssaultRifleAlter.png" />
+    <EmbeddedResource Include="assets\Weapon_RifleSprite.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\glow.png" />
@@ -134,6 +136,33 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\anim.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarsprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_shotgun.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\bulletSpriteFade.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_submachinegun.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\Weapon_ShotgunSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarspriteestimate.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarborder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_sniper.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\glowshader.shader" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

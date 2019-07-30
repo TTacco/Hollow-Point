@@ -1,0 +1,274 @@
+//SPRINT ANIMATION 
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using UnityEngine;
+using System.Collections;
+using GlobalEnums;
+using static Modding.Logger;
+using System.Reflection;
+
+namespace HollowPoint
+{
+    class HP_Sprites : MonoBehaviour
+    {
+        public static GameObject gunSpriteGO;
+        public static GameObject flashSpriteGO;
+        public static GameObject muzzleFlashGO;
+
+        System.Random shakeNum = new System.Random();
+        static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
+
+        int rotationNum = 0;
+
+        public static float lowerGunTimer = 0;
+        float spriteRecoilHeight;
+        float spriteSprintDropdownHeight;
+
+        public static bool isFiring = false;
+        public static bool startShake = false;
+        bool isSprinting = false;
+        bool dropDown = false;
+        bool? prevFaceRightVal;
+
+        public void Start()
+        {
+            Log("[HOLLOW POINT] Intializing Weapon Sprites");
+            StartCoroutine(SpriteRoutine());
+        }
+
+        //Initalizes the sprite game objects
+        IEnumerator SpriteRoutine()
+        {
+            do
+            {
+                yield return null;
+            }
+            while (HeroController.instance == null || GameManager.instance == null);
+
+            prevFaceRightVal = HeroController.instance.cState.facingRight;
+
+            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer));
+
+            gunSpriteGO.transform.position = HeroController.instance.transform.position;
+            //y value was -0.85
+            //gunSpriteGO.transform.localPosition = new Vector3(-0.2f, -0.85f, -0.0001f);  
+            gunSpriteGO.transform.localPosition = defaultWeaponPos;
+            gunSpriteGO.SetActive(true);
+            DontDestroyOnLoad(gunSpriteGO);
+
+            //StartCoroutine(StartFlash());
+        }
+
+        public void LateUpdate()
+        {        
+            //if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
+              
+            
+
+            gunSpriteGO.transform.position = HeroController.instance.transform.position;
+
+            int directionMultiplier = (HeroController.instance.cState.facingRight) ? 1 : -1 ; 
+            gunSpriteGO.transform.localPosition = gunSpriteGO.transform.position + new Vector3(0.1f*directionMultiplier, -0.95f, -0.00001f);
+
+
+            //flips the sprite on player face direction
+            if (HeroController.instance.cState.facingRight != prevFaceRightVal)
+            {
+                prevFaceRightVal = !prevFaceRightVal;
+                gunSpriteGO.transform.Rotate(0, 180, 0, 0);
+            }
+
+            RecoilWeaponShake();
+            SprintWeaponShake();
+            WeaponBehindBack();
+
+            //Log("Position Transform" + gunSpriteGO.transform.position);
+            //Log("LocalPos Transform" + gunSpriteGO.transform.localPosition);
+
+        }
+
+        void RecoilWeaponShake()
+        {
+            if (startShake)
+            {
+                startShake = false;
+                //StartCoroutine(StartFlash());
+                StartCoroutine(GunRecoilAnimation());
+            }
+        }
+
+        void SprintWeaponShake()
+        {
+            if (isFiring) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
+            {
+                StopCoroutine("SprintingShake");
+                lowerGunTimer -= Time.deltaTime;
+                gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
+
+                if (lowerGunTimer < 0)
+                {
+                    isFiring = false;
+                    isSprinting = false;
+                    //Log("Done firing");
+                }
+            }
+            else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
+            {
+                // gunSpriteGO.transform.SetRotationZ(25); 
+                if (!isSprinting && !HP_WeaponHandler.currentGun.gunName.Equals("Nail")) //This bool check prevents the couroutine from running multiple times
+                {
+                    StartCoroutine("SprintingShake");
+                    isSprinting = true;
+                }
+            }
+            else if (!isFiring)
+            {
+                isSprinting = false;
+                StopCoroutine("SprintingShake");
+                gunSpriteGO.transform.localPosition = gunSpriteGO.transform.position + new Vector3(-0.2f, -0.12f, -0.01f);
+                gunSpriteGO.transform.SetRotationZ(30);
+            }
+        }
+
+        void WeaponBehindBack()
+        {
+            if (HP_WeaponHandler.currentGun.gunName.Equals("Nail"))
+            {
+                gunSpriteGO.transform.SetRotationZ(-23); // 23
+                gunSpriteGO.transform.localPosition = gunSpriteGO.transform.position + new Vector3(-0.07f, 0f, 0.0001f);
+                // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
+
+                if (HeroController.instance.hero_state == ActorStates.running)
+                {
+                    gunSpriteGO.transform.SetRotationZ(-17);
+                }
+            }
+        }
+
+        public static void DefaultWeaponPos()
+        {
+            gunSpriteGO.transform.localPosition = defaultWeaponPos;
+        }
+
+        IEnumerator SprintingShake()
+        {
+            while (true)
+            {
+                //Vector3(-0.2f, -0.81f, -0.0001f);
+
+                if (dropDown)
+                {
+                    //spriteSprintDropdownHeight = -.12f;
+                    //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    //dropDown = !dropDown;
+
+                    while (spriteSprintDropdownHeight > -0.12f)
+                    {
+                        yield return new WaitForSeconds(0.07f);
+                        spriteSprintDropdownHeight -= 0.09f;
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(15, 24));
+                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    }
+                    dropDown = !dropDown;
+                }
+                else if (!dropDown)
+                {
+                    while (spriteSprintDropdownHeight < -0.06f)
+                    {
+                        yield return new WaitForSeconds(0.07f);
+                        spriteSprintDropdownHeight += 0.06f;
+                        gunSpriteGO.transform.SetRotationZ(shakeNum.Next(17, 27));
+                        gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0, spriteSprintDropdownHeight, 0);
+                    }
+                    dropDown = !dropDown;
+                }
+
+            }
+        }
+
+
+        IEnumerator GunRecoilAnimation()
+        {
+            spriteRecoilHeight = -0.60f; //-0.53 the lower this is the lower the gun moves during recoil (NOTE THAT THIS IS IN NEGATIVE, -0.20 is greater than -0.50, ttacco you fucking moron
+            //gunSpriteGO.transform.localPosition = defaultWeaponPos + new Vector3(0.07f, 0.10f, -0.0000001f);
+            gunSpriteGO.transform.SetRotationZ(15);
+
+            do
+            {
+                spriteRecoilHeight -= 0.01f;
+                gunSpriteGO.transform.localPosition = new Vector3(0f, spriteRecoilHeight, -0.0001f);
+                yield return new WaitForEndOfFrame();
+            }
+            while (spriteRecoilHeight > -0.84);
+
+            //-0.2f, -0.85f, -0.0001f
+            spriteRecoilHeight = 0;
+            gunSpriteGO.transform.localPosition = defaultWeaponPos;
+            gunSpriteGO.transform.SetRotationZ(0);
+
+            yield return null;
+        }
+
+        //returns the degree of the gun's sprite depending on what the player inputs while shooting
+        //basically it just rotates the gun based on shooting direction
+        static float SpriteRotation()
+        {
+            if (InputHandler.Instance.inputActions.up.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            {
+                return 90;
+            }
+
+            if (InputHandler.Instance.inputActions.down.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            {
+                return -90;
+            }
+
+            if (InputHandler.Instance.inputActions.up.IsPressed)
+            {
+                if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+                {
+                    return 45;
+                }
+            }
+            else if (InputHandler.Instance.inputActions.down.IsPressed)
+            {
+                if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
+                {
+                    return -45;
+                }
+            }
+
+
+            return 0;
+        }
+
+    }
+
+    class HP_GunSpriteRenderer : MonoBehaviour
+    {
+        static SpriteRenderer gunRenderer;
+        private const int PIXELS_PER_UNIT = 180;
+
+        public void Start()
+        {
+            gunRenderer = gameObject.GetComponent<SpriteRenderer>();
+
+            LoadAssets.spriteDictionary.TryGetValue("AssaultRifleAlter.png", out Texture2D gunSprite);
+            gunRenderer.sprite = Sprite.Create(gunSprite,
+                new Rect(0, 0, gunSprite.width, gunSprite.height),
+                new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
+            gunRenderer.color = Color.white;
+            gunRenderer.enabled = true;
+        }
+
+        public void OnDestroy()
+        {
+            Destroy(gunRenderer);
+            Destroy(this);
+        }
+    }
+
+}

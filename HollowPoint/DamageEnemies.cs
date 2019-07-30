@@ -32,9 +32,17 @@ namespace HollowPoint
             {
                 multiplier *= 0.3;
             }
-            realDamage = (int) Math.Round(realDamage * multiplier);
-            
+            realDamage = (int) Math.Round(realDamage * multiplier);    
             */
+
+            //Modding.Logger.Log("Target name is " + targetHP.name);
+
+
+            //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
+            if (targetHP.IsInvincible && !targetHP.name.Equals("Moss Charger"))
+            {
+                return;
+            }
 
             if (realDamage <= 0)
             {
@@ -49,10 +57,12 @@ namespace HollowPoint
              */
 
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
+
+            //Modding.Logger.Log("Cardinal is " + cardinalDirection);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
             if (sendHitGO != null)
-            {
+            {            
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
@@ -62,17 +72,19 @@ namespace HollowPoint
             if (HitPrefab != null && effectOrigin != null)
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-            }
-
+            }           
+        
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
 
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
 
+
             // Actually do damage to target.
             try
             {
+                //TODO: change this audio source
                 //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
                 LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
@@ -88,7 +100,7 @@ namespace HollowPoint
             }
             else
             {
-                targetHP.hp -= realDamage;
+                targetHP.hp -= realDamage; // the actual damage                                                       
                 HeroController.instance.AddMPCharge(soulGain);
             }
 
@@ -97,7 +109,7 @@ namespace HollowPoint
             {
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
-                targetHP.Die(0f, AttackTypes.Generic, true);
+                targetHP.Die(90f, hitInstance.AttackType, true);
                 return;
             }
 
@@ -114,7 +126,7 @@ namespace HollowPoint
                 component.FsmName == "Stun Control" || component.FsmName == "Stun");
             if (stunControlFSM != null)
             {
-                stunControlFSM.SendEvent("STUN DAMAGE");
+                //stunControlFSM.SendEvent("STUN DAMAGE");
             }
 
             /*
