@@ -52,6 +52,9 @@
     <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\mods\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\mods\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
@@ -69,6 +72,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="HP_Component_EnemyBelow.cs" />
+    <Compile Include="HP_DamageCalculator.cs" />
     <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HP_AttackHandler.cs" />
@@ -118,9 +123,6 @@
     <EmbeddedResource Include="assets\enemydead3.wav" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\grenadesprite.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="assets\bulletCasingSprite.png" />
   </ItemGroup>
   <ItemGroup>
@@ -162,7 +164,7 @@
     <EmbeddedResource Include="assets\shoot_sfx_sniper.wav" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\glowshader.shader" />
+    <EmbeddedResource Include="assets\exampletext.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

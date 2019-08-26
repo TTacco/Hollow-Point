@@ -26,16 +26,21 @@ namespace HollowPoint
         float defaultAnimationSpeed = 0.35f;
         float defaultAnimationSpeed_CH = 0.28f;
 
+        public static Rigidbody2D knight;
         public static GameObject damageNumberTestGO;
 
-        float cooldown = 0;
-        float cooldown_CH = 0;
+        public static bool enemyBelowPlayer = false;
+
+        public static GameObject enemyBelow;
 
         public void Awake()
         {
             On.NailSlash.StartSlash += OnSlash;
 
+
             StartCoroutine(InitRoutine());
+
+            
         }
 
         public IEnumerator InitRoutine()
@@ -43,14 +48,33 @@ namespace HollowPoint
             while(HeroController.instance == null)
             {
                 yield return null;
-                damageNumberTestGO = new GameObject("damageNumberTESTCLONE", typeof(Text), typeof(CanvasRenderer), typeof(RectTransform));
-                DontDestroyOnLoad(damageNumberTestGO);
+                
             }
+
+            knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
+
+            damageNumberTestGO = new GameObject("damageNumberTESTCLONE", typeof(Text), typeof(CanvasRenderer), typeof(RectTransform));
+            DontDestroyOnLoad(damageNumberTestGO);
+
+            /*
+            enemyBelow = new GameObject("ColliderChecker", typeof(HP_Component_EnemyBelow), typeof(BoxCollider2D), typeof(SpriteRenderer));
+
+            LoadAssets.spriteDictionary.TryGetValue("exampletext.png", out Texture2D rifleTextureInit);
+            enemyBelow.GetComponent<SpriteRenderer>().sprite = Sprite.Create(rifleTextureInit,
+                new Rect(0, 0, rifleTextureInit.width, rifleTextureInit.height),
+                new Vector2(0.5f, 0.5f), 50);
+
+            enemyBelow.GetComponent<BoxCollider2D>().enabled = false;         
+
+            GameObject go = Instantiate(enemyBelow);
+            DontDestroyOnLoad(go);
+            */
         }
 
         public void Update()
         {
-            if (HP_WeaponHandler.currentGun.gunName != "Nail" && !HP_HeatHandler.overheat)
+
+            if (HP_WeaponHandler.currentGun.gunName != "Nail") // && !HP_HeatHandler.overheat
             {
                 HeroController.instance.ATTACK_DURATION = 0;
                 HeroController.instance.ATTACK_DURATION_CH = 0;
@@ -75,86 +99,119 @@ namespace HollowPoint
             float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
             directionMultiplier *= wallClimbMultiplier;
+            if(HP_DirectionHandler.finalDegreeDirection == 90 || HP_DirectionHandler.finalDegreeDirection == 270) directionMultiplier = 0;
 
-            if (HP_HeatHandler.overheat)
+            if (HP_WeaponHandler.currentGun.gunName == "Nail")
             {
                 orig(self);
-                return;
+                return;        
             }
 
             switch (HP_WeaponHandler.currentGun.gunName)
             {
                 case "Nail":
                     orig(self);
-                    break;
-                case "Submachinegun":
-                    StartCoroutine(SMGShots(3));
+                    return;
+                case "Rifle":
+                    StartCoroutine(KnockbackRecoil(1));
+                    StartCoroutine(BurstShot(5, directionMultiplier));
                     GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
                     break;
                 case "Shotgun":
-                    StartCoroutine(ShotgunShot(8));
+                    StartCoroutine(KnockbackRecoil(6));
+                    StartCoroutine(ShotgunShot(8, directionMultiplier));
                     GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
-                    ShotgunRecoil();
+                    //ShotgunRecoil();
+                    break;
+                case "Sniper":
+                    GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+                    GameObject sniperBullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.8f, -0.00001f), new Quaternion(0, 0, 0, 0));
+                    sniperBullet.GetComponent<HP_BulletBehaviour>().pierce = true;
+                    PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
                     break;
                 default:
-                    GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.3f * directionMultiplier, -0.8f, -0.00001f), new Quaternion(0, 0, 0, 0));
-                    //Destroy(bullet, 0.40f);
+                    GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.8f, -0.00001f), new Quaternion(0, 0, 0, 0));
+                    Destroy(bullet, 0.40f);
                     PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
-                    GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+                    //GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
                     break;
             }
-           
-            HP_HeatHandler.IncreaseHeat();
+
+
+            HP_HeatHandler.IncreaseHeat();          
             HP_Sprites.StartGunAnims();
             HP_Sprites.StartFlash();
         }
 
-        public IEnumerator Test()
-        {
-            float time = 1;
-            Rigidbody2D knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
-            while (time > 0)
-            {
-                knight.velocity = new Vector2(knight.velocity.x, 30);
-                time -= Time.deltaTime;
-            }
-
-            yield return null;
-        }
-
-        public IEnumerator SMGShots(int burst)
+        public IEnumerator BurstShot(int burst, float directionMultiplier)
         {
             for (int i = 0; i < burst; i++)
             {
-                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
-                yield return new WaitForSeconds(0.07f);
+                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
+                yield return new WaitForSeconds(0.05f);
                 PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
             }
         }
 
-        public IEnumerator ShotgunShot(int pellets)
+        public IEnumerator ShotgunShot(int pellets, float directionMultiplier)
         {
             PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
             for (int i = 0; i < pellets; i++)
             {
                 yield return new WaitForEndOfFrame();
-                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
+                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
                 bullet.GetComponent<HP_BulletBehaviour>();
-                //Destroy(bullet, 0.28f);
+                Destroy(bullet, 0.20f);
             }
         }
 
-        public void ShotgunRecoil()
+        public IEnumerator KnockbackRecoil(float recoilStrength)
         {
+            //TODO: Develop the direction launch soon 
+            float deg = HP_DirectionHandler.finalDegreeDirection + 180;
+
+            deg = deg % 360;
+
+            float radian = deg * Mathf.Deg2Rad;
+
+            float xDeg = (float) ((4 * recoilStrength) * Math.Cos(radian));
+            float yDeg = (float) ((4 * recoilStrength) * Math.Sin(radian));
+
+            xDeg = (xDeg == 0) ? 0 : xDeg;
+            yDeg = (yDeg == 0) ? 0 : yDeg;
+
+            HeroController.instance.cState.shroomBouncing = true;
+
+            if (deg == 90 || deg == 270)
+            {
+                knight.velocity = new Vector2(0, yDeg);
+                yield break;
+            }
+
             if (HeroController.instance.cState.facingRight)
             {
-                HeroController.instance.RecoilLeftLong();
+                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
+                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                HeroController.instance.cState.recoilingLeft = true;
+                HeroController.instance.cState.recoilingRight = false;
+                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+
+                knight.velocity = new Vector2(-xDeg, yDeg);
             }
             else
             {
-                HeroController.instance.RecoilRightLong();
+                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
+                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                HeroController.instance.cState.recoilingLeft = false;
+                HeroController.instance.cState.recoilingRight = true;
+                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+
+                knight.velocity = new Vector2(xDeg, yDeg);
             }
+
+            yield return null;
         }
+
 
         public void PlayGunSounds(String gunName)
         {
@@ -165,7 +222,7 @@ namespace HollowPoint
                 AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
                 audios.clip = ac;
                 //HP_Sprites.gunSpriteGO.GetComponent<AudioSource>().PlayOneShot(ac);
-                audios.pitch = UnityEngine.Random.Range(1f, 1.4f);
+                audios.pitch = UnityEngine.Random.Range(0.8f, 1.5f);
 
                 audios.PlayOneShot(audios.clip);
                 

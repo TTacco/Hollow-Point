@@ -21,8 +21,8 @@ namespace HollowPoint
         {
             ModHooks.Instance.AfterSavegameLoadHook += SaveGame;
             ModHooks.Instance.NewGameHook += NewGame;
-
             LoadAssets.LoadResources();
+
         }
 
         private static void NewGame()
@@ -33,6 +33,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_WeaponSwapHandler>();
             GameManager.instance.gameObject.AddComponent<HP_BulletHandler>();
             GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
+            GameManager.instance.gameObject.AddComponent<HP_DamageCalculator>();
             GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
             //GameManager.instance.gameObject.AddComponent<SpellControl>();

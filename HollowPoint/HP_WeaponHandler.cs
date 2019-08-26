@@ -21,6 +21,8 @@ namespace HollowPoint
 
         public void Update()
         {
+            if (HP_HeatHandler.overheat) return;
+
             if ((InputHandler.Instance.inputActions.down.WasPressed))
             {
                 tapDown++;
@@ -32,7 +34,7 @@ namespace HollowPoint
 
             if ((tapDown == 1 || tapUp == 1) && !swapWeaponStart)
             {
-                swapWeaponTimer = 0.4f;
+                swapWeaponTimer = 0.20f;
                 swapWeaponStart = true;
             }
             else if (swapWeaponStart)
@@ -72,6 +74,12 @@ namespace HollowPoint
             }
         }
 
+        public static void ForceLowPowerMode()
+        {
+            HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[1];
+            HP_GunSpriteRenderer.SwapWeapon(HP_WeaponHandler.currentGun.spriteName);
+        }
+
         public void CheckIndexBound()
         {
             if (weaponIndex > HP_WeaponHandler.allGuns.Length - 1)
@@ -109,13 +117,14 @@ namespace HollowPoint
                 yield return null;
             }
 
-            allGuns = new HP_Gun[5];
+            allGuns = new HP_Gun[6];
 
             allGuns[0] = new HP_Gun("Nail", 4, 9999, 9999, 0, "Nail", 2, 10, 1, 0.40f, 0, false, "Old Nail");
-            allGuns[1] = new HP_Gun("Rifle", 3, 9999, 9999, 8, "Weapon_RifleSprite.png", 3, 30, 50, 0.90f, 0.12f, false, "AK-753 Assault Rifle");
-            allGuns[2] = new HP_Gun("Shotgun", 4, 24, 24, 25, "Weapon_ShotgunSprite.png", 9, 22, 20, 0.30f, 0.60f, false, "Grad-00 Shotgun");
-            allGuns[3] = new HP_Gun("Submachinegun", 3, 90, 90, 15, "Weapon_RifleSprite.png", 2, 30, 30, 0.50f, 0.40f, false, "H&K-56 Submachine Gun");
-            allGuns[4] = new HP_Gun("Sniper", 35, 15, 15, 33, "Weapon_RifleSprite.png", 0, 70, 150, 1.2f, 0.50f, true, "SID SAUER DMR");
+            allGuns[1] = new HP_Gun("Submachinegun", 2, 9999, 9999, 0, "Weapon_RifleSprite.png", 1, 33, 40, 0.40f, 0.15f, false, "Low Power");
+            allGuns[2] = new HP_Gun("Submachinegun", 5, 9999, 9999, 10, "Weapon_RifleSprite.png", 1, 33, 40, 0.80f, 0.15f, false, "Regular Charge");
+            allGuns[3] = new HP_Gun("Shotgun", 3, 24, 24, 30, "Weapon_ShotgunSprite.png", 9, 22, 20, 0.40f, 0.60f, false, "Scattershot");
+            allGuns[4] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Burst Fire");
+            allGuns[5] = new HP_Gun("Sniper", 35, 15, 15, 35, "Weapon_RifleSprite.png", 0, 70, 150, 1.3f, 0.50f, true, "Overcharge");
             //Add an LMG and a flamethrower later
 
             currentGun = allGuns[0];
@@ -169,9 +178,9 @@ namespace HollowPoint
         public static int ExtraDeviation()
         {
 
-            if (HP_WeaponHandler.currentGun.gunName.Equals("SubMachinegun"))
+            if (HP_WeaponHandler.currentGun.gunName.Contains("Submachinegun"))
             {
-                return 0;
+                return 1;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)

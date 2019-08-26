@@ -20,13 +20,13 @@ namespace HollowPoint
         Text multiDamageDisplay;
         Text gunActiveDisplay;
         public Image heatbarImage;
+        public Image energybarImage;
         public Image heatbarImageEstimate;
         public GameObject heatbar_go;
         public GameObject heatbar_go_estimate;
         public GameObject heatbar_go_border;
-        public static Font trajan; //note that this is initalized at the UI_Handler init coroutine
-        public static Font perpe;
-
+        public GameObject energybar_go;
+        public GameObject energybar_go_border;
         public void Start()
         {
             StartCoroutine(UI_Initializer());
@@ -53,7 +53,7 @@ namespace HollowPoint
                 multiDamageDisplay.color = new Color(1f, 1f, 1f, 1f);
                 multiDamageDisplay.text = "";
 
-                gunActiveDisplay = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-480, 790), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
+                gunActiveDisplay = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-520, 785), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
                 gunActiveDisplay.color = new Color(1f, 1f, 1f, 1f);
                 gunActiveDisplay.text = "";
 
@@ -72,8 +72,9 @@ namespace HollowPoint
                 Sprite spriteBorder = Sprite.Create(barBorder, new Rect(0, 0, barBorder.width, barBorder.height),
                 new Vector2(0.5f, 0.5f), 25);
 
+                //HEAT BAR
                 CanvasUtil.RectData rectDataBorder = new CanvasUtil.RectData(new Vector2(275, 30), new Vector2(0, 0), new Vector2(0.12f, 0.70f), new Vector2(0.12f, 0.70f), new Vector2(0.50f, 0.50f));
-                heatbar_go_border = CanvasUtil.CreateImagePanel(canvas, spriteBorder, rectDataBorder);     
+                heatbar_go_border = CanvasUtil.CreateImagePanel(canvas, spriteBorder, rectDataBorder);
 
                 CanvasUtil.RectData rectData = new CanvasUtil.RectData(new Vector2(175, 25), new Vector2(0, 0), new Vector2(0.12f, 0.70f), new Vector2(0.12f, 0.70f), new Vector2(0.50f, 0.50f));
 
@@ -92,22 +93,66 @@ namespace HollowPoint
                 heatbarImageEstimate.fillMethod = Image.FillMethod.Horizontal;
                 heatbarImageEstimate.preserveAspect = false;
 
+
+
+                //ENERGY BAR
+                LoadAssets.spriteDictionary.TryGetValue("heatbarsprite.png", out Texture2D energybar);
+
+                spriteMain = Sprite.Create(energybar, new Rect(0, 0, bar.width, bar.height),
+                new Vector2(0.5f, 0.5f), 25);
+
+                rectDataBorder = new CanvasUtil.RectData(new Vector2(275, 30), new Vector2(0, 0), new Vector2(0.12f, 0.67f), new Vector2(0.12f, 0.67f), new Vector2(0.50f, 0.50f));
+                energybar_go_border = CanvasUtil.CreateImagePanel(canvas, spriteBorder, rectDataBorder);
+
+                rectData = new CanvasUtil.RectData(new Vector2(175, 25), new Vector2(0, 0), new Vector2(0.12f, 0.67f), new Vector2(0.12f, 0.67f), new Vector2(0.50f, 0.50f));
+
+                energybar_go = CanvasUtil.CreateImagePanel(canvas, spriteMain, rectData);
+                energybar_go.transform.position = new Vector3(energybar_go.transform.position.x, energybar_go.transform.position.y, 0);
+
+                energybarImage = energybar_go.GetComponent<Image>();
+                energybarImage.type = Image.Type.Filled;
+                energybarImage.fillMethod = Image.FillMethod.Horizontal;
+                energybarImage.preserveAspect = false;
+
+
+
                 //HP_DamageNumber.damageNumberGO = new GameObject("damageNumberClone", typeof(HP_DamageNumber), typeof(TextMesh), typeof(MeshRenderer));
                 DontDestroyOnLoad(canvas);
+                DontDestroyOnLoad(canvasGroup);
+
+                On.CameraController.FadeOut += CamFadeOut;
+                On.CameraController.FadeSceneIn += CamFadeIn;
 
             }
             catch (Exception e)
             {
-                Modding.Logger.Log(e);
+                Modding.Logger.Log(e.StackTrace);
             }
+    
+        }
+
+        public void CamFadeOut(On.CameraController.orig_FadeOut orig, CameraController self, GlobalEnums.CameraFadeType type)
+        {
+            Modding.Logger.Log("CAMERA FADING OUT");
+            canvasGroup.alpha = 0;
+            orig(self, type);
+        }
+
+        public void CamFadeIn(On.CameraController.orig_FadeSceneIn orig, CameraController self)
+        {
+            Modding.Logger.Log("CAMERA FADING IN");
+            CanvasUtil.FadeInCanvasGroup(canvasGroup);
+            canvasGroup.alpha = 1;
+            orig(self);
         }
 
         public void OnGUI()
         {
             gunActiveDisplay.text = HP_WeaponHandler.currentGun.flavorName;
-            multiDamageDisplay.text = HP_HeatHandler.currentMultiplier + "x";
+            //multiDamageDisplay.text = HP_HeatHandler.currentMultiplier + "x";
             heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
-            heatbarImageEstimate.fillAmount = (HP_HeatHandler.currentHeat + HP_WeaponHandler.currentGun.gunHeatGain) / 100 ;
+            energybarImage.fillAmount = 1;
+            heatbarImageEstimate.fillAmount = (HP_HeatHandler.currentHeat + HP_WeaponHandler.currentGun.gunHeatGain) / 100 ;     
         }
 
         public void OnDestroy()

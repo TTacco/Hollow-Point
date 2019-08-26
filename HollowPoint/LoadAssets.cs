@@ -20,8 +20,7 @@ namespace HollowPoint
         public static TMP_FontAsset perpetua;
 
         static AssetBundle fontAssetBundle;
-
-
+   
 
         public static void LoadResources()
         {
@@ -40,7 +39,7 @@ namespace HollowPoint
                         string restemp = res.Replace("HollowPoint.assets.", "");
                         sfxDictionary.Add(restemp, WavUtility.ToAudioClip(buffer));
                     }
-                    //Modding.Logger.Log("[HOLLOW POINT] Created sound effect " + res);
+                    Modding.Logger.Log("[HOLLOW POINT] Created sound effect " + res);
                 }
                 else if (res.EndsWith(".png"))
                 {
@@ -56,7 +55,7 @@ namespace HollowPoint
                         currSprite.LoadImage(buffer);
                         currSprite.Apply();
                         spriteDictionary.Add(restemp, currSprite);
-                        //Modding.Logger.Log("[HOLLOW POINT] Created sprite from embedded image: " + restemp);
+                        Modding.Logger.Log("[HOLLOW POINT] Created sprite from embedded image: " + restemp);
                     }
                 }
                 else if (res.EndsWith(".shader"))

@@ -39,13 +39,17 @@ namespace HollowPoint
 
 
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
+            GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
+
             if (targetHP.IsInvincible && !targetHP.name.Equals("Moss Charger"))
-            {
+            {             
                 return;
             }
 
             if (realDamage <= 0)
             {
+                GameObject blockHit = blockHitPrefab.Spawn();
+                blockHit.transform.position = targetHP.transform.position;
                 return;
             }
 

@@ -90,8 +90,8 @@ namespace HollowPoint
             if (isWallClimbing) directionMultiplier *= -1;
 
             //fuck your standard naming conventions, if it works, it fucking works
-            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat) ? 0.20f : 0.35f;
-            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat) ? -0.9f : -1.1f;
+            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail") ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
+            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail") ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
 
             ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
             //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
@@ -131,10 +131,13 @@ namespace HollowPoint
             
             Log("TS POSITION " + ts.position);
             Log("TS LOCAL POSITION" + ts.localPosition);
+            
 
             Log("GUN POSITION " +gunSpriteGO.transform.position);
             Log("GUN LOCAL POSITION" +gunSpriteGO.transform.localPosition);
             */
+
+
         }
 
         public void ShootAnim()
@@ -158,7 +161,7 @@ namespace HollowPoint
                 lowerGunTimer -= Time.deltaTime;
                 gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
-                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f, -0.001f);
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f, -0.0001f);
 
                 if (lowerGunTimer < 0)
                 {
@@ -190,7 +193,7 @@ namespace HollowPoint
 
         void WeaponBehindBack()
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail" || HP_HeatHandler.overheat)
+            if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
             {
                 gunSpriteGO.transform.SetRotationZ(-23); // 23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);
@@ -203,7 +206,7 @@ namespace HollowPoint
             }
             else
             {
-                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, gunSpriteGO.transform.localPosition.y, -0.01f);
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, gunSpriteGO.transform.localPosition.y, -0.0001f);
             }
         }
 
