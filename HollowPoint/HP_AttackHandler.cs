@@ -29,7 +29,7 @@ namespace HollowPoint
         public static Rigidbody2D knight;
         public static GameObject damageNumberTestGO;
 
-        public static bool enemyBelowPlayer = false;
+        public static bool firingSpecialShot = false;
 
         public static GameObject enemyBelow;
 
@@ -76,11 +76,11 @@ namespace HollowPoint
 
             if (HP_WeaponHandler.currentGun.gunName != "Nail") // && !HP_HeatHandler.overheat
             {
-                HeroController.instance.ATTACK_DURATION = 0;
-                HeroController.instance.ATTACK_DURATION_CH = 0;
+                HeroController.instance.ATTACK_DURATION = 0f;
+                HeroController.instance.ATTACK_DURATION_CH = 0f;
 
-                HeroController.instance.ATTACK_COOLDOWN_TIME = HP_WeaponHandler.currentGun.gunCooldown;
-                HeroController.instance.ATTACK_COOLDOWN_TIME_CH = HP_WeaponHandler.currentGun.gunCooldown;
+                HeroController.instance.ATTACK_COOLDOWN_TIME = 0.2f;
+                HeroController.instance.ATTACK_COOLDOWN_TIME_CH = 0.2f;
             }
             else
             {
@@ -107,50 +107,67 @@ namespace HollowPoint
                 return;        
             }
 
+            /*
             switch (HP_WeaponHandler.currentGun.gunName)
             {
-                case "Nail":
-                    orig(self);
-                    return;
                 case "Rifle":
-                    StartCoroutine(KnockbackRecoil(1));
+                    //StartCoroutine(KnockbackRecoil(1));
                     StartCoroutine(BurstShot(5, directionMultiplier));
                     GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
-                    break;
-                case "Shotgun":
-                    StartCoroutine(KnockbackRecoil(6));
-                    StartCoroutine(ShotgunShot(8, directionMultiplier));
-                    GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
-                    //ShotgunRecoil();
-                    break;
-                case "Sniper":
-                    GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
-                    GameObject sniperBullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.8f, -0.00001f), new Quaternion(0, 0, 0, 0));
-                    sniperBullet.GetComponent<HP_BulletBehaviour>().pierce = true;
-                    PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
-                    break;
-                default:
-                    GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.8f, -0.00001f), new Quaternion(0, 0, 0, 0));
-                    Destroy(bullet, 0.40f);
-                    PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
-                    //GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
-                    break;
+                    break;              
+            }
+            */
+
+            if (HP_HeatHandler.currentEnergy >= 100)
+            {
+                //Special Attack
+
+                //StartCoroutine(BurstShot(5, directionMultiplier));
+                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
+                bullet.GetComponent<HP_BulletBehaviour>().special = true;
+                bullet.GetComponent<HP_BulletBehaviour>().pierce = false;
+
+                GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+
+                HP_HeatHandler.currentEnergy = 0;
+          
+                HP_Sprites.StartGunAnims();
+                HP_Sprites.StartFlash();
+
+                PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
+                HP_HeatHandler.IncreaseHeat();
+
+                Destroy(bullet, 0.3f);
+            }
+            else if(!firingSpecialShot)
+            {
+                GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
+                bullet.GetComponent<HP_BulletBehaviour>().pierce = false;
+
+                //GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+
+                HP_Sprites.StartGunAnims();
+                HP_Sprites.StartFlash();
+
+                PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
+                HP_HeatHandler.IncreaseHeat();
+
+                Destroy(bullet, 0.3f);
             }
 
-
-            HP_HeatHandler.IncreaseHeat();          
-            HP_Sprites.StartGunAnims();
-            HP_Sprites.StartFlash();
         }
 
         public IEnumerator BurstShot(int burst, float directionMultiplier)
         {
+            firingSpecialShot = true;
             for (int i = 0; i < burst; i++)
             {
                 GameObject bullet = Instantiate(HP_BulletHandler.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
-                yield return new WaitForSeconds(0.05f);
+                yield return new WaitForSeconds(0.07f);
                 PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
+                Destroy(bullet, 1f);
             }
+            firingSpecialShot = false;
         }
 
         public IEnumerator ShotgunShot(int pellets, float directionMultiplier)

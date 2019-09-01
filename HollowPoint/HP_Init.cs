@@ -36,7 +36,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_DamageCalculator>();
             GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
-            //GameManager.instance.gameObject.AddComponent<SpellControl>();
+            GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
             //GameManager.instance.gameObject.AddComponent<CharmControl>();
             //GameManager.instance.gameObject.AddComponent<BulletObject>();
             //GameManager.instance.gameObject.AddComponent<GunSpriteController>();

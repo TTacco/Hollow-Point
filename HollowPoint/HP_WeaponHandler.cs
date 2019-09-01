@@ -117,14 +117,11 @@ namespace HollowPoint
                 yield return null;
             }
 
-            allGuns = new HP_Gun[6];
+            allGuns = new HP_Gun[3];
 
             allGuns[0] = new HP_Gun("Nail", 4, 9999, 9999, 0, "Nail", 2, 10, 1, 0.40f, 0, false, "Old Nail");
-            allGuns[1] = new HP_Gun("Submachinegun", 2, 9999, 9999, 0, "Weapon_RifleSprite.png", 1, 33, 40, 0.40f, 0.15f, false, "Low Power");
-            allGuns[2] = new HP_Gun("Submachinegun", 5, 9999, 9999, 10, "Weapon_RifleSprite.png", 1, 33, 40, 0.80f, 0.15f, false, "Regular Charge");
-            allGuns[3] = new HP_Gun("Shotgun", 3, 24, 24, 30, "Weapon_ShotgunSprite.png", 9, 22, 20, 0.40f, 0.60f, false, "Scattershot");
-            allGuns[4] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Burst Fire");
-            allGuns[5] = new HP_Gun("Sniper", 35, 15, 15, 35, "Weapon_RifleSprite.png", 0, 70, 150, 1.3f, 0.50f, true, "Overcharge");
+            allGuns[1] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Primary Fire");
+            allGuns[2] = new HP_Gun("Sniper", 35, 15, 15, 35, "Weapon_RifleSprite.png", 0, 70, 150, 1.3f, 0.50f, true, "Underbarrel");
             //Add an LMG and a flamethrower later
 
             currentGun = allGuns[0];
@@ -177,28 +174,22 @@ namespace HollowPoint
     {
         public static int ExtraDeviation()
         {
-
-            if (HP_WeaponHandler.currentGun.gunName.Contains("Submachinegun"))
-            {
-                return 1;
-            }
-
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
-                return 6;
+                return 7;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
             {
-                return 3;
+                return 2;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
             {
-                return 2;
+                return 5;
             }
 
-            return 0;
+            return 1;
         }
     }
 }

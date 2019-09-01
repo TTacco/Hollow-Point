@@ -80,6 +80,7 @@
     <Compile Include="HP_BulletHandler.cs" />
     <Compile Include="HP_DirectionHandler.cs" />
     <Compile Include="HP_Init.cs" />
+    <Compile Include="HP_SpellControl.cs" />
     <Compile Include="HP_SpriteHandler.cs" />
     <Compile Include="HP_WeaponHandler.cs" />
     <Compile Include="LoadAssets.cs" />
@@ -165,6 +166,17 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\exampletext.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\energybarborder.png" />
+    <EmbeddedResource Include="assets\energybarsprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\specialbullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\divedetonate.wav" />
+    <EmbeddedResource Include="assets\divetrigger.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

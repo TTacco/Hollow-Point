@@ -34,19 +34,21 @@ namespace HollowPoint
         //Handles the damage
         public void BulletDamage(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
-            HP_HeatHandler.IncreaseMultiplier(0.1f);
-
             if (!hitInstance.Source.name.Contains("bullet"))
             {
                 orig(self, hitInstance);
                 return;
             }
 
+            int damage = 3;
+
+            if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
+
             Modding.Logger.Log(hitInstance.Source.name);
             // TODO: Put these in the weapon handler section
             //damage.AttackType = AttackTypes.Generic;
             // damage.DamageDealt = HP_WeaponHandler.currentGun.gunDamage;
-            DamageEnemies.HitEnemy(self, HP_WeaponHandler.currentGun.gunDamage, HP_BulletBehaviour.damage, 0);
+            DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.damage, 0);
             return;
 
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
@@ -61,7 +63,7 @@ namespace HollowPoint
             }
             else
             {
-                finalBulletDamage *= HP_HeatHandler.currentMultiplier;
+                //finalBulletDamage *= HP_HeatHandler.currentMultiplier;
             }
 
             if (damageDropOff > 3) //at losing its damage for the 5th time, it now does no damage

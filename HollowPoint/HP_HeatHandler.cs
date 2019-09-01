@@ -10,11 +10,13 @@ namespace HollowPoint
     class HP_HeatHandler : MonoBehaviour
     {
         public static float currentHeat;
-        public static float currentMultiplier;
-        public static float cooldownMultiplier; 
+        public static float currentEnergy = 100;
         public static float cooldownPause; //This is so whenever the player fires, theres a short pause before the heat goes down
         public const int MAX_HEAT = 100;
         public static bool overheat = false;
+
+        public static bool fastCooldown = true;
+        public static float fastCooldownTimer = 30f;
 
         public void Start()
         {
@@ -25,25 +27,18 @@ namespace HollowPoint
         {
             while (HeroController.instance == null || PlayerData.instance == null)
             {
-                currentMultiplier = 1;
                 yield return null;
             }
         }
 
         public void FixedUpdate()
         {
-            //Multiplyer
-            if (cooldownMultiplier > 0)
-            {
-                cooldownMultiplier -= Time.deltaTime;
+            currentEnergy += Time.deltaTime * 30f;
 
-            }
+            if (currentEnergy > 100) currentEnergy = 100;
 
-            if (currentMultiplier > 1 && cooldownMultiplier < 0)
-            {
-                cooldownMultiplier = 0.20f;
-                currentMultiplier -= 0.1f;
-            }
+            //Modding.Logger.Log(fastCooldownTimer);
+
 
             //Heat
             if (cooldownPause > 0)
@@ -52,40 +47,46 @@ namespace HollowPoint
                 return;
             }
 
-            if (currentHeat > 0) currentHeat -= Time.deltaTime * 40;
-
-            if (currentHeat < 0)
+            if (fastCooldownTimer > 0)
             {
-                currentHeat = 0;
-                overheat = false;
+                fastCooldownTimer -= Time.deltaTime * 20f;
             }
+
+
+            if (currentHeat > 0)
+            {
+                currentHeat -= Time.deltaTime * 90f;
+                if (currentHeat < 0)
+                {
+                    currentHeat = 0;
+                }
+            } 
+
+
 
         }
 
         public static void IncreaseHeat()
         {
-            currentHeat += HP_WeaponHandler.currentGun.gunHeatGain;
-            cooldownPause = (HP_WeaponHandler.currentGun.flavorName.Equals("Low Power")) ? 0 : 0.60f;
-
-            if (currentHeat > MAX_HEAT && !overheat)
+            
+            if(fastCooldownTimer> 25f)
             {
-                overheat = true;
-                cooldownPause = 1f;
-                HP_WeaponSwapHandler.ForceLowPowerMode();
+                currentHeat += 35;
             }
+            else if(fastCooldownTimer > 15f)
+            {
+                currentHeat += 18;
+            }
+            else
+            {
+                currentHeat += 5;
+            }
+
+            fastCooldownTimer = 30f;
+
+            if (currentHeat > 100) currentHeat = 100;
         }
 
-        public static void IncreaseMultiplier(float multIncrease)
-        {
-            cooldownMultiplier = 0.40f;
-            currentMultiplier += multIncrease;
-
-            float multMax = (PlayerData.instance.nailSmithUpgrades * 0.5f) + 2;
-            if (currentMultiplier > multMax)
-            {
-                currentMultiplier = multMax;
-            }
-        }
 
     }
 }

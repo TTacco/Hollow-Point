@@ -13,6 +13,8 @@ namespace HollowPoint
 {
     class HP_Sprites : MonoBehaviour
     {
+        //Holds all the projectile sprites
+
         public static GameObject gunSpriteGO;
         public static GameObject flashSpriteGO;
         public static GameObject muzzleFlashGO;

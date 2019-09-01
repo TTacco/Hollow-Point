@@ -16,6 +16,8 @@ namespace HollowPoint
         public static GameObject bulletTrailPrefab;
         //public static GameObject greenscreen;
 
+        public static Dictionary<String, Sprite> projectileSprites = new Dictionary<String, Sprite>();
+
         public void Start()
         {
             StartCoroutine(CreateBulletPrefab());
@@ -29,8 +31,7 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
-            Texture2D bulletTexture;        
-            LoadAssets.spriteDictionary.TryGetValue("bulletSprite.png", out bulletTexture);
+            LoadAssets.spriteDictionary.TryGetValue("bulletSprite.png", out Texture2D bulletTexture);
             LoadAssets.spriteDictionary.TryGetValue("bulletSpriteFade.png", out Texture2D fadeTexture);
 
             //Prefab instantiation
@@ -38,6 +39,13 @@ namespace HollowPoint
             bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(bulletTexture,
                 new Rect(0, 0, bulletTexture.width, bulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42);
+
+
+            //Special bullet sprite
+            LoadAssets.spriteDictionary.TryGetValue("specialbullet.png", out Texture2D specialBulletTexture);
+            projectileSprites.Add("specialbullet.png", Sprite.Create(specialBulletTexture,
+                new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
+                new Vector2(0.5f, 0.5f), 42));
 
             //Rigidbody
             bulletPrefab.GetComponent<Rigidbody2D>().isKinematic = true;
@@ -61,16 +69,20 @@ namespace HollowPoint
             //bulletTR.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
             bulletTR.material = new Material(Shader.Find("Diffuse")); //Find("Particles/Additive")
             //bulletTR.widthMultiplier = 0.05f;
-            bulletTR.startWidth = 0.1f;
-            bulletTR.endWidth = 0.050f;
+            bulletTR.startWidth = 0.075f;
+            bulletTR.endWidth = 0.025f;
             bulletTR.enabled = true;
-            bulletTR.time = 0.1f;
+            bulletTR.time = 0.075f;
             bulletTR.startColor = new Color(240, 234, 196);
             bulletTR.endColor = new Color(237, 206, 154);
    
             DontDestroyOnLoad(bulletPrefab);
             DontDestroyOnLoad(bulletFadePrefab);
             DontDestroyOnLoad(bulletTrailPrefab);
+
+
+
+            
 
             Modding.Logger.Log("[HOLLOW POINT] Initalized BulletObject");
 
@@ -91,6 +103,7 @@ namespace HollowPoint
         double bulletSpeed = 10;
         bool noDamage = false;
         public bool pierce = false;
+        public bool special = false;
 
         public Vector3 bulletOriginPosition;
 
@@ -109,7 +122,7 @@ namespace HollowPoint
             MagnitudeMultiplier = 1,
             SpecialType = SpecialTypes.None,
             
-        };
+        };        
 
         public void Start()
         {
@@ -125,9 +138,19 @@ namespace HollowPoint
             bulletOriginPosition = gameObject.transform.position;
 
             //Bullet Direction
-            float deviation = HP_WeaponHandler.currentGun.gunDeviation + SpreadDeviationControl.ExtraDeviation();
-            bulletSpeed = HP_WeaponHandler.currentGun.gunBulletSpeed;
+            float deviation = (HP_HeatHandler.currentHeat * 0.1f) + SpreadDeviationControl.ExtraDeviation();
+            //bulletSpeed = HP_WeaponHandler.currentGun.gunBulletSpeed;
+            bulletSpeed = 50f;
+
+            //Bullet Sprite Size
             float size = HP_WeaponHandler.currentGun.gunBulletSize;
+            if (special)
+            {
+                HP_BulletHandler.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
+                size *= 1.5f;
+                bulletSprite.sprite = specialBulletTexture;
+            }
+
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
 
@@ -157,7 +180,6 @@ namespace HollowPoint
             float flashOffsetY = (float) (1.9f * Math.Sin(radian));
             float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding) ? 180 : 0;
 
-            //Destroy(Instantiate(HP_Sprites.muzzleFlashGO, HP_Sprites.gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.25f, -0.8f), bulletSprite.transform.rotation), 0.07f);
             GameObject muzzleFlashClone = Instantiate(HP_Sprites.muzzleFlashGO, HP_Sprites.gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.25f, -0.8f), new Quaternion(0, 0, 0, 0));
             muzzleFlashClone.transform.Rotate(0, 0, HP_DirectionHandler.finalDegreeDirection + HP_Sprites.SpriteRotationWallSlide() + muzzleFlashWallSlide , 0);
 
@@ -169,30 +191,6 @@ namespace HollowPoint
         {
             //if (HP_WeaponHandler.currentGun.Equals("Flamethrower")) SlowDownBullet();
 
-        }
-
-        //Slows down bullets the longer they travel, will be used for the flamethrower projectiles
-        public void SlowDownBullet()
-        {
-            bool positivex = (xDeg > 0) ? true : false;
-            bool positivey = (yDeg > 0) ? true : false;
-            if (positivex && xDeg > 0)
-            {
-                xDeg -= Time.deltaTime * 50;
-            }
-            else if (!positivex && xDeg < 0)
-            {
-                xDeg += Time.deltaTime * 50;
-            }
-
-            if (positivey && yDeg > 0)
-            {
-                yDeg -= Time.deltaTime * 50;
-            }
-            else if (!positivey && yDeg < 0)
-            {
-                yDeg += Time.deltaTime * 50;
-            }
         }
 
         //Handles the colliders
@@ -216,9 +214,10 @@ namespace HollowPoint
             //Damages the enemy and destroys the bullet
             else if (hm != null)
             {
+                Destroy(gameObject);
                 Modding.Logger.Log(col.gameObject.layer);
-                hm.Hit(damage); 
-                if(!pierce) Destroy(gameObject);
+                hm.Hit(damage);
+                //gameObject.GetComponent<Corpse>().GetAttr<ParticleSystem>("corpseFlame").Emit(50);
             }
 
         }
@@ -261,4 +260,39 @@ namespace HollowPoint
             */
         }
     }
+
+
+    public class OnFire : MonoBehaviour
+    {
+        public void Start()
+        {
+            Destroy(this, 10f);
+            StartCoroutine(SetEnemyOnFire(gameObject));
+        }
+
+        public void Update()
+        {
+            Modding.Logger.Log(gameObject.name + " is on fire!");
+        }
+
+        public void OnDestroy()
+        {
+            Modding.Logger.Log(gameObject.name + " is no longer on fire!");
+        }
+
+
+        IEnumerator SetEnemyOnFire(GameObject targetEnemyToBurn)
+        {
+            HealthManager hm = targetEnemyToBurn.GetComponent<HealthManager>();
+
+            while (true)
+            {
+                yield return new WaitForSeconds(0.2f);
+                hm.Hit(HP_BulletBehaviour.damage);
+            }
+
+            yield return null; 
+        }
+    }
+
 }

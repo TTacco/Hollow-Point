@@ -114,14 +114,9 @@ namespace HollowPoint
                 energybarImage.fillMethod = Image.FillMethod.Horizontal;
                 energybarImage.preserveAspect = false;
 
-
-
                 //HP_DamageNumber.damageNumberGO = new GameObject("damageNumberClone", typeof(HP_DamageNumber), typeof(TextMesh), typeof(MeshRenderer));
                 DontDestroyOnLoad(canvas);
                 DontDestroyOnLoad(canvasGroup);
-
-                On.CameraController.FadeOut += CamFadeOut;
-                On.CameraController.FadeSceneIn += CamFadeIn;
 
             }
             catch (Exception e)
@@ -133,26 +128,27 @@ namespace HollowPoint
 
         public void CamFadeOut(On.CameraController.orig_FadeOut orig, CameraController self, GlobalEnums.CameraFadeType type)
         {
+            /*
             Modding.Logger.Log("CAMERA FADING OUT");
             canvasGroup.alpha = 0;
+            */
             orig(self, type);
         }
 
         public void CamFadeIn(On.CameraController.orig_FadeSceneIn orig, CameraController self)
         {
+            /*
             Modding.Logger.Log("CAMERA FADING IN");
             CanvasUtil.FadeInCanvasGroup(canvasGroup);
             canvasGroup.alpha = 1;
+            */
             orig(self);
         }
 
         public void OnGUI()
         {
-            gunActiveDisplay.text = HP_WeaponHandler.currentGun.flavorName;
-            //multiDamageDisplay.text = HP_HeatHandler.currentMultiplier + "x";
             heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
-            energybarImage.fillAmount = 1;
-            heatbarImageEstimate.fillAmount = (HP_HeatHandler.currentHeat + HP_WeaponHandler.currentGun.gunHeatGain) / 100 ;     
+            energybarImage.fillAmount = HP_HeatHandler.currentEnergy/100;
         }
 
         public void OnDestroy()
