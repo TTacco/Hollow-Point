@@ -4,6 +4,9 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 using System.Collections;
+using Modding;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 
 
 namespace HollowPoint
@@ -22,7 +25,6 @@ namespace HollowPoint
                 yield return null;
             }
 
-            //HeroController.instance.spellControl.
         }
 
     }
