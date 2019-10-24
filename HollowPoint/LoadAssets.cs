@@ -48,7 +48,6 @@ namespace HollowPoint
                         if (s == null) continue;
                         byte[] buffer = new byte[s.Length];
                         s.Read(buffer, 0, buffer.Length);
-                        s.Dispose();
                         string restemp = res.Replace("HollowPoint.assets.", "");
                         Texture2D currSprite;
                         currSprite = new Texture2D(1, 1);
