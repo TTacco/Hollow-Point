@@ -2,6 +2,7 @@
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using System;
 
 
 namespace HollowPoint
@@ -27,19 +28,18 @@ namespace HollowPoint
 
         private static void NewGame()
         {
+            GameManager.instance.gameObject.AddComponent<HP_Prefabs>();
             GameManager.instance.gameObject.AddComponent<HP_AttackHandler>();
             GameManager.instance.gameObject.AddComponent<HP_DirectionHandler>();
             GameManager.instance.gameObject.AddComponent<HP_WeaponHandler>();
             GameManager.instance.gameObject.AddComponent<HP_WeaponSwapHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_BulletHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
+            //GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
             GameManager.instance.gameObject.AddComponent<HP_DamageCalculator>();
             GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
             GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
-            //GameManager.instance.gameObject.AddComponent<CharmControl>();
-            //GameManager.instance.gameObject.AddComponent<BulletObject>();
-            //GameManager.instance.gameObject.AddComponent<GunSpriteController>();
+            //GameManager.instance.gameObject.AddComponent<HP_Stats>();
+
         }
 
         private static void SaveGame(SaveGameData sgd)

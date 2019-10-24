@@ -6,6 +6,7 @@ using System.Text;
 using Modding;
 using ModCommon.Util;
 using UnityEngine;
+using GlobalEnums;
 
 
 namespace HollowPoint
@@ -14,6 +15,9 @@ namespace HollowPoint
     {
         //Put this at the prefabs class
         public static GameObject blockHitPrefab;
+        public static System.Random rand = new System.Random();
+
+        public static bool heroDamageCoroutineActive = false;
 
         public void Awake()
         {
@@ -27,28 +31,153 @@ namespace HollowPoint
                 yield return null;
             }
 
+           
 
             On.HealthManager.Hit += BulletDamage;
+            On.HeroController.TakeDamage += PlayerDamaged;
+        }
+
+        public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
+        {
+            if (go.name.Contains("KnightMadeExplosion"))
+            {
+                if (!heroDamageCoroutineActive)
+                {
+                    heroDamageCoroutineActive = true;
+                    StartCoroutine(RocketJump(go));
+
+                    HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
+                    GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
+                    UnityEngine.Object.Instantiate<GameObject>(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
+                }
+            }
+            else
+            {
+                orig(self, go, damageSide, damageAmount, hazardType);
+            }
+
+        }
+        
+        public IEnumerator RocketJump(GameObject damagerGO)
+        {
+            Modding.Logger.Log("Player has been damaged by " + damagerGO.name);
+            float explodeX = damagerGO.transform.position.x;
+            float explodeY = damagerGO.transform.position.y;
+
+            float knightX = HeroController.instance.transform.position.x;
+            float knightY = HeroController.instance.transform.position.y;
+
+            float slope = (explodeY - knightY) / (explodeX - knightX);
+
+            Modding.Logger.Log("The slope is " + slope);
+
+            float angle = (float) Math.Atan(slope);
+            angle  = (float) (angle * 180 / Math.PI);
+
+            Modding.Logger.Log("angle is " + angle);
+            StartCoroutine(LaunchTowardsAngle(10f, angle));
+
+            yield return new WaitForSeconds(1.2f);
+            Modding.Logger.Log("Coroutine has ended");
+            heroDamageCoroutineActive = false;
+        }
+
+        public IEnumerator LaunchTowardsAngle(float recoilStrength, float applyForceFromDegree)
+        {
+            //TODO: Develop the direction launch soon 
+
+            Rigidbody2D knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
+
+            float deg = applyForceFromDegree;
+            deg = Math.Abs(deg);
+            if (applyForceFromDegree < 100 && applyForceFromDegree > 80 )
+            {
+                deg = 90;
+
+            }
+
+            deg = deg % 360;
+
+            float radian = deg * Mathf.Deg2Rad;
+
+            float xDeg = (float)((4 * recoilStrength) * Math.Cos(radian));
+            float yDeg = (float)((4 * recoilStrength) * Math.Sin(radian));
+
+            xDeg = (xDeg == 0) ? 0 : xDeg;
+            yDeg = (yDeg == 0) ? 0 : yDeg;
+
+            HeroController.instance.cState.shroomBouncing = true;
+
+            if (deg == 90 || deg == 270)
+            {
+                knight.velocity = new Vector2(0, yDeg);
+                yield break;
+            }
+
+            if (HeroController.instance.cState.facingRight)
+            {
+                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
+                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                HeroController.instance.cState.recoilingLeft = true;
+                HeroController.instance.cState.recoilingRight = false;
+                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+
+                knight.velocity = new Vector2(-xDeg, yDeg);
+            }
+            else
+            {
+                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
+                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                HeroController.instance.cState.recoilingLeft = false;
+                HeroController.instance.cState.recoilingRight = true;
+                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+
+                knight.velocity = new Vector2(xDeg, yDeg);
+            }
+
+            yield return null;
         }
 
         //Handles the damage
         public void BulletDamage(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
+            //Modding.Logger.Log(self.gameObject.name + " " + hitInstance.Source.name);
+
+            if (hitInstance.Source.name.Contains("Gas"))
+            {
+                try
+                {
+                    
+                    hitInstance.DamageDealt = 10;
+                    Modding.Logger.Log("[Damage Dealt by] " + hitInstance.Source.name);
+                }
+                catch(Exception e)
+                {
+                    Modding.Logger.Log("[Damage Calculator] " + e);
+                }
+                orig(self, hitInstance);
+                return;
+            }
+
             if (!hitInstance.Source.name.Contains("bullet"))
             {
                 orig(self, hitInstance);
                 return;
             }
 
-            int damage = 3;
+            int damage = rand.Next(3, 9) + PlayerData.instance.nailSmithUpgrades * 3;
+            int bloodAmount = (int)(damage / (3 + (PlayerData.instance.nailSmithUpgrades * 3))) - 1;  
 
-            if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
-
-            Modding.Logger.Log(hitInstance.Source.name);
             // TODO: Put these in the weapon handler section
             //damage.AttackType = AttackTypes.Generic;
             // damage.DamageDealt = HP_WeaponHandler.currentGun.gunDamage;
-            DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.damage, 0);
+
+
+            if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
+
+            StartCoroutine(SplatterBlood(self.gameObject, bloodAmount));
+
+            DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.bulletHitInstance, 0);
             return;
 
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
@@ -81,11 +210,23 @@ namespace HollowPoint
 
         }
 
+        public IEnumerator SplatterBlood(GameObject target, int repeat)
+        {
+            for (int i = 0; i < repeat; i++)
+            {
+                GameObject bloodSplat = Instantiate(HP_Prefabs.blood, target.transform.position, Quaternion.identity);
+                bloodSplat.SetActive(true);
+            }
+            yield return new WaitForEndOfFrame();
 
+
+        }
 
         public void Destroy()
         { 
 
         }
     }
+
+    
 }

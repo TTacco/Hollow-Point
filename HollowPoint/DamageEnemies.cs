@@ -16,40 +16,27 @@ namespace HollowPoint
         {
             int realDamage = expectedDamage;
 
-            // TODO: Add possible optional damage multiplier information below.
-
-            /*
-            double multiplier = 1;
-            if (PlayerData.instance.GetBool("equippedCharm_25"))
-            {
-                multiplier *= 1.5;
-            }
-            if (PlayerData.instance.GetBool("equippedCharm_6") && PlayerData.instance.GetInt("health") == 1)
-            {
-                multiplier *= 1.75f;
-            }
-            if (gng_bindings.hasNailBinding())
-            {
-                multiplier *= 0.3;
-            }
-            realDamage = (int) Math.Round(realDamage * multiplier);    
-            */
-
-            //Modding.Logger.Log("Target name is " + targetHP.name);
-
-
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
             if (targetHP.IsInvincible && !targetHP.name.Equals("Moss Charger"))
-            {             
+            {
+                GameObject blockHit = blockHitPrefab.Spawn();
+                blockHit.transform.position = targetHP.transform.position;
                 return;
+            }
+
+            Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
+
+            if (recoil != null)
+            {
+                recoil.RecoilByDirection(cardinalDirection, 1f);
             }
 
             if (realDamage <= 0)
             {
-                GameObject blockHit = blockHitPrefab.Spawn();
-                blockHit.transform.position = targetHP.transform.position;
+
                 return;
             }
 
@@ -60,13 +47,14 @@ namespace HollowPoint
              * Mostly code copied from the healthmanager class itself.
              */
 
-            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
+
+
 
             //Modding.Logger.Log("Cardinal is " + cardinalDirection);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
             if (sendHitGO != null)
-            {            
+            {
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
@@ -76,8 +64,8 @@ namespace HollowPoint
             if (HitPrefab != null && effectOrigin != null)
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-            }           
-        
+            }
+
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
 
@@ -163,6 +151,22 @@ namespace HollowPoint
 
             return targetHP;
         }
+
+        /*
+        public IEnumerator SplatterBlood(int repeat)
+        {
+            for (int i = 0; i < repeat; i++)
+            {
+                GameObject bloodSplat = Instantiate(HP_Prefabs.blood, gameObject.transform.position, Quaternion.identity);
+                bloodSplat.SetActive(true);
+            }
+            yield return new WaitForEndOfFrame();
+
+
+        }
+
+        StartCoroutine(SplatterBlood(2));
+        */
 
     }
 }

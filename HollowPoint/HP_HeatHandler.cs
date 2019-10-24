@@ -55,7 +55,7 @@ namespace HollowPoint
 
             if (currentHeat > 0)
             {
-                currentHeat -= Time.deltaTime * 90f;
+                currentHeat -= Time.deltaTime * 100f;
                 if (currentHeat < 0)
                 {
                     currentHeat = 0;
@@ -71,11 +71,11 @@ namespace HollowPoint
             
             if(fastCooldownTimer> 25f)
             {
-                currentHeat += 35;
+                currentHeat += 40;
             }
             else if(fastCooldownTimer > 15f)
             {
-                currentHeat += 18;
+                currentHeat += 20;
             }
             else
             {

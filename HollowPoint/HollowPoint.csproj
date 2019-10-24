@@ -77,11 +77,12 @@
     <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HP_AttackHandler.cs" />
-    <Compile Include="HP_BulletHandler.cs" />
+    <Compile Include="HP_Prefabs.cs" />
     <Compile Include="HP_DirectionHandler.cs" />
     <Compile Include="HP_Init.cs" />
     <Compile Include="HP_SpellControl.cs" />
     <Compile Include="HP_SpriteHandler.cs" />
+    <Compile Include="HP_Stats.cs" />
     <Compile Include="HP_WeaponHandler.cs" />
     <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -177,6 +178,15 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\divedetonate.wav" />
     <EmbeddedResource Include="assets\divetrigger.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\lightflash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\firerocket.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\subsonicsfx.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

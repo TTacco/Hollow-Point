@@ -66,18 +66,42 @@ namespace HollowPoint
             //ts.transform.SetParent(HeroController.instance.transform);
             gunSpriteGO.transform.SetParent(ts);
 
-            whiteFlashGO = HeroController.instance.GetAttr<GameObject>("dJumpFlashPrefab");
-
-            LoadAssets.spriteDictionary.TryGetValue("muzzleflash.png", out Texture2D muzzleflashTex);
-            muzzleFlashGO = new GameObject("bulletFadePrefabObject", typeof(SpriteRenderer));
+            //Flash
+            /*
+            LoadAssets.spriteDictionary.TryGetValue("flash.png", out Texture2D muzzleflashTex);
+            muzzleFlashGO = new GameObject("fireFlash", typeof(SpriteRenderer));
             muzzleFlashGO.GetComponent<SpriteRenderer>().sprite = Sprite.Create(muzzleflashTex,
                 new Rect(0, 0, muzzleflashTex.width, muzzleflashTex.height),
                 new Vector2(0.5f, 0.5f), 150);
+                */
+
+            try
+            {
+                whiteFlashGO = CreateGameObjectSprite("lightflash.png", "lightFlashGO", 30);
+                muzzleFlashGO = CreateGameObjectSprite("muzzleflash.png", "bulletFadePrefabObject", 150);
+            }
+            catch (Exception e)
+            {
+                Log(e);
+            }
+
+            whiteFlashGO.SetActive(false);
 
             DontDestroyOnLoad(whiteFlashGO);
             DontDestroyOnLoad(transformSlave);
             DontDestroyOnLoad(gunSpriteGO);
             DontDestroyOnLoad(muzzleFlashGO);
+        }
+
+        public static GameObject CreateGameObjectSprite(string spriteName, string gameObjectName, float pixelsPerUnit) 
+        {
+            LoadAssets.spriteDictionary.TryGetValue(spriteName, out Texture2D texture);
+            GameObject gameObjectWithSprite = new GameObject(gameObjectName, typeof(SpriteRenderer));
+            gameObjectWithSprite.GetComponent<SpriteRenderer>().sprite = Sprite.Create(texture,
+                new Rect(0, 0, texture.width, texture.height),
+                new Vector2(0.5f, 0.5f), pixelsPerUnit);
+
+            return gameObjectWithSprite;
         }
 
         public void LateUpdate()
@@ -150,7 +174,7 @@ namespace HollowPoint
                 isFiring = true;
                 idleAnim = false;
                 startFiringAnim = false;
-                StartCoroutine(ShootAnimation());
+                StartCoroutine(ShootAnimation(HP_DirectionHandler.finalDegreeDirection));
             }
         }
 
@@ -163,12 +187,16 @@ namespace HollowPoint
                 lowerGunTimer -= Time.deltaTime;
                 gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
-                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f, -0.0001f);
+                float gunHeightWhenPointingUpwards = (SpriteRotation() == 90 || SpriteRotation() == 45) ? 0.3f: 0f;
+
+                //gunSpriteGO.transform.localPosition.x 
+                gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f + gunHeightWhenPointingUpwards, -0.0001f); //0.10f * yMult
 
                 if (lowerGunTimer < 0)
                 {
                     isFiring = false;
                     isSprinting = false;
+                    gunSpriteGO.transform.localPosition = new Vector3(0, 0.10f, -0.0001f);
                 }
             }
             else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
@@ -188,7 +216,7 @@ namespace HollowPoint
                 StopCoroutine("SprintingShake");
                 StopCoroutine("SprintingShakeRotation");
                 //gunSpriteGO.transform.localPosition = defaultWeaponPos;
-                gunSpriteGO.transform.SetRotationZ(24);
+                gunSpriteGO.transform.SetRotationZ(35);
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0, -0.001f);
             }
         }
@@ -197,13 +225,13 @@ namespace HollowPoint
         {
             if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
             {
-                gunSpriteGO.transform.SetRotationZ(-23); // 23 
+                gunSpriteGO.transform.SetRotationZ(-34); //-23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);
                 // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running)
                 {
-                    gunSpriteGO.transform.SetRotationZ(-17);
+                    gunSpriteGO.transform.SetRotationZ(-28); //-17
                 }
             }
             else
@@ -254,12 +282,17 @@ namespace HollowPoint
             }
         }
 
-        IEnumerator ShootAnimation()
+        IEnumerator ShootAnimation(float degreeDirection)
         {
             float face = (HeroController.instance.cState.facingRight) ? 1 : -1;
-            gunSpriteGO.transform.localPosition = new Vector3(-0.20f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
+
+            gunSpriteGO.transform.localPosition = new Vector3(-0.2f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
             gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + shakeNum.Next(-5,6));
-            yield return new WaitForSeconds(0.1f);
+            yield return new WaitForSeconds(0.15f);
+
+            // float faceX = (HeroController.instance.cState.facingRight) ? 0.1f : -0.1f;
+
+            //float faceX = (degreeDirection >= 45 && degreeDirection <= 135)? 0.2f : 0f;
             gunSpriteGO.transform.localPosition = new Vector3(0, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
         }
 
@@ -307,8 +340,28 @@ namespace HollowPoint
 
         public static void StartFlash()
         {
-            GameObject flash = Instantiate(whiteFlashGO, HeroController.instance.transform.position + new Vector3(0, 0, -1), new Quaternion(0, 0, 0, 0));
+            GameObject flash = Instantiate(whiteFlashGO, HeroController.instance.transform.position + new Vector3(0, 0, -15), new Quaternion(0, 0, 0, 0));
             flash.SetActive(true);
+            Destroy(flash, 0.1f);
+        }
+
+        public static void StartMuzzleFlash(float bulletDegreeDirection)
+        {
+            //MuzzleFlash Rotation and Spawn
+            float degree = bulletDegreeDirection;
+            float radian = (float)(degree * Math.PI / 180);
+
+            float wallSlideOffset = (HeroController.instance.cState.wallSliding) ? -1 : 1;
+            float flashOffsetX = (float)(wallSlideOffset * 1.9f * Math.Cos(radian));
+            float flashOffsetY = (float)(1.9f * Math.Sin(radian));
+            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding) ? 180 : 0;
+
+            GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f), new Quaternion(0, 0, 0, 0));
+            muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + SpriteRotationWallSlide() + muzzleFlashWallSlide, 0);
+
+            //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
+
+            Destroy(muzzleFlashClone, 0.06f);
         }
 
         public static float SpriteRotationWallSlide()

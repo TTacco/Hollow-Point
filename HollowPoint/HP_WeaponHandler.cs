@@ -21,63 +21,6 @@ namespace HollowPoint
 
         public void Update()
         {
-            if (HP_HeatHandler.overheat) return;
-
-            if ((InputHandler.Instance.inputActions.down.WasPressed))
-            {
-                tapDown++;
-            }
-            if ((InputHandler.Instance.inputActions.up.WasPressed))
-            {
-                tapUp++;
-            }
-
-            if ((tapDown == 1 || tapUp == 1) && !swapWeaponStart)
-            {
-                swapWeaponTimer = 0.20f;
-                swapWeaponStart = true;
-            }
-            else if (swapWeaponStart)
-            {
-                swapWeaponTimer -= Time.deltaTime;
-
-                if (swapWeaponTimer < 0)
-                {
-                    swapWeaponStart = false;
-                    tapDown = 0;
-                    tapUp = 0;
-                }
-            }
-
-            //Cycle the weapon
-            if (tapDown >= 2)
-            {
-                tapDown = 0;
-                tapUp = 0;
-                swapWeaponTimer = 0;
-                swapWeaponStart = false;
-                weaponIndex++;
-                CheckIndexBound();
-                HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[weaponIndex];
-                HP_GunSpriteRenderer.SwapWeapon(HP_WeaponHandler.currentGun.spriteName);
-            }
-            if (tapUp >= 2)
-            { 
-                tapDown = 0;
-                tapUp = 0;
-                swapWeaponTimer = 0;
-                swapWeaponStart = false;
-                weaponIndex--;
-                CheckIndexBound();
-                HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[weaponIndex];
-                HP_GunSpriteRenderer.SwapWeapon(HP_WeaponHandler.currentGun.spriteName);
-            }
-        }
-
-        public static void ForceLowPowerMode()
-        {
-            HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[1];
-            HP_GunSpriteRenderer.SwapWeapon(HP_WeaponHandler.currentGun.spriteName);
         }
 
         public void CheckIndexBound()
@@ -117,11 +60,10 @@ namespace HollowPoint
                 yield return null;
             }
 
-            allGuns = new HP_Gun[3];
+            allGuns = new HP_Gun[2];
 
             allGuns[0] = new HP_Gun("Nail", 4, 9999, 9999, 0, "Nail", 2, 10, 1, 0.40f, 0, false, "Old Nail");
             allGuns[1] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Primary Fire");
-            allGuns[2] = new HP_Gun("Sniper", 35, 15, 15, 35, "Weapon_RifleSprite.png", 0, 70, 150, 1.3f, 0.50f, true, "Underbarrel");
             //Add an LMG and a flamethrower later
 
             currentGun = allGuns[0];
@@ -174,6 +116,8 @@ namespace HollowPoint
     {
         public static int ExtraDeviation()
         {
+            
+
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
                 return 7;
