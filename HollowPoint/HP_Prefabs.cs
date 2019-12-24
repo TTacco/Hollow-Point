@@ -33,7 +33,7 @@ namespace HollowPoint
 
         private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
         {
-            //Modding.Logger.Log(go.name);
+            Modding.Logger.Log(go.name);
             return go;
         }
 
@@ -49,8 +49,6 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
-
-            //MAJOR NOTICE SOMETIMES THIS EXPLOSION GO WILL FAIL TO INSTANTIATE DUE TO SOME NULL REFERENCE, SOMETIMES IT DOES
 
             Resources.LoadAll<GameObject>("");
             foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
@@ -116,11 +114,11 @@ namespace HollowPoint
             //bulletTR.material = new Material(Shader.Find("Particles/Additive"));
             //bulletTR.widthMultiplier = 0.05f;
             bulletTR.startWidth = 0.08f;
-            bulletTR.endWidth = 0.06f;
-            bulletTR.numCornerVertices = 20;
-            bulletTR.numCapVertices = 5;
+            bulletTR.endWidth = 0.04f;
+            bulletTR.numCornerVertices = 50;
+            bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
-            bulletTR.time = 0.075f;
+            bulletTR.time = 0.045f; //0.075
             bulletTR.startColor = new Color(240, 234, 196);
             bulletTR.endColor = new Color(237, 206, 154);
 
@@ -155,8 +153,7 @@ namespace HollowPoint
             if (bulletDegreeDirection == 90 || bulletDegreeDirection == 270) directionMultiplierX = 0.2f * directionMultiplierX;
 
             directionMultiplierX *= wallClimbMultiplier;
-            
-
+                
             GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.5f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
 
             bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
@@ -193,8 +190,8 @@ namespace HollowPoint
         static System.Random rand = new System.Random();
 
         public static HitInstance bulletHitInstance = new HitInstance
-        {          
-            DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 2),
+        {
+            DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 3),
             Multiplier = 1,
             IgnoreInvulnerable = false,
             CircleDirection = true,
@@ -223,7 +220,7 @@ namespace HollowPoint
             bulletOriginPosition = gameObject.transform.position;
 
             //Bullet Direction
-            float deviation = (HP_HeatHandler.currentHeat * 0.1f) + SpreadDeviationControl.ExtraDeviation();
+            float deviation = (HP_HeatHandler.currentHeat * 0.2f) + SpreadDeviationControl.ExtraDeviation();
             //bulletSpeed = HP_WeaponHandler.currentGun.gunBulletSpeed;
             bulletSpeed = 45f * bulletSpeedMult;
 
@@ -253,6 +250,8 @@ namespace HollowPoint
             {
                 xDeg *= -1;
                 degree += 180;
+
+                if (HeroController.instance.cState.facingRight) degree += 180;
             }
 
             rb2d.velocity = new Vector2((float)xDeg, (float)yDeg);
@@ -267,6 +266,34 @@ namespace HollowPoint
             hm = col.GetComponentInChildren<HealthManager>();
             bulletHitInstance.Source = gameObject;
 
+            //PURE VESSEL CHECK
+            if (col.gameObject.name.Contains("Idle"))
+            {
+                Modding.Logger.Log("PV IS HIT");
+
+                Component[] pvc = col.gameObject.GetComponents<Component>();
+
+                foreach(Component c in pvc){
+                    Type type = c.GetType();
+
+                    //Transform BoxCollider2D DamageHero
+                    if (type.Name.Contains("Transform")){
+                        Transform pvt = (Transform) c;
+                        Component[] parent_pvt = pvt.GetComponentsInParent(typeof(Component));
+
+                        foreach(Component cp in parent_pvt)
+                        {
+                            Type type_2 = cp.GetType();
+                            if (type_2.Name.Contains("HealthManager"))
+                            {
+                                hm = (HealthManager) cp;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
 
             if (hm == null && col.gameObject.layer.Equals(8))
             {
@@ -279,7 +306,6 @@ namespace HollowPoint
                 HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
 
                 Destroy(gameObject);
-
             }
             //Damages the enemy and destroys the bullet
             else if (hm != null)
@@ -301,10 +327,11 @@ namespace HollowPoint
         }
 
 
-        public IEnumerator wallHitDust()
+        public IEnumerator wallHitDust() //fuck your naming violations
         {
-
             ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
+
+            Destroy(wallDust, 0.5f);
             wallDust.transform.position = gameObject.transform.position;
             wallDust.Emit(200);
             ParticleSystem.VelocityOverLifetimeModule v = wallDust.velocityOverLifetime;
@@ -315,7 +342,7 @@ namespace HollowPoint
             v.yMultiplier = 3f * Mathf.Sin(rad);
 
             yield return new WaitForSeconds(0.3f);
-            Destroy(wallDust);
+            v.enabled = false;
         }
 
        

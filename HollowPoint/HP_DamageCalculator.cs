@@ -51,6 +51,10 @@ namespace HollowPoint
                     UnityEngine.Object.Instantiate<GameObject>(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
                 }
             }
+            else if (HP_AttackHandler.slowWalk)
+            {
+                orig(self, go, damageSide, (int) damageAmount*2, hazardType);
+            }
             else
             {
                 orig(self, go, damageSide, damageAmount, hazardType);

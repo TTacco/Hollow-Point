@@ -66,20 +66,20 @@ namespace HollowPoint
 
         }
 
-        public static void IncreaseHeat()
+        public static void IncreaseHeat(float mult)
         {
             
             if(fastCooldownTimer> 25f)
             {
-                currentHeat += 40;
+                currentHeat += 40 * mult;
             }
             else if(fastCooldownTimer > 15f)
             {
-                currentHeat += 20;
+                currentHeat += 20 * mult;
             }
             else
             {
-                currentHeat += 5;
+                currentHeat += 5 * mult;
             }
 
             fastCooldownTimer = 30f;

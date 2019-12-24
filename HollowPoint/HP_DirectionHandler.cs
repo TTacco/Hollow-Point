@@ -22,6 +22,8 @@ namespace HollowPoint
         public static bool right;
         public static bool left;
         public static bool facingRight;
+        public static bool holdingAttack;
+        public static bool pressingAttack;
         public static float finalDegreeDirection;
 
         public void Update()
@@ -30,6 +32,8 @@ namespace HollowPoint
             down = InputHandler.Instance.inputActions.down;
             right = InputHandler.Instance.inputActions.right;
             left = InputHandler.Instance.inputActions.left;
+            holdingAttack = InputHandler.Instance.inputActions.attack.WasRepeated;
+            pressingAttack = InputHandler.Instance.inputActions.attack.WasPressed;
             facingRight = HeroController.instance.cState.facingRight;
 
             if (facingRight)

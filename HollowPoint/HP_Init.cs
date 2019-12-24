@@ -38,7 +38,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
             GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
-            //GameManager.instance.gameObject.AddComponent<HP_Stats>();
+            GameManager.instance.gameObject.AddComponent<HP_Stats>();
 
         }
 
@@ -51,7 +51,14 @@ namespace HollowPoint
         {
             ModHooks.Instance.AfterSavegameLoadHook -= SaveGame;
             ModHooks.Instance.NewGameHook -= NewGame;
+            Modding.Logger.Log("Unload on Init is called");
         }
 
+        public void OnDestroy()
+        {
+            ModHooks.Instance.AfterSavegameLoadHook -= SaveGame;
+            ModHooks.Instance.NewGameHook -= NewGame;
+            Modding.Logger.Log("Destroy on Init is called");
+        }
     }
 }

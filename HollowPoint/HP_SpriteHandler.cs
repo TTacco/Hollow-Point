@@ -33,6 +33,7 @@ namespace HollowPoint
         public static bool startFiringAnim = false;
         public static bool idleAnim = true;
         public static bool isWallClimbing = false;
+        public static bool facingNorthFirstTime = false;
 
         public static GameObject transformSlave = new GameObject("slaveTransform", typeof(Transform));
         public static Transform ts;
@@ -109,6 +110,8 @@ namespace HollowPoint
             //if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
             isWallClimbing = HeroController.instance.cState.wallSliding;
 
+            //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); ENTER = when the player enters
+
             //This just makes it so the gun is more stretched out on wherever the knight is facing, rather than staying in his center
             int directionMultiplier = (HeroController.instance.cState.facingRight) ? 1 : -1;
 
@@ -181,6 +184,8 @@ namespace HollowPoint
         
         public void SprintAnim()
         {
+            //If the player is ducking and collecting, lower gun aim further
+
             if (isFiring) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             {
                 StopCoroutine("SprintingShake");
@@ -216,20 +221,37 @@ namespace HollowPoint
                 StopCoroutine("SprintingShake");
                 StopCoroutine("SprintingShakeRotation");
                 //gunSpriteGO.transform.localPosition = defaultWeaponPos;
-                gunSpriteGO.transform.SetRotationZ(35);
+
+                if (BadStareDown())
+                {
+                    gunSpriteGO.transform.SetRotationZ(50);
+                }
+                else
+                {
+                    gunSpriteGO.transform.SetRotationZ(35);
+                }
+
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0, -0.001f);
             }
         }
 
         void WeaponBehindBack()
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
+
+            
+            if (BadAnimFace())
+            {
+                gunSpriteGO.transform.SetPositionZ(0.01f);
+
+            }
+
+            else if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
             {
                 gunSpriteGO.transform.SetRotationZ(-34); //-23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);
                 // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
-                if (HeroController.instance.hero_state == ActorStates.running)
+                if (HeroController.instance.hero_state == ActorStates.running )
                 {
                     gunSpriteGO.transform.SetRotationZ(-28); //-17
                 }
@@ -238,6 +260,34 @@ namespace HollowPoint
             {
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, gunSpriteGO.transform.localPosition.y, -0.0001f);
             }
+        }
+
+
+        //Player is facing the front
+        bool BadAnimFace()
+        {
+            //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
+            string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+
+            if (!facingNorthFirstTime && animName.Contains("Enter"))
+            {
+                facingNorthFirstTime = true;
+                HeroController.instance.cState.facingRight = !HeroController.instance.cState.facingRight;
+            }
+            else if(facingNorthFirstTime && !animName.Contains("Enter"))
+            {
+                facingNorthFirstTime = false;
+            }
+
+            return (animName.Contains("Enter") || animName.Contains("Challenge") || animName.Contains("Prostrate"));
+        }
+
+        bool BadStareDown()
+        {
+            //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
+            string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+
+            return (animName.Contains("Collect Normal") || animName.Contains("RoarLock") || animName.Contains("SD"));
         }
 
         //================================ ANIMATION COROUTINES ======================================== 
@@ -354,7 +404,8 @@ namespace HollowPoint
             float wallSlideOffset = (HeroController.instance.cState.wallSliding) ? -1 : 1;
             float flashOffsetX = (float)(wallSlideOffset * 1.9f * Math.Cos(radian));
             float flashOffsetY = (float)(1.9f * Math.Sin(radian));
-            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding) ? 180 : 0;
+            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !HP_DirectionHandler.facingRight) ? 180 : 0;
+
 
             GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f), new Quaternion(0, 0, 0, 0));
             muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + SpriteRotationWallSlide() + muzzleFlashWallSlide, 0);
