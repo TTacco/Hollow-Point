@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using System.Xml;
 
 namespace HollowPoint
 {
@@ -18,6 +19,7 @@ namespace HollowPoint
         public static Texture2D perpetuaTMPTex;
 
         public static TMP_FontAsset perpetua;
+        public static XmlDocument textChanges = new XmlDocument();
 
         static AssetBundle fontAssetBundle;
    
@@ -28,6 +30,8 @@ namespace HollowPoint
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {
                 //Modding.Logger.Log(res);
+                
+
                 if (res.EndsWith(".wav"))
                 {
                     Stream audioStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(res);
@@ -58,7 +62,7 @@ namespace HollowPoint
                         Modding.Logger.Log("[HOLLOW POINT] Created sprite from embedded image: " + restemp);
                     }
                 }
-                else if (res.EndsWith(".shader"))
+                else if (res.EndsWith(".xml"))
                 {
                     //Modding.Logger.Log(Path.Combine(Application.streamingAssetsPath, "glowshader.shader"));
                     //string path = "";//Path.Combine(Application.streamingAssetsPath, "/glowshader.shader");
@@ -69,6 +73,15 @@ namespace HollowPoint
                     //Shader s = Resources.Load<Shader>(path);
 
                     //Modding.Logger.Log("Is the shader empty? " + (s == null));
+                    using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(res))
+                    {
+                  
+                        using (StreamReader sr = new StreamReader(stream))
+                        {
+                            textChanges.LoadXml(sr.ReadToEnd());
+                        }
+                        
+                    }
 
                 }
             }

@@ -11,11 +11,11 @@ namespace HollowPoint
     {
         public static float currentHeat;
         public static float currentEnergy = 100;
-        public static float cooldownPause; //This is so whenever the player fires, theres a short pause before the heat goes down
+        public float cooldownPause; //This is so whenever the player fires, theres a short pause before the heat goes down
         public const int MAX_HEAT = 100;
-        public static bool overheat = false;
+        public bool overheat = false;
 
-        public static bool fastCooldown = true;
+        public bool fastCooldown = true;
         public static float fastCooldownTimer = 30f;
 
         public void Start()
@@ -69,11 +69,11 @@ namespace HollowPoint
         public static void IncreaseHeat(float mult)
         {
             
-            if(fastCooldownTimer> 25f)
+            if(fastCooldownTimer> 20f)
             {
                 currentHeat += 40 * mult;
             }
-            else if(fastCooldownTimer > 15f)
+            else if(fastCooldownTimer > 10f)
             {
                 currentHeat += 20 * mult;
             }

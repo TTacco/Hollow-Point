@@ -1,30 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections;
-using System.Linq;
-using System.Text;
 using UnityEngine;
 using Modding;
 using ModCommon.Util;
 using MonoMod;
 using Language;
+using System.Xml;
 
 
 namespace HollowPoint
 {
     class HP_Stats : MonoBehaviour
     {
-        public static int soulBurstCost = 12;
+        public static int soulSingleCost = 3;
+        public static int soulBurstCost = 15;
 
-        public static float main_cooldown = 5f;
-        public static float burst_cooldown = 14f;
+        const float DEFAULT_ATTACK_SPEED = 0.41f;
+        const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
 
-        public static float current_main_cooldown = main_cooldown;
-        public static float current_burst_cooldown = burst_cooldown;
+        const float DEFAULT_ANIMATION_SPEED = 0.35f;
+        const float DEFAULT_ANIMATION_SPEED_CH = 0.28f;
+        const float DEFAULT_SOULTIMER = 4f;
+        const float MAX_SOULREGEN_CAP = 24;
+        float passiveSoulTimer = 4f;
 
-        public static bool canFireMain = true;
+        public static float DEFAULT_SINGLEFIRE_COOLDOWN = 3f;
+        public static float DEFAULT_BURSTFIRE_COOLDOWN = 14f;
+
+        public static float singlefire_cooldown = DEFAULT_SINGLEFIRE_COOLDOWN;
+        public static float burstfire_cooldown = DEFAULT_BURSTFIRE_COOLDOWN;
+
+        public static bool canFireSingle = true;
         public static bool canFireBurst = false;
+        static float recentlyFiredTimer = 150f;
+        
 
+        int totalGeo = 0;
+
+        public PlayerData pd_instance;
+        public HeroController hc_instance;
 
         public void Awake()
         {
@@ -38,12 +52,50 @@ namespace HollowPoint
                 yield return null;
             }
 
+            pd_instance = PlayerData.instance;
+            hc_instance = HeroController.instance;
+
             //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
-           // ModHooks.Instance.LanguageGetHook += LanguageHook;
+            //ModHooks.Instance.FocusCostHook += FocusCost;
+            ModHooks.Instance.LanguageGetHook += LanguageHook;
+            ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
+            On.HeroController.CanNailCharge += HeroController_CanNailCharge;
+            On.HeroController.AddGeo += HeroController_AddGeo;
         }
-     
+
+        private int Instance_SoulGainHook(int num)
+        {
+            return 4;
+        }
+
+        private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
+        {
+            totalGeo += amount;
+
+            if(totalGeo >= 50)
+            {
+                HeroController.instance.AddMPChargeSpa(15);
+                totalGeo = 0;
+            }
+
+            orig(self, amount);
+        }
+
+        private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
+        {
+            if (HP_WeaponHandler.currentGun.gunName == "Nail")
+                return orig(self);
+
+            return false;
+        }
+
+        private float FocusCost()
+        {
+            return (float)PlayerData.instance.GetInt("MPCharge") / 33.0f;
+        }
+
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
             Modding.Logger.Log("Charm Update Called");
@@ -52,16 +104,47 @@ namespace HollowPoint
         public string LanguageHook(string key, string sheet)
         {
             string txt = Language.Language.GetInternal(key, sheet);
-            Modding.Logger.Log("KEY: " + key + " displays this text: " + txt);
+            //Modding.Logger.Log("KEY: " + key + " displays this text: " + txt);
 
-            return txt;
+            string nodePath = "/TextChanges/Text[@name=\'" + key + "\']"; 
+            XmlNode newText = LoadAssets.textChanges.SelectSingleNode(nodePath);
+
+            if(newText == null)
+            {
+                return txt;
+            }
+            Modding.Logger.Log("NEW TEXT IS " + newText.InnerText);
+            return newText.InnerText;
         }
 
-        public void Update()
+        void Update()
         {
-            if(current_burst_cooldown > 0)
+            //actually put this on the weapon handler so its not called 24/7
+            if (HP_WeaponHandler.currentGun.gunName != "Nail") // && !HP_HeatHandler.overheat
             {
-                current_burst_cooldown -= Time.deltaTime * 30f;
+                hc_instance.ATTACK_DURATION = 0.0f;
+                hc_instance.ATTACK_DURATION_CH = 0f;
+
+                hc_instance.ATTACK_COOLDOWN_TIME = 500f;
+                hc_instance.ATTACK_COOLDOWN_TIME_CH = 500f;
+            }
+            else
+            {
+                hc_instance.ATTACK_COOLDOWN_TIME = DEFAULT_ANIMATION_SPEED;
+                hc_instance.ATTACK_COOLDOWN_TIME_CH = DEFAULT_ANIMATION_SPEED_CH;
+
+                hc_instance.ATTACK_DURATION = DEFAULT_ATTACK_SPEED;
+                hc_instance.ATTACK_DURATION_CH = DEFAULT_ATTACK_SPEED_CH;
+            }       
+        }
+
+        void FixedUpdate()
+        {
+            if (hc_instance.cState.isPaused) return;
+
+            if (burstfire_cooldown > 0)
+            {
+                burstfire_cooldown -= Time.deltaTime * 30f;
                 canFireBurst = false;
             }
             else
@@ -69,16 +152,30 @@ namespace HollowPoint
                 canFireBurst= true;
             }
 
-            if (current_main_cooldown > 0)
-            {
-                current_main_cooldown -= Time.deltaTime * 30f;
-                canFireMain = false;
+            if (singlefire_cooldown > 0)
+            {                
+                singlefire_cooldown -= Time.deltaTime * 30f;
+                canFireSingle = false;
             }
             else
             {
-                canFireMain = true;
+                canFireSingle = true;
             }
 
+            //Soul Gain Timer
+            if (recentlyFiredTimer >= 0)
+            {
+                recentlyFiredTimer -= Time.deltaTime * 30f;
+            }
+            else if (passiveSoulTimer > 0)
+            {
+                passiveSoulTimer -= Time.deltaTime * 30f;
+            }
+            else if(pd_instance.MPCharge < MAX_SOULREGEN_CAP)
+            {
+                passiveSoulTimer = DEFAULT_SOULTIMER;
+                HeroController.instance.AddMPChargeSpa(1);
+            }
 
 
         }
@@ -89,16 +186,19 @@ namespace HollowPoint
         {
             StartMainCooldown();
             StartBurstCooldown();
+            recentlyFiredTimer = 150;
         }
 
         public static void StartMainCooldown()
         {
-            current_main_cooldown = main_cooldown;
+            singlefire_cooldown = DEFAULT_SINGLEFIRE_COOLDOWN;
+            canFireSingle = false;
         }
         
         public static void StartBurstCooldown()
         {
-            current_burst_cooldown = burst_cooldown;
+            burstfire_cooldown = DEFAULT_BURSTFIRE_COOLDOWN;
+            canFireBurst = false;
         }
 
     }

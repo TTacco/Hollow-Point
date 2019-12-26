@@ -33,7 +33,7 @@ namespace HollowPoint
 
            
 
-            On.HealthManager.Hit += BulletDamage;
+            On.HealthManager.Hit += EnemyIsHit;
             On.HeroController.TakeDamage += PlayerDamaged;
         }
 
@@ -48,12 +48,12 @@ namespace HollowPoint
 
                     HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
                     GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
-                    UnityEngine.Object.Instantiate<GameObject>(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
+                    Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
                 }
             }
-            else if (HP_AttackHandler.slowWalk)
+            else if (HP_AttackHandler.slowWalk) //take double damage when bursting
             {
-                orig(self, go, damageSide, (int) damageAmount*2, hazardType);
+                orig(self, go, damageSide, (int) damageAmount, hazardType);
             }
             else
             {
@@ -143,16 +143,14 @@ namespace HollowPoint
         }
 
         //Handles the damage
-        public void BulletDamage(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
+        public void EnemyIsHit(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
             //Modding.Logger.Log(self.gameObject.name + " " + hitInstance.Source.name);
-
             if (hitInstance.Source.name.Contains("Gas"))
             {
                 try
                 {
-                    
-                    hitInstance.DamageDealt = 10;
+                    hitInstance.DamageDealt = 20;
                     Modding.Logger.Log("[Damage Dealt by] " + hitInstance.Source.name);
                 }
                 catch(Exception e)
@@ -165,11 +163,24 @@ namespace HollowPoint
 
             if (!hitInstance.Source.name.Contains("bullet"))
             {
+                hitInstance.DamageDealt = 2 + PlayerData.instance.nailSmithUpgrades * 3;
                 orig(self, hitInstance);
                 return;
             }
 
-            int damage = rand.Next(3, 9) + PlayerData.instance.nailSmithUpgrades * 3;
+            int soulGainAmt = 0;
+
+            try
+            {
+                HP_BulletBehaviour hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
+                soulGainAmt = 0; //(hpbb.isSingleFire) ? 4 : 0;
+            }
+            catch (Exception e)
+            {
+                Modding.Logger.Log("[HP_DAMAGECALCULATOR](EnemyIsHit) could not find HP_BulletBehaviour component in hitInstance");
+                soulGainAmt = 0;
+            }
+            int damage = rand.Next(3, 6) + PlayerData.instance.nailSmithUpgrades * 5;
             int bloodAmount = (int)(damage / (3 + (PlayerData.instance.nailSmithUpgrades * 3))) - 1;  
 
             // TODO: Put these in the weapon handler section
@@ -177,11 +188,11 @@ namespace HollowPoint
             // damage.DamageDealt = HP_WeaponHandler.currentGun.gunDamage;
 
 
-            if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
+            //if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
 
             StartCoroutine(SplatterBlood(self.gameObject, bloodAmount));
 
-            DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.bulletHitInstance, 0);
+            DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.bulletHitInstance, soulGainAmt);
             return;
 
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;

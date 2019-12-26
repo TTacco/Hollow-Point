@@ -40,6 +40,7 @@
       <HintPath>..\..\mods\PlayMaker.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.XML" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
@@ -74,6 +75,7 @@
   <ItemGroup>
     <Compile Include="HP_Component_EnemyBelow.cs" />
     <Compile Include="HP_DamageCalculator.cs" />
+    <Compile Include="HP_Enums.cs" />
     <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HP_AttackHandler.cs" />
@@ -187,6 +189,34 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\subsonicsfx.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_draw.wav" />
+    <EmbeddedResource Include="assets\weapon_holster.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\mortarclose.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\mortarexplosion.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\airstrikeinbound.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_flare.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\airstrikeend.wav" />
+    <EmbeddedResource Include="assets\airstrikerequest.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\textchanges.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\cantfire.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

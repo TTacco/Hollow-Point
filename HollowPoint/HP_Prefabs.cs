@@ -21,10 +21,13 @@ namespace HollowPoint
 
         //public static GameObject greenscreen;
         public static GameObject blood = null;
+        public static GameObject dungexplosion = null;
         public static GameObject explosion = null;
+        public static GameObject knight_spore = null;
         public static GameObject takeDamage = null;
 
         public static Dictionary<String, Sprite> projectileSprites = new Dictionary<String, Sprite>();
+        public static Dictionary<string, GameObject> prefabDictionary = new Dictionary<string, GameObject>();
         public void Start()
         {
             StartCoroutine(CreateBulletPrefab());
@@ -33,7 +36,7 @@ namespace HollowPoint
 
         private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
         {
-            Modding.Logger.Log(go.name);
+            //Modding.Logger.Log(go.name);
             return go;
         }
 
@@ -53,13 +56,14 @@ namespace HollowPoint
             Resources.LoadAll<GameObject>("");
             foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
             {
-
+                //Modding.Logger.Log(go.name);
+                //if (go.name.Equals("shadow burst") && blood == null)
                 if (go.name.Equals("particle_orange blood") && blood == null)
                 {
                     //globalPrefabDict.Add("blood", Instantiate(go));
                     blood = go;
                     //blood.SetActive(false);
-                    Modding.Logger.Log("Found blood!");
+                    Modding.Logger.Log(go.name);
                 }
 
                 else if (go.name.Equals("Gas Explosion Recycle M") && explosion == null)
@@ -67,9 +71,27 @@ namespace HollowPoint
                     //globalPrefabDict.Add("explosion medium", Instantiate(go));
                     explosion = go;
                     //explosion.SetActive(false);
-                    Modding.Logger.Log("Found the explosion!");
+                    Modding.Logger.Log(go.name);
                 }
 
+                else if (go.name.Equals("Dung Explosion") && dungexplosion == null)
+                {                   
+                    dungexplosion = go;
+                    Modding.Logger.Log(go.name);
+                }
+
+                else if (go.name.Equals("Knight Spore Cloud") && knight_spore == null)
+                {
+                    prefabDictionary.Add("Knight Spore Cloud", go);
+                    knight_spore = go;
+                    Modding.Logger.Log(go.name);
+                }
+                else if (go.name.Equals("Knight Dung Cloud") && knight_spore == null)
+                {
+                    prefabDictionary.Add("Knight Dung Cloud", go);
+                    knight_spore = go;
+                    Modding.Logger.Log(go.name);
+                }
 
             }
 
@@ -124,6 +146,7 @@ namespace HollowPoint
 
             bulletPrefab.SetActive(false);
 
+            //Get the cool af white particles from fireball and add it to the bullets
             DontDestroyOnLoad(bulletPrefab);
             DontDestroyOnLoad(bulletFadePrefab);
             DontDestroyOnLoad(bulletTrailPrefab);
@@ -177,15 +200,23 @@ namespace HollowPoint
         double bulletSpeed = 10;
        
         bool noDamage = false;
-        public String specialAttrib;
+        public string specialAttrib;
         public bool pierce = false;
-        public bool special = false;
+        public bool isSingleFire = false; //determines if the bullet is shot from regular mode
+
+
         public int bulletDamage;
-        public float bulletSpeedMult = 1;
-
+        public float bulletSpeedMult = 1; 
         public float bulletDegreeDirection = 0;
-
         public Vector3 bulletOriginPosition;
+
+        public bool ignoreCollisions = false;
+        public bool hasSporeCloud = true;
+
+        //Fire Support Attribs
+        public bool special = false;
+        public bool isFireSupportBullet = false;
+        public Vector3 targetDestination;
 
         static System.Random rand = new System.Random();
 
@@ -209,12 +240,31 @@ namespace HollowPoint
             rb2d = GetComponent<Rigidbody2D>();
             bc2d = GetComponent<BoxCollider2D>();
             bulletSprite = GetComponent<SpriteRenderer>();
-            bc2d.enabled = true;
+            bc2d.enabled = !ignoreCollisions;
 
             gameObject.tag = "Wall Breaker";
 
             //Trail    
             bulletTrailObjectClone = Instantiate(HP_Prefabs.bulletTrailPrefab, gameObject.transform);
+
+
+            //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
+            if (isFireSupportBullet)
+            {
+                bulletSprite.transform.Rotate(0, 0, 270);
+                bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
+                HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
+
+                gameObject.transform.localScale = new Vector3(1.2f, 1.2f, 0.90f);
+                bulletSprite.sprite = specialBulletTexture;
+
+                rb2d.velocity = new Vector2(0, -120);
+
+
+                return;
+            }
+
+            //===================================REGULAR BULLET ATTRIBUTES=========================================
 
             //Bullet Distance
             bulletOriginPosition = gameObject.transform.position;
@@ -229,7 +279,7 @@ namespace HollowPoint
             if (special)
             {
                 HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
-                size *= 1.5f;
+                size *= 1.25f;
                 bulletSprite.sprite = specialBulletTexture;
             }
 
@@ -258,6 +308,18 @@ namespace HollowPoint
 
             //Bullet Rotation
             bulletSprite.transform.Rotate(0, 0, degree + HP_Sprites.SpriteRotationWallSlide(), 0);
+        }
+
+        //For tracking fire support target
+        void FixedUpdate()
+        {
+            if(isFireSupportBullet)
+            {
+                if(gameObject.transform.position.y < targetDestination.y)
+                {
+                    Destroy(gameObject);
+                }
+            }
         }
 
         //Handles the colliders
@@ -302,8 +364,15 @@ namespace HollowPoint
                 //TODO: change this audio source location
                 LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
                 //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
-
                 HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
+
+                //Mark target for fire support
+                if (special)
+                {
+                    FireSupportTarget(gameObject);
+                    return;
+                }
+
 
                 Destroy(gameObject);
             }
@@ -316,16 +385,39 @@ namespace HollowPoint
                 GameObject bloodSplat = Instantiate(HP_Prefabs.blood, gameObject.transform.position, Quaternion.identity);
                 bloodSplat.SetActive(true);
                 */
-
+                //Mark target for fire support
+                if (special)
+                {
+                    FireSupportTarget(gameObject);
+                    return;
+                }
 
                 if (!pierce) Destroy(gameObject);
                 
                 hm.Hit(bulletHitInstance);
-
-
             }
         }
 
+        /* NOTE:
+            Heres the thing with this method
+                
+            Turns out if the game object that gets deleted, whatever coroutine they do also gets deleted
+            Which is why the coroutine only fires 1 round before destroying itself
+            This method just ensures that theres a long enough lifespan on the bullet once it hits that it'll be able to
+            deplete all the rounds
+        */
+        public void FireSupportTarget(GameObject fireSupportGO)
+        {
+            Vector3 pos = gameObject.transform.position;
+            Modding.Logger.Log("CALL AN AIR STRIKE AT THIS POSITION " + pos);
+            
+            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling FireSupportTarget
+            fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up
+            fireSupportGO.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0); //Same for line render
+            StartCoroutine(HP_SpellControl.CallMortar(pos));
+
+            Destroy(fireSupportGO, 25f);
+        }
 
         public IEnumerator wallHitDust() //fuck your naming violations
         {
@@ -345,7 +437,8 @@ namespace HollowPoint
             v.enabled = false;
         }
 
-       
+        
+
         public float DamageFalloffCalculation()
         {
             return 0f;
@@ -353,15 +446,37 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
+   
             Destroy(Instantiate(HP_Prefabs.bulletFadePrefab, gameObject.transform.position, gameObject.transform.localRotation), 0.03f); //bullet fade out sprite
 
-            if (gameObject.GetComponent<HP_BulletBehaviour>().specialAttrib.Contains("Explosion"))
+            
+            if (specialAttrib.Contains("DungExplosion"))
             {
-               GameObject explosionClone = Instantiate(HP_Prefabs.explosion, gameObject.transform.position, Quaternion.identity);
+                GameObject explosionClone = Instantiate(HP_Prefabs.dungexplosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                explosionClone.SetActive(true);
+                explosionClone.name += " KnightMadeDungExplosion";
+            }
+
+            else if (gameObject.GetComponent<HP_BulletBehaviour>().specialAttrib.Contains("Explosion") || isFireSupportBullet)
+            {
+                GameObject explosionClone = Instantiate(HP_Prefabs.explosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.SetActive(true);
                 explosionClone.name += " KnightMadeExplosion";
+
+
+                if (isFireSupportBullet)
+                {
+                    HP_SpellControl.PlayAudio("mortarexplosion", true);
+                }
+
+                HP_Prefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject knightgascloud);
+                GameObject knightspore = Instantiate(knightgascloud, gameObject.transform.position + new Vector3(0, 0, -1), Quaternion.identity);
+                knightspore.SetActive(true);
             }
+
+            
         }
+       
     }
 
 
