@@ -33,7 +33,7 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_DirectionHandler>();
             GameManager.instance.gameObject.AddComponent<HP_WeaponHandler>();
             GameManager.instance.gameObject.AddComponent<HP_WeaponSwapHandler>();
-            //GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
+            GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
             GameManager.instance.gameObject.AddComponent<HP_DamageCalculator>();
             GameManager.instance.gameObject.AddComponent<HP_Sprites>();
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();

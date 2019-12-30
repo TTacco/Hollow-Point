@@ -120,17 +120,17 @@ namespace HollowPoint
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
-                return 7;
+                return 5;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
             {
-                return 0;
+                return 2;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
             {
-                return 5;
+                return 3;
             }
 
             return 1;

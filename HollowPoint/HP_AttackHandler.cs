@@ -39,6 +39,26 @@ namespace HollowPoint
             StartCoroutine(InitRoutine());        
         }
 
+        private void HeroController_HeroDash(On.HeroController.orig_HeroDash orig, HeroController self)
+        {
+            if (isBursting)
+            {
+                Modding.Logger.Log(self.cState.facingRight);
+                if (self.cState.facingRight)
+                {
+                    self.FaceLeft();
+                }
+                else
+                {
+                    self.FaceRight();
+                }
+
+                //StartCoroutine(BackDash(self));
+            } 
+
+            orig(self);
+        }
+
         public IEnumerator InitRoutine()
         {
             while(HeroController.instance == null)
@@ -61,15 +81,9 @@ namespace HollowPoint
             {
                 if (HP_DirectionHandler.holdingAttack && HP_Stats.canFireBurst)
                 {
-                    //if(PlayerData.instance.equippedCharm_1 && PlayerData.instance.geo >= 30)
-                    //{
-                    //    HP_Stats.StartBothCooldown();
-                    //    HeroController.instance.TakeGeo(30); 
-                    //    HeroController.instance.AddMPChargeSpa(99);
-                    //}
                     if (PlayerData.instance.MPCharge >= HP_Stats.soulBurstCost)
                     {
-                        HP_Stats.StartBothCooldown();                 
+                        HP_Stats.StartBothCooldown();
                         FireGun(FireModes.Burst);
                     }
                     else
@@ -92,7 +106,7 @@ namespace HollowPoint
             }
             else if (!isFiring)
             {
-                HeroController.instance.WALK_SPEED = 4f;
+                HeroController.instance.WALK_SPEED = 3f;
             }
 
             //If the player lands, allow themselves to get lifted from the ground again when firing
@@ -132,7 +146,6 @@ namespace HollowPoint
 
             float finalDegreeDirectionLocal = HP_DirectionHandler.finalDegreeDirection;
 
-
             if (flareRound)
             {              
                 StartCoroutine(FireFlare());
@@ -144,17 +157,31 @@ namespace HollowPoint
                 HeroController.instance.TakeMP(HP_Stats.soulBurstCost);
                 slowWalk = true;
                 isBursting = true;
-                StartCoroutine(BurstShot(3));
+
+                //Change this depending on the Charm
+                HeroController.instance.WALK_SPEED = 3f;
+
+                if (PlayerData.instance.equippedCharm_11)
+                {
+                    StartCoroutine(SpreadShot(5));
+                }
+                else
+                {
+                    StartCoroutine(BurstShot(3));
+                }
             }
             else if(fm == FireModes.Single)
             {
                 HeroController.instance.TakeMP(HP_Stats.soulSingleCost);
                 slowWalk = true;
+
+                HeroController.instance.WALK_SPEED = (PlayerData.instance.equippedCharm_14) ? 4f : 5.5f;
                 StartCoroutine(SingleShot());
             }
 
             //Firing below will push the player up
             if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1f, finalDegreeDirectionLocal));
+            else if (finalDegreeDirectionLocal > 215 && finalDegreeDirectionLocal < 325) StartCoroutine(KnockbackRecoil(0.5f, finalDegreeDirectionLocal));
             /*
             else if (!HeroController.instance.cState.onGround && (finalDegreeDirectionLocal == 0 || finalDegreeDirectionLocal == 180))
             {
@@ -179,13 +206,15 @@ namespace HollowPoint
 
         public IEnumerator BurstShot(int burst)
         {
-            HeroController.instance.WALK_SPEED = 3f;
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            //HeroController.instance.SetAttr<int>("recoilSteps", 2);
             for (int i = 0; i < burst; i++)
             {
-                HP_HeatHandler.IncreaseHeat(1.2f);
+                HeroController.instance.RecoilLeft();
+                HP_HeatHandler.IncreaseHeat(0.5f);
          
                 GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+                bullet.GetComponent<HP_BulletBehaviour>().fm = FireModes.Burst;
                 PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
                 Destroy(bullet, .2f);
 
@@ -203,19 +232,20 @@ namespace HollowPoint
 
         public IEnumerator SingleShot()
         {
-            HeroController.instance.WALK_SPEED = 5.5f;
-            HP_HeatHandler.IncreaseHeat(0.3f);
+            HP_HeatHandler.IncreaseHeat(0.75f);
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
             GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
-            PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
-            bullet.GetComponent<HP_BulletBehaviour>().isSingleFire = true; //means its shot from single fire, burst == non standard
-            Destroy(bullet, .225f);
+            bullet.GetComponent<HP_BulletBehaviour>().fm = FireModes.Single;
+
+            float lifeSpan = (PlayerData.instance.equippedCharm_18) ? .325f : .225f;
+            Destroy(bullet, lifeSpan);
 
             HP_Sprites.StartGunAnims();
             HP_Sprites.StartFlash();
             HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
 
             slowWalkDisableTimer = 17f;
+            PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
             yield return new WaitForSeconds(0.04f);
             isFiring = false;
         }
@@ -227,7 +257,7 @@ namespace HollowPoint
             PlayGunSounds("flare");
 
             HP_BulletBehaviour bullet_behaviour = bullet.GetComponent<HP_BulletBehaviour>();
-            bullet_behaviour.special = true;
+            bullet_behaviour.flareRound = true;
 
             HP_Sprites.StartGunAnims();
             HP_Sprites.StartFlash();
@@ -238,22 +268,27 @@ namespace HollowPoint
             isFiring = false;
         }
 
-        public IEnumerator ShotgunShot(int pellets, float directionMultiplier, float directionDegree)
+        public IEnumerator SpreadShot(int pellets)
         {
+            slowWalkDisableTimer = 25f;
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
             HP_Sprites.StartGunAnims();
+            HP_Sprites.StartFlash();
+            HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
             PlayGunSounds("Shotgun");
 
-            float startAngle = directionDegree - 30;
+            float direction = HP_DirectionHandler.finalDegreeDirection;
             for (int i = 0; i < pellets; i++)
             {
                 yield return new WaitForEndOfFrame();
-                GameObject bullet = Instantiate(HP_Prefabs.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.7f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
-                bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection = startAngle;
-                bullet.GetComponent<HP_BulletBehaviour>().pierce = true; 
-                Destroy(bullet, 0.135f);
-
-                startAngle += 6.7f;
+                GameObject bullet = HP_Prefabs.SpawnBullet(direction);
+                bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection += UnityEngine.Random.Range(-20, 20);
+                Destroy(bullet, UnityEngine.Random.Range(0.15f, 0.3f));
             }
+
+            yield return new WaitForSeconds(0.05f);
+            isFiring = false;
+            isBursting = false;
         }
 
         public IEnumerator KnockbackRecoil(float recoilStrength, float applyForceFromDegree)

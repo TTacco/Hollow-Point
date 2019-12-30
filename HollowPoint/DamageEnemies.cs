@@ -20,7 +20,7 @@ namespace HollowPoint
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
-            if (targetHP.IsInvincible && !targetHP.name.Equals("Moss Charger"))
+            if ((targetHP.IsInvincible && !targetHP.name.Contains("Moss Charger")) && !PlayerData.instance.equippedCharm_15)
             {
                 GameObject blockHit = blockHitPrefab.Spawn();
                 blockHit.transform.position = targetHP.transform.position;
@@ -29,14 +29,13 @@ namespace HollowPoint
 
             Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
 
-            if (recoil != null)
+            if (recoil != null && PlayerData.instance.equippedCharm_15)
             {
-                recoil.RecoilByDirection(cardinalDirection, 1f);
+                recoil.RecoilByDirection(cardinalDirection, 1.5f);
             }
 
             if (realDamage <= 0)
             {
-
                 return;
             }
 
@@ -72,7 +71,7 @@ namespace HollowPoint
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
 
-
+            
             // Actually do damage to target.
             try
             {
@@ -101,7 +100,7 @@ namespace HollowPoint
             {
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
-                targetHP.Die(90f, hitInstance.AttackType, true);
+                targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
                 return;
             }
 

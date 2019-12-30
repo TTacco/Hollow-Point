@@ -17,8 +17,14 @@ namespace HollowPoint
     {
         GameObject canvas;
         CanvasGroup canvasGroup;
-        Text multiDamageDisplay;
-        Text gunActiveDisplay;
+        Text grenadeAmountText;
+        Text firesupportAmountText;
+
+        static int firesupportAmnt = 0;
+        static int grenadeAmnt = 0;
+        static float fadeOutTimer = 0f;
+        float alpha = 0;
+
         public Image heatbarImage;
         public Image energybarImage;
         public Image heatbarImageEstimate;
@@ -49,14 +55,15 @@ namespace HollowPoint
                 canvasGroup = canvas.GetComponent<CanvasGroup>();
                 canvas.GetComponent<Canvas>().sortingOrder = 1;
 
-                multiDamageDisplay = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-530, 790), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
-                multiDamageDisplay.color = new Color(1f, 1f, 1f, 1f);
-                multiDamageDisplay.text = "";
+                grenadeAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 900), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
+                grenadeAmountText.color = new Color(1f, 1f, 1f, 0f);
+                grenadeAmountText.text = "";
 
-                gunActiveDisplay = CanvasUtil.CreateTextPanel(canvas, "", 25, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-520, 785), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
-                gunActiveDisplay.color = new Color(1f, 1f, 1f, 1f);
-                gunActiveDisplay.text = "";
+                firesupportAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 875), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
+                firesupportAmountText.color = new Color(1f, 1f, 1f, 0f);
+                firesupportAmountText.text = "";
 
+                /*
                 LoadAssets.spriteDictionary.TryGetValue("heatbarsprite.png", out Texture2D bar);
 
                 Sprite spriteMain = Sprite.Create(bar, new Rect(0, 0, bar.width, bar.height),
@@ -71,8 +78,9 @@ namespace HollowPoint
 
                 Sprite spriteBorder = Sprite.Create(barBorder, new Rect(0, 0, barBorder.width, barBorder.height),
                 new Vector2(0.5f, 0.5f), 25);
-
+                */
                 //HEAT BAR
+                /*
                 CanvasUtil.RectData rectDataBorder = new CanvasUtil.RectData(new Vector2(275, 30), new Vector2(0, 0), new Vector2(0.12f, 0.70f), new Vector2(0.12f, 0.70f), new Vector2(0.50f, 0.50f));
                 heatbar_go_border = CanvasUtil.CreateImagePanel(canvas, spriteBorder, rectDataBorder);
 
@@ -92,10 +100,11 @@ namespace HollowPoint
                 heatbarImageEstimate.type = Image.Type.Filled;
                 heatbarImageEstimate.fillMethod = Image.FillMethod.Horizontal;
                 heatbarImageEstimate.preserveAspect = false;
-
+                */
 
 
                 //ENERGY BAR
+                /*
                 LoadAssets.spriteDictionary.TryGetValue("heatbarsprite.png", out Texture2D energybar);
 
                 spriteMain = Sprite.Create(energybar, new Rect(0, 0, bar.width, bar.height),
@@ -113,6 +122,7 @@ namespace HollowPoint
                 energybarImage.type = Image.Type.Filled;
                 energybarImage.fillMethod = Image.FillMethod.Horizontal;
                 energybarImage.preserveAspect = false;
+                */
 
                 //HP_DamageNumber.damageNumberGO = new GameObject("damageNumberClone", typeof(HP_DamageNumber), typeof(TextMesh), typeof(MeshRenderer));
                 DontDestroyOnLoad(canvas);
@@ -123,32 +133,50 @@ namespace HollowPoint
             {
                 Modding.Logger.Log(e.StackTrace);
             }
-    
+
         }
 
-        public void CamFadeOut(On.CameraController.orig_FadeOut orig, CameraController self, GlobalEnums.CameraFadeType type)
+        public static void UpdateDisplay()
         {
-            /*
-            Modding.Logger.Log("CAMERA FADING OUT");
-            canvasGroup.alpha = 0;
-            */
-            orig(self, type);
+            grenadeAmnt = HP_Stats.grenadeAmnt;
+            firesupportAmnt = HP_Stats.fireSupportAmnt;
+            fadeOutTimer = 70f;
         }
-
-        public void CamFadeIn(On.CameraController.orig_FadeSceneIn orig, CameraController self)
-        {
-            /*
-            Modding.Logger.Log("CAMERA FADING IN");
-            CanvasUtil.FadeInCanvasGroup(canvasGroup);
-            canvasGroup.alpha = 1;
-            */
-            orig(self);
-        }
-
         public void OnGUI()
         {
-            heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
-            energybarImage.fillAmount = HP_HeatHandler.currentEnergy/100;
+            grenadeAmountText.text = "GRENADES:       " + grenadeAmnt + " x";
+            firesupportAmountText.text =   "FIRE SUPPORT: " + firesupportAmnt + " x";
+            //heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
+            //energybarImage.fillAmount = HP_HeatHandler.currentEnergy/100;
+        }
+
+        void FixedUpdate()
+        {
+            if (fadeOutTimer > 0)
+            {
+                alpha = 1;
+                //multiDamageDisplay.color = Color.white;
+                grenadeAmountText.color = Color.white;
+                firesupportAmountText.color = Color.white;
+
+                fadeOutTimer -= 30 * Time.deltaTime;
+            }
+            else if (alpha > 0)
+            {
+                Color c = new Color(1, 1, 1, alpha);
+
+                grenadeAmountText.color = c;
+                firesupportAmountText.color = c;
+
+                alpha -= 0.90f * Time.deltaTime;
+
+                if(alpha < 0.03f)
+                {
+                    c = new Color(1, 1, 1, 0);
+                    grenadeAmountText.color = c;
+                    firesupportAmountText.color = c;
+                }
+            } 
         }
 
         public void OnDestroy()

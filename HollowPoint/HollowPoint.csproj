@@ -218,5 +218,8 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\cantfire.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\flarebullet.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -15,14 +15,17 @@ namespace HollowPoint
         public static int soulSingleCost = 3;
         public static int soulBurstCost = 15;
 
+        const int DEFAULT_SINGLE_COST = 3;
+        const int DEFAULT_BURST_COST = 15;
+
         const float DEFAULT_ATTACK_SPEED = 0.41f;
         const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
 
         const float DEFAULT_ANIMATION_SPEED = 0.35f;
         const float DEFAULT_ANIMATION_SPEED_CH = 0.28f;
-        const float DEFAULT_SOULTIMER = 4f;
-        const float MAX_SOULREGEN_CAP = 24;
-        float passiveSoulTimer = 4f;
+        float soulRegenTimer = 3f;
+        float max_soul_regen = 33;
+        float passiveSoulTimer = 3f;
 
         public static float DEFAULT_SINGLEFIRE_COOLDOWN = 3f;
         public static float DEFAULT_BURSTFIRE_COOLDOWN = 14f;
@@ -32,10 +35,14 @@ namespace HollowPoint
 
         public static bool canFireSingle = true;
         public static bool canFireBurst = false;
-        static float recentlyFiredTimer = 150f;
-        
+        static float recentlyFiredTimer = 60f;
+
+        public static bool hasActivatedAdrenaline = false;
 
         int totalGeo = 0;
+
+        public static int fireSupportAmnt = 0;
+        public static int grenadeAmnt = 0;
 
         public PlayerData pd_instance;
         public HeroController hc_instance;
@@ -58,16 +65,17 @@ namespace HollowPoint
             //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
-            //ModHooks.Instance.FocusCostHook += FocusCost;
+            ModHooks.Instance.FocusCostHook += FocusCost;
             ModHooks.Instance.LanguageGetHook += LanguageHook;
             ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
+            ModHooks.Instance.BlueHealthHook += Instance_BlueHealthHook;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
-            On.HeroController.AddGeo += HeroController_AddGeo;
+            //On.HeroController.AddGeo += HeroController_AddGeo;
         }
 
         private int Instance_SoulGainHook(int num)
         {
-            return 4;
+            return 6;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -83,6 +91,11 @@ namespace HollowPoint
             orig(self, amount);
         }
 
+        private int Instance_BlueHealthHook()
+        {
+            return 0;
+        }
+
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
             if (HP_WeaponHandler.currentGun.gunName == "Nail")
@@ -93,12 +106,32 @@ namespace HollowPoint
 
         private float FocusCost()
         {
-            return (float)PlayerData.instance.GetInt("MPCharge") / 33.0f;
+            return (float)PlayerData.instance.GetInt("MPCharge") / 35.0f;
         }
 
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
             Modding.Logger.Log("Charm Update Called");
+            grenadeAmnt = 3;
+            fireSupportAmnt = 1;
+
+            //Charm 3 Grubsong
+            soulRegenTimer = (PlayerData.instance.equippedCharm_3) ? 2 : 8;
+
+            //Charm 9 Lifeblood Heart
+            max_soul_regen = (PlayerData.instance.equippedCharm_8)? 33 : 25;
+            
+            //Charm 9 Lifeblood Core
+            soulSingleCost = (PlayerData.instance.equippedCharm_9)? 0 : DEFAULT_SINGLE_COST;
+
+            //Charm 23 Fragile/Unbrekable Heart
+            hasActivatedAdrenaline = (PlayerData.instance.equippedCharm_23) ? false : true;
+
+            //Charm 33 Spell Twister
+            grenadeAmnt += (PlayerData.instance.equippedCharm_33) ? 2 : 0;
+            //fireSupportAmnt += (PlayerData.instance.equippedCharm_33) ? 1 : 0;
+
+            HP_UIHandler.UpdateDisplay();
         }
 
         public string LanguageHook(string key, string sheet)
@@ -171,13 +204,11 @@ namespace HollowPoint
             {
                 passiveSoulTimer -= Time.deltaTime * 30f;
             }
-            else if(pd_instance.MPCharge < MAX_SOULREGEN_CAP)
+            else if(pd_instance.MPCharge < max_soul_regen)
             {
-                passiveSoulTimer = DEFAULT_SOULTIMER;
-                HeroController.instance.AddMPChargeSpa(1);
+                passiveSoulTimer = soulRegenTimer;
+                HeroController.instance.AddMPCharge(1);
             }
-
-
         }
 
 
@@ -186,7 +217,7 @@ namespace HollowPoint
         {
             StartMainCooldown();
             StartBurstCooldown();
-            recentlyFiredTimer = 150;
+            recentlyFiredTimer = 60;
         }
 
         public static void StartMainCooldown()

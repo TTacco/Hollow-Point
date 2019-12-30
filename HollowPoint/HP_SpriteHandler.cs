@@ -272,7 +272,15 @@ namespace HollowPoint
             if (!facingNorthFirstTime && animName.Contains("Enter"))
             {
                 facingNorthFirstTime = true;
-                HeroController.instance.cState.facingRight = !HeroController.instance.cState.facingRight;
+                //HeroController.instance.cState.facingRight = !HeroController.instance.cState.facingRight;
+                if (HeroController.instance.cState.facingRight)
+                {
+                    HeroController.instance.FaceLeft();
+                }
+                else
+                {
+                    HeroController.instance.FaceRight();
+                }
             }
             else if(facingNorthFirstTime && !animName.Contains("Enter"))
             {

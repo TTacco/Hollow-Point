@@ -29,9 +29,7 @@ namespace HollowPoint
             while(HeroController.instance == null && PlayerData.instance == null)
             {
                 yield return null;
-            }
-
-           
+            }      
 
             On.HealthManager.Hit += EnemyIsHit;
             On.HeroController.TakeDamage += PlayerDamaged;
@@ -39,27 +37,28 @@ namespace HollowPoint
 
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
-            if (go.name.Contains("KnightMadeExplosion"))
+            if (go.name.Contains("KnightMadeExplosion") && PlayerData.instance.equippedCharm_5)
             {
                 if (!heroDamageCoroutineActive)
                 {
                     heroDamageCoroutineActive = true;
                     StartCoroutine(RocketJump(go));
-
+                    PlayerData.instance.orig_TakeHealth(3);
                     HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
                     GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
-                    Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
+                    Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);  
+                    orig(self, go, damageSide, 0, hazardType);
                 }
             }
-            else if (HP_AttackHandler.slowWalk) //take double damage when bursting
+            //Adrenaline from fragile heart
+            else if (!HP_Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount)) 
             {
-                orig(self, go, damageSide, (int) damageAmount, hazardType);
-            }
-            else
-            {
-                orig(self, go, damageSide, damageAmount, hazardType);
+                HP_Stats.hasActivatedAdrenaline = true;
+                HeroController.instance.AddHealth(4);
+                orig(self, go, damageSide, 0, hazardType);
             }
 
+            orig(self, go, damageSide, damageAmount, hazardType);
         }
         
         public IEnumerator RocketJump(GameObject damagerGO)
@@ -146,17 +145,18 @@ namespace HollowPoint
         public void EnemyIsHit(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
             //Modding.Logger.Log(self.gameObject.name + " " + hitInstance.Source.name);
+            //Alternative hit damages from other sources like weaver or explosions 
+            Modding.Logger.Log(hitInstance.Source.tag);
+
             if (hitInstance.Source.name.Contains("Gas"))
             {
-                try
-                {
-                    hitInstance.DamageDealt = 20;
-                    Modding.Logger.Log("[Damage Dealt by] " + hitInstance.Source.name);
-                }
-                catch(Exception e)
-                {
-                    Modding.Logger.Log("[Damage Calculator] " + e);
-                }
+                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 5);
+                orig(self, hitInstance);
+                return;
+            }
+            else if (hitInstance.Source.name.Contains("Hatchling"))
+            {
+                HeroController.instance.AddMPCharge(15);
                 orig(self, hitInstance);
                 return;
             }
@@ -170,17 +170,28 @@ namespace HollowPoint
 
             int soulGainAmt = 0;
 
+            HP_BulletBehaviour hpbb = null;
             try
             {
-                HP_BulletBehaviour hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
-                soulGainAmt = 0; //(hpbb.isSingleFire) ? 4 : 0;
+                hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
+                soulGainAmt = 1; //(hpbb.isSingleFire) ? 1 : 0;
+
+                soulGainAmt = (PlayerData.instance.equippedCharm_20) ? 2 : soulGainAmt;
             }
             catch (Exception e)
             {
                 Modding.Logger.Log("[HP_DAMAGECALCULATOR](EnemyIsHit) could not find HP_BulletBehaviour component in hitInstance");
-                soulGainAmt = 0;
+                soulGainAmt = 1;
             }
-            int damage = rand.Next(3, 6) + PlayerData.instance.nailSmithUpgrades * 5;
+
+
+            int damage = rand.Next(4, 7) + PlayerData.instance.nailSmithUpgrades * 4;
+
+            if (hpbb.fm == HP_Enums.FireModes.Burst)
+            {
+                damage = (int)(damage * 1.5);
+            }
+
             int bloodAmount = (int)(damage / (3 + (PlayerData.instance.nailSmithUpgrades * 3))) - 1;  
 
             // TODO: Put these in the weapon handler section
