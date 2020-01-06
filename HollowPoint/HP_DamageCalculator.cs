@@ -18,6 +18,7 @@ namespace HollowPoint
         public static System.Random rand = new System.Random();
 
         public static bool heroDamageCoroutineActive = false;
+        GameObject healSoundGO;
 
         public void Awake()
         {
@@ -29,7 +30,12 @@ namespace HollowPoint
             while(HeroController.instance == null && PlayerData.instance == null)
             {
                 yield return null;
-            }      
+            }
+
+            healSoundGO = new GameObject("healSoundGO", typeof(AudioSource));
+            DontDestroyOnLoad(healSoundGO);
+
+            rand = new System.Random();
 
             On.HealthManager.Hit += EnemyIsHit;
             On.HeroController.TakeDamage += PlayerDamaged;
@@ -37,26 +43,59 @@ namespace HollowPoint
 
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
+
             if (go.name.Contains("KnightMadeExplosion") && PlayerData.instance.equippedCharm_5)
             {
                 if (!heroDamageCoroutineActive)
                 {
                     heroDamageCoroutineActive = true;
                     StartCoroutine(RocketJump(go));
-                    PlayerData.instance.orig_TakeHealth(3);
-                    HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
-                    GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
-                    Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);  
+                    //HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
+                    //GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
+                    //Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);  
                     orig(self, go, damageSide, 0, hazardType);
+                    return;
                 }
             }
             //Adrenaline from fragile heart
-            else if (!HP_Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount)) 
+
+            if (!HP_Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1) && PlayerData.instance.equippedCharm_27)
             {
                 HP_Stats.hasActivatedAdrenaline = true;
-                HeroController.instance.AddHealth(4);
+                HeroController.instance.AddMPCharge(99);
                 orig(self, go, damageSide, 0, hazardType);
+                return;
             }
+            else if (!HP_Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1)) 
+            {
+
+                LoadAssets.sfxDictionary.TryGetValue("focussound.wav", out AudioClip ac);
+                AudioSource aud = healSoundGO.GetComponent<AudioSource>();
+                aud.PlayOneShot(ac);
+
+                GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform.position, Quaternion.identity);
+                artChargeFlash.SetActive(true);
+                artChargeFlash.transform.SetParent(HeroController.instance.transform);
+                Destroy(artChargeFlash, 0.5f);
+
+                GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform.position, Quaternion.identity);
+                dJumpFlash.SetActive(true);
+                dJumpFlash.transform.SetParent(HeroController.instance.transform);
+                Destroy(dJumpFlash, 0.5f);
+
+                HP_Stats.hasActivatedAdrenaline = true;
+
+                HeroController.instance.AddHealth(3);
+                orig(self, go, damageSide, 0, hazardType);
+                return;
+            }
+            else if (PlayerData.instance.equippedCharm_6)
+            {
+                orig(self, go, damageSide, damageAmount*2, hazardType);
+                return;
+            }
+
+
 
             orig(self, go, damageSide, damageAmount, hazardType);
         }
@@ -146,15 +185,16 @@ namespace HollowPoint
         {
             //Modding.Logger.Log(self.gameObject.name + " " + hitInstance.Source.name);
             //Alternative hit damages from other sources like weaver or explosions 
-            Modding.Logger.Log(hitInstance.Source.tag);
+            Modding.Logger.Log(self.name);
 
             if (hitInstance.Source.name.Contains("Gas"))
             {
-                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 5);
+                
+                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 10);
                 orig(self, hitInstance);
                 return;
             }
-            else if (hitInstance.Source.name.Contains("Hatchling"))
+            else if (hitInstance.Source.name.Contains("Damager"))
             {
                 HeroController.instance.AddMPCharge(15);
                 orig(self, hitInstance);
@@ -163,7 +203,7 @@ namespace HollowPoint
 
             if (!hitInstance.Source.name.Contains("bullet"))
             {
-                hitInstance.DamageDealt = 2 + PlayerData.instance.nailSmithUpgrades * 3;
+                hitInstance.DamageDealt = 3 + PlayerData.instance.nailSmithUpgrades * 3;
                 orig(self, hitInstance);
                 return;
             }
@@ -171,60 +211,44 @@ namespace HollowPoint
             int soulGainAmt = 0;
 
             HP_BulletBehaviour hpbb = null;
-            try
+
+            hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
+
+            //==============Soul Gain Amount============
+            soulGainAmt = 7; 
+            soulGainAmt += (PlayerData.instance.equippedCharm_20) ? 3 : 0;
+            soulGainAmt += (PlayerData.instance.equippedCharm_21) ? 5 : 0;
+
+            int damage = rand.Next(3, 5) + PlayerData.instance.nailSmithUpgrades * 4;
+
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
+            if(!self.IsInvincible) StartCoroutine(SplatterBlood(self.gameObject, 2, cardinalDirection * 90));
+
+            //==============Damage=================
+            //Fluke damage
+            if (PlayerData.instance.equippedCharm_11)
             {
-                hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
-                soulGainAmt = 1; //(hpbb.isSingleFire) ? 1 : 0;
-
-                soulGainAmt = (PlayerData.instance.equippedCharm_20) ? 2 : soulGainAmt;
+                damage = (int) (damage / 2f);
+                soulGainAmt = (int)(soulGainAmt / 3f);
             }
-            catch (Exception e)
+            //For MoP damage
+            if (PlayerData.instance.equippedCharm_13)
             {
-                Modding.Logger.Log("[HP_DAMAGECALCULATOR](EnemyIsHit) could not find HP_BulletBehaviour component in hitInstance");
-                soulGainAmt = 1;
+                Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
+                float travelDistance = Vector3.Distance(bulletOriginPosition, self.transform.position);
+                damage = (int) Mathf.Floor(travelDistance * 1.5f) + damage;
+                Modding.Logger.Log("Travel distance " + travelDistance);
+                soulGainAmt += (int) travelDistance;
             }
-
-
-            int damage = rand.Next(4, 7) + PlayerData.instance.nailSmithUpgrades * 4;
-
-            if (hpbb.fm == HP_Enums.FireModes.Burst)
+            if (PlayerData.instance.equippedCharm_6)
             {
-                damage = (int)(damage * 1.5);
+                damage = (int) (damage * 1.25f);
             }
 
-            int bloodAmount = (int)(damage / (3 + (PlayerData.instance.nailSmithUpgrades * 3))) - 1;  
-
-            // TODO: Put these in the weapon handler section
-            //damage.AttackType = AttackTypes.Generic;
-            // damage.DamageDealt = HP_WeaponHandler.currentGun.gunDamage;
-
-
-            //if (hitInstance.Source.GetComponent<HP_BulletBehaviour>().special) damage *= 2;
-
-            StartCoroutine(SplatterBlood(self.gameObject, bloodAmount));
+            Modding.Logger.Log("DamageCalculator, damage dealt is " + damage);
 
             DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.bulletHitInstance, soulGainAmt);
             return;
-
-            Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
-
-            HP_Gun gunTheBulletCameFrom = HP_WeaponHandler.currentGun;
-            float finalBulletDamage = gunTheBulletCameFrom.gunDamage;
-            float travelDistance = Vector3.Distance(bulletOriginPosition, self.transform.position) * 10;
-            float damageDropOff = Mathf.Floor(travelDistance / gunTheBulletCameFrom.gunDamMultiplier); //gunDamMult basically shows how much distance does it take before the bullet loses 1/4th of its damage
-            if (damageDropOff == 0)
-            {
-                finalBulletDamage = gunTheBulletCameFrom.gunDamage;
-            }
-            else
-            {
-                //finalBulletDamage *= HP_HeatHandler.currentMultiplier;
-            }
-
-            if (damageDropOff > 3) //at losing its damage for the 5th time, it now does no damage
-            {
-                finalBulletDamage = 0;
-            }
             //HP_DamageNumber.ShowDamageNumbers("" + finalBulletDamage, self, c); //OUTPUTS THE DAMAGE NUMBERS ON THE HEAD   
 
             //if the damage is from a bullet, override the damage causing function because the bullets do not function well
@@ -236,21 +260,22 @@ namespace HollowPoint
 
         }
 
-        public IEnumerator SplatterBlood(GameObject target, int repeat)
+        public static IEnumerator SplatterBlood(GameObject target, int repeat, float directionOfBlood)
         {
             for (int i = 0; i < repeat; i++)
             {
                 GameObject bloodSplat = Instantiate(HP_Prefabs.blood, target.transform.position, Quaternion.identity);
+                bloodSplat.transform.Rotate(new Vector3(0, 0, directionOfBlood));
                 bloodSplat.SetActive(true);
             }
             yield return new WaitForEndOfFrame();
-
-
         }
 
-        public void Destroy()
-        { 
-
+        public void OnDestroy()
+        {
+            On.HealthManager.Hit -= EnemyIsHit;
+            On.HeroController.TakeDamage -= PlayerDamaged;
+            Destroy(gameObject.GetComponent<HP_DamageCalculator>());
         }
     }
 

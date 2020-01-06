@@ -6,6 +6,7 @@
         {
             Single,
             Burst,
+            Spread,
         }
 
         public enum BulletType

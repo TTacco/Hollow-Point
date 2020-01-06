@@ -35,7 +35,10 @@ namespace HollowPoint
             }
         }
 
-
+        void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HP_WeaponSwapHandler>());
+        }
     }
 
 
@@ -67,6 +70,11 @@ namespace HollowPoint
             //Add an LMG and a flamethrower later
 
             currentGun = allGuns[0];
+        }
+
+        void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HP_WeaponHandler>());
         }
     }
 
@@ -120,17 +128,17 @@ namespace HollowPoint
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
-                return 5;
+                return 9;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
             {
-                return 2;
+                return 5;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
             {
-                return 3;
+                return 7;
             }
 
             return 1;

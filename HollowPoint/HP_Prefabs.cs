@@ -6,6 +6,7 @@ using ModCommon;
 using System.Linq;
 using System.Text;
 using Modding;
+using static Modding.Logger;
 using ModCommon.Util;
 
 
@@ -38,10 +39,15 @@ namespace HollowPoint
         private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
         {
             //Modding.Logger.Log(go.name);
-            if (go.name.Contains("Weaverling")) Destroy(go);
-            else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
+            //if (go.name.Contains("Weaverling")) Destroy(go);
+            //else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
+            //{
+            //    prefabDictionary.Add("Orbit Shield", go);
+            //}
+
+            if (go.name.Contains("Grubberfly"))
             {
-                prefabDictionary.Add("Orbit Shield", go);
+                Destroy(go);
             }
 
             return go;
@@ -59,6 +65,9 @@ namespace HollowPoint
                 yield return null;
             }
             while (HeroController.instance == null || GameManager.instance == null);
+
+            projectileSprites = new Dictionary<String, Sprite>();
+            prefabDictionary = new Dictionary<string, GameObject>();
 
             Resources.LoadAll<GameObject>("");
             foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
@@ -81,9 +90,8 @@ namespace HollowPoint
                         //explosion.SetActive(false);
                         prefabDictionary.Add("Gas Explosion Recycle M", go);
                         Modding.Logger.Log(go.name);
-   
-                    }
 
+                    }
                     else if (go.name.Equals("Dung Explosion") && !prefabDictionary.ContainsKey("Dung Explosion"))
                     {
                         prefabDictionary.Add("Dung Explosion", go);
@@ -129,11 +137,32 @@ namespace HollowPoint
                 new Vector2(0.5f, 0.5f), 42);
 
 
+
+            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png"};
             //Special bullet sprite
+            /*
             LoadAssets.spriteDictionary.TryGetValue("specialbullet.png", out Texture2D specialBulletTexture);
             projectileSprites.Add("specialbullet.png", Sprite.Create(specialBulletTexture,
                 new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42));
+            */
+            
+            foreach(string tn in textureNames)
+            {
+                try
+                {
+                    LoadAssets.spriteDictionary.TryGetValue(tn, out Texture2D specialBulletTexture);
+                    projectileSprites.Add(tn, Sprite.Create(specialBulletTexture,
+                        new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
+                        new Vector2(0.5f, 0.5f), 42));
+                }
+                catch(Exception e)
+                {
+                    Modding.Logger.Log(e);
+                }
+            }
+
+
             //Rigidbody
             bulletPrefab.GetComponent<Rigidbody2D>().isKinematic = true;
             bulletPrefab.transform.localScale = new Vector3(1.2f, 1.2f, 0);
@@ -148,7 +177,7 @@ namespace HollowPoint
             bulletFadePrefab = new GameObject("bulletFadePrefabObject", typeof(SpriteRenderer));
             bulletFadePrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(fadeTexture,
                 new Rect(0, 0, fadeTexture.width, fadeTexture.height),
-                new Vector2(0.5f, 0.5f), 42);
+                new Vector2(0.5f, 0.5f), 70);
 
 
             //Trail
@@ -163,7 +192,8 @@ namespace HollowPoint
             bulletTR.numCornerVertices = 50;
             bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
-            bulletTR.time = 0.045f; //0.075
+            //bulletTR.time = 0.045f; //0.075
+            bulletTR.time = 0.03f;
             bulletTR.startColor = new Color(240, 234, 196);
             bulletTR.endColor = new Color(237, 206, 154);
 
@@ -184,14 +214,13 @@ namespace HollowPoint
 
             if(bulletDegreeDirection > 10 && bulletDegreeDirection < 170)
             {
-                directionOffsetY = 0.5f;
+                directionOffsetY = 0.8f;
             }
             else if(bulletDegreeDirection > 190 && bulletDegreeDirection < 350)
             {
-                directionOffsetY = -0.5f;
+                directionOffsetY = -1.1f;
             }
-
-           
+   
             float directionMultiplierX = (HeroController.instance.cState.facingRight) ? 1f : -1f;
 
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
@@ -201,11 +230,16 @@ namespace HollowPoint
             directionMultiplierX *= wallClimbMultiplier;
                 
             GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.5f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
-
             bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
             bullet.SetActive(true);
 
             return bullet;
+        }
+
+        public void OnDestroy()
+        {
+            ModHooks.Instance.ObjectPoolSpawnHook -= Instance_ObjectPoolSpawnHook;
+            Destroy(gameObject.GetComponent<HP_Prefabs>());
         }
     }
 
@@ -238,6 +272,9 @@ namespace HollowPoint
         public bool flareRound = false;
         public bool isFireSupportBullet = false;
 
+        public bool noDeviation = false;
+        public bool noHeat = false;
+        public bool perfectAccuracy = false;
 
         public Vector3 targetDestination;
 
@@ -271,14 +308,13 @@ namespace HollowPoint
             bc2d.enabled = !ignoreCollisions;
 
             gameObject.tag = "Wall Breaker";
-
-
-
             //Trail    
             bulletTrailObjectClone = Instantiate(HP_Prefabs.bulletTrailPrefab, gameObject.transform);
 
             //Increase the bullet size
             bc2d.size = new Vector2(1f, 0.65f);
+
+            pierce = PlayerData.instance.equippedCharm_16;
 
             //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
             if (isFireSupportBullet)
@@ -297,19 +333,38 @@ namespace HollowPoint
 
             //===================================REGULAR BULLET ATTRIBUTES=========================================
 
-            //Bullet Distance
+
+            //Bullet sprite changer
+            string sn = HP_Stats.spriteName;
+            if (sn != "" && false)
+            {
+                HP_Prefabs.projectileSprites.TryGetValue(HP_Stats.spriteName, out Sprite regularBulletSprite);
+                bulletSprite.sprite = regularBulletSprite;
+            }
+
+
+            //Bullet Origin for Distance Calculation
             bulletOriginPosition = gameObject.transform.position;
 
             //Bullet Direction
-            float deviation = (HP_HeatHandler.currentHeat * 0.15f) + SpreadDeviationControl.ExtraDeviation();
+            float heat = HP_HeatHandler.currentHeat;
+            // heat -= (fm == HP_Enums.FireModes.Single && PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? -40 : 0 ;
+            // heat = (heat < 0)? 0 :  heat;
 
-            //Charm 14 Steady Body
-            deviation = (fm == HP_Enums.FireModes.Single && PlayerData.instance.equippedCharm_14) ? 1 : deviation;
-            //bulletSpeed = HP_WeaponHandler.currentGun.gunBulletSpeed;
-            bulletSpeed = 30f * bulletSpeedMult;
+            noDeviation = (PlayerData.instance.equippedCharm_14);
+
+            float deviationFromMovement = (noDeviation) ? 0 : SpreadDeviationControl.ExtraDeviation();
+            float deviationFromHeat = (noHeat) ? 0 : (HP_HeatHandler.currentHeat * 0.3f);
+            deviationFromHeat *= (PlayerData.instance.equippedCharm_37)? 1.5f : 1; //Increase movement penalty when equipping sprint master
+            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 15 : 0; //Decrease innacuracy when on ground and steady body is equipped
+
+            float deviation = (perfectAccuracy)? 0 : (deviationFromHeat + deviationFromMovement);
+            deviation = (deviation < 0) ? 0 : deviation; //just set up the minimum value
+
+            bulletSpeed = HP_Stats.bulletVelocity;
 
             //Bullet Sprite Size
-            float size = HP_WeaponHandler.currentGun.gunBulletSize;
+            float size = 0.90f;
 
             //===================================FIRE SUPPORT=========================================
             if (flareRound)
@@ -320,14 +375,6 @@ namespace HollowPoint
 
                 bulletSprite.sprite = flareBulletTexture;
 
-                /*
-                //DEFENSIVE FIRE SUPPORT
-                if(bulletDegreeDirection > 50 && bulletDegreeDirection < 130)
-                {
-                    offensive = false;
-                    DefensiveFireSupport_Target(gameObject);
-                }
-                */
             }
 
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
@@ -374,6 +421,8 @@ namespace HollowPoint
         {
             hm = col.GetComponentInChildren<HealthManager>();
             bulletHitInstance.Source = gameObject;
+
+            //Log(col.name);
 
             //PURE VESSEL CHECK
             if (col.gameObject.name.Contains("Idle"))
@@ -427,7 +476,7 @@ namespace HollowPoint
                 //Mark target for fire support
                 if (flareRound)
                 {
-                    OffensiveFireSupport_Target(gameObject);
+                    OffensiveFireSupport_Target(gameObject, null, false);
                     return;
                 }
 
@@ -436,24 +485,21 @@ namespace HollowPoint
             }
             //Damages the enemy and destroys the bullet
             else if (hm != null)
-            {       
-                /*
-                GameObject bloodSplat = Instantiate(HP_Prefabs.blood, gameObject.transform.position, Quaternion.identity);
-                bloodSplat.SetActive(true);
-                */
-                //Mark target for fire support
+            {
+                HeroController.instance.ResetAirMoves();
+
                 if (flareRound)
                 {
-                    OffensiveFireSupport_Target(gameObject);
+                    OffensiveFireSupport_Target(gameObject, col.gameObject, true);
+                    hm.Hit(bulletHitInstance);
                     return;
                 }
 
                 if (!pierce) Destroy(gameObject);
-                
+
                 hm.Hit(bulletHitInstance);
             }
         }
-
 
         /* ======================================================FIRE SUPPORT OFFENSIVE TARGET===========================
          * NOTE:
@@ -464,27 +510,28 @@ namespace HollowPoint
             This method just ensures that theres a long enough lifespan on the bullet once it hits that it'll be able to
             deplete all the rounds
         */
-        public void OffensiveFireSupport_Target(GameObject fireSupportGO)
+        public void OffensiveFireSupport_Target(GameObject fireSupportGO, GameObject enemyGO, bool trackTarget)
         {
+
             Vector3 pos = gameObject.transform.position;
             Modding.Logger.Log("CALL AN AIR STRIKE AT THIS POSITION " + pos);
-            
-            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling FireSupportTarget
-            fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up
+
+            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling fire support on wtv it collides on
+            fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up visually
             fireSupportGO.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0); //Stop the bullet movement, so the line renderer wont show up
-            StartCoroutine(HP_SpellControl.CallMortar(pos));
+
+            //Modding.Logger.Log(enemyGO.transform == null);
+            if (trackTarget && enemyGO != null)
+            {
+                StartCoroutine(HP_SpellControl.StartSteelRain(enemyGO));
+            }
+            else
+            {
+
+                StartCoroutine(HP_SpellControl.StartSteelRainNoTrack(pos));
+            }
 
             Destroy(fireSupportGO, 25f);
-        }
-
-        public void DefensiveFireSupport_Target(GameObject fireSupportGO)
-        {
-            Destroy(fireSupportGO, 25f);
-            Vector3 pos = gameObject.transform.position;
-            Modding.Logger.Log("CALLING SUPPORT " + pos);
-
-            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling FireSupportTarget
-            StartCoroutine(HP_SpellControl.CallSupplies());
         }
 
         public IEnumerator wallHitDust() //fuck your naming violations
@@ -514,10 +561,15 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
-   
             Destroy(Instantiate(HP_Prefabs.bulletFadePrefab, gameObject.transform.position, gameObject.transform.localRotation), 0.03f); //bullet fade out sprite
+           
+            if(specialAttrib.Contains("Explosion") && PlayerData.instance.equippedCharm_17)
+            {
+                HP_Prefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
+                GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                sporeCloudGO.SetActive(true);
+            }
 
-            
             if (specialAttrib.Contains("DungExplosion"))
             {
 
@@ -529,7 +581,7 @@ namespace HollowPoint
 
                 if (specialAttrib.Contains("Small"))
                 {
-                    dungExplosionGO.transform.localScale = new Vector3(0.5f, 0.5f, 0);
+                    dungExplosionGO.transform.localScale = new Vector3(0.75f, 0.75f, 0);
                 }
             }
 
@@ -540,7 +592,6 @@ namespace HollowPoint
                 GameObject explosionClone = Instantiate(knightMadeExplosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.SetActive(true);
                 explosionClone.name += " KnightMadeExplosion";
-
 
                 if (isFireSupportBullet)
                 {

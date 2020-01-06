@@ -35,11 +35,13 @@ namespace HollowPoint
         public static bool isWallClimbing = false;
         public static bool facingNorthFirstTime = false;
 
-        public static GameObject transformSlave = new GameObject("slaveTransform", typeof(Transform));
+        public static GameObject transformSlave;
         public static Transform ts;
 
         bool isSprinting = false;
         bool? prevFaceRightVal;
+
+        private tk2dSpriteAnimator tk2d = null;
 
         public void Start()
         {
@@ -56,28 +58,24 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
-            prevFaceRightVal = HeroController.instance.cState.facingRight;
-
-            gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer), typeof(AudioSource));
-            gunSpriteGO.transform.position = HeroController.instance.transform.position;
-            gunSpriteGO.transform.localPosition = new Vector3(0,0,0);
-            gunSpriteGO.SetActive(true);
-
-            ts = transformSlave.GetComponent<Transform>();
-            //ts.transform.SetParent(HeroController.instance.transform);
-            gunSpriteGO.transform.SetParent(ts);
-
-            //Flash
-            /*
-            LoadAssets.spriteDictionary.TryGetValue("flash.png", out Texture2D muzzleflashTex);
-            muzzleFlashGO = new GameObject("fireFlash", typeof(SpriteRenderer));
-            muzzleFlashGO.GetComponent<SpriteRenderer>().sprite = Sprite.Create(muzzleflashTex,
-                new Rect(0, 0, muzzleflashTex.width, muzzleflashTex.height),
-                new Vector2(0.5f, 0.5f), 150);
-                */
 
             try
             {
+                prevFaceRightVal = HeroController.instance.cState.facingRight;
+
+                gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer), typeof(AudioSource));
+                gunSpriteGO.transform.position = HeroController.instance.transform.position;
+                gunSpriteGO.transform.localPosition = new Vector3(0, 0, 0);
+                gunSpriteGO.SetActive(true);
+
+                transformSlave = new GameObject("slaveTransform", typeof(Transform));
+                ts = transformSlave.GetComponent<Transform>();
+                //ts.transform.SetParent(HeroController.instance.transform);
+                gunSpriteGO.transform.SetParent(ts);
+
+                defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
+                shakeNum = new System.Random();
+
                 whiteFlashGO = CreateGameObjectSprite("lightflash.png", "lightFlashGO", 30);
                 muzzleFlashGO = CreateGameObjectSprite("muzzleflash.png", "bulletFadePrefabObject", 150);
             }
@@ -86,12 +84,22 @@ namespace HollowPoint
                 Log(e);
             }
 
+
             whiteFlashGO.SetActive(false);
 
             DontDestroyOnLoad(whiteFlashGO);
             DontDestroyOnLoad(transformSlave);
             DontDestroyOnLoad(gunSpriteGO);
             DontDestroyOnLoad(muzzleFlashGO);
+
+            try
+            {
+                tk2d = HeroController.instance.GetComponent<tk2dSpriteAnimator>();
+            }
+            catch (Exception e)
+            {
+                Log(e);
+            }
         }
 
         public static GameObject CreateGameObjectSprite(string spriteName, string gameObjectName, float pixelsPerUnit) 
@@ -110,8 +118,7 @@ namespace HollowPoint
             //if (HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name.Contains("Sprint") && !AmmunitionControl.gunHeatBreak)
             isWallClimbing = HeroController.instance.cState.wallSliding;
 
-            //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); ENTER = when the player enters
-
+            //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name);// ENTER = when the player enters
             //This just makes it so the gun is more stretched out on wherever the knight is facing, rather than staying in his center
             int directionMultiplier = (HeroController.instance.cState.facingRight) ? 1 : -1;
 
@@ -267,7 +274,8 @@ namespace HollowPoint
         bool BadAnimFace()
         {
             //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
-            string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+            string animName = tk2d.CurrentClip.name;
+
 
             if (!facingNorthFirstTime && animName.Contains("Enter"))
             {
@@ -293,7 +301,7 @@ namespace HollowPoint
         bool BadStareDown()
         {
             //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
-            string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
+            string animName = tk2d.CurrentClip.name;
 
             return (animName.Contains("Collect Normal") || animName.Contains("RoarLock") || animName.Contains("SD"));
         }
@@ -410,17 +418,24 @@ namespace HollowPoint
             float radian = (float)(degree * Math.PI / 180);
 
             float wallSlideOffset = (HeroController.instance.cState.wallSliding) ? -1 : 1;
-            float flashOffsetX = (float)(wallSlideOffset * 1.9f * Math.Cos(radian));
-            float flashOffsetY = (float)(1.9f * Math.Sin(radian));
+            float flashOffsetX = (float)(wallSlideOffset * 1.6f * Math.Cos(radian));
+            float flashOffsetY = (float)(1.6f * Math.Sin(radian));
             float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !HP_DirectionHandler.facingRight) ? 180 : 0;
 
+            //If the player is aiming upwards or downwards, nudge the muzzle flash a bit because facing the right or left, the muzzle is a bit "forward"
+            flashOffsetX += (bulletDegreeDirection == 90) ? (HP_DirectionHandler.facingRight) ? -0.2f : 0.2f : 0;
+
+            //So if the player is firing forward or upwards while wall sliding, make it so to lower the muzzle flash so it doesnt look weird
+            flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 0) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
+
+   
 
             GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f), new Quaternion(0, 0, 0, 0));
             muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + SpriteRotationWallSlide() + muzzleFlashWallSlide, 0);
 
             //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
 
-            Destroy(muzzleFlashClone, 0.06f);
+            Destroy(muzzleFlashClone, 0.04f);
         }
 
         public static float SpriteRotationWallSlide()
@@ -446,8 +461,13 @@ namespace HollowPoint
         }
 
         public void OnDestroy()
-        {
+        { 
+            Destroy(gameObject.GetComponent<HP_Sprites>());
             Destroy(gunSpriteGO);
+            Destroy(whiteFlashGO);
+            Destroy(transformSlave);
+
+            Destroy(muzzleFlashGO);
         }
 
     }
@@ -458,6 +478,7 @@ namespace HollowPoint
         public static Dictionary<String, Sprite> weaponSpriteDicitionary = new Dictionary<String, Sprite>();
 
         private const int PIXELS_PER_UNIT = 180;
+        private tk2dSpriteAnimator tk2d = null; 
 
         public void Start()
         {
@@ -483,6 +504,64 @@ namespace HollowPoint
 
             gunRenderer.color = Color.white;
             gunRenderer.enabled = true;
+
+            try
+            {
+               tk2d = HeroController.instance.GetComponent<tk2dSpriteAnimator>();
+            }
+            catch (Exception e)
+            {
+                Log(e);
+            }
+        }
+
+        public void Update()
+        {
+            try
+            {
+                if (MakeGunInvisibleCheck())
+                {
+                    gunRenderer.enabled = false;
+                }
+                else
+                {
+                    gunRenderer.enabled = true;
+                }
+            }
+            catch (Exception e)
+            {
+                Log(e);
+            }
+        }
+
+        bool MakeGunInvisibleCheck()
+        {
+            /*I am gonna say it now, this is probably singlehandedly one of the worst thing ive ever written in this mod, i have no idea where to
+              find anim that handles getting new abilities and i am not gonna bother because its probably tucked into a hundred individual FSMs
+              that i am not gonna waste my time in looking at, so unless this actually tanks performance, i dont care.
+            */
+            if(tk2d == null)
+            {
+                tk2d = HeroController.instance.GetComponent<tk2dSpriteAnimator>();
+                return true;
+            }
+
+            string animName = tk2d.CurrentClip.name;
+
+            return !HeroController.instance.CanInput() &&
+            !HeroController.instance.cState.transitioning &&
+            !animName.Contains("Enter") &&
+            !animName.Contains("Challenge") &&
+            !animName.Contains("Prostrate") && 
+            !animName.Contains("Collect Normal") && 
+            !animName.Contains("RoarLock") &&
+            !animName.Contains("Super Hard Land") &&
+            !animName.Contains("Wake Up") &&
+            !animName.Contains("Sit") &&
+            !animName.Contains("SD") &&
+            !animName.Contains("Get Off") &&
+            !animName.Contains("DN") &&
+            !HeroController.instance.cState.isPaused;
         }
 
         public static void SwapWeapon(String weaponName)
@@ -502,7 +581,7 @@ namespace HollowPoint
         public void OnDestroy()
         {
             Destroy(gunRenderer);
-            Destroy(this);
+            Destroy(gameObject.GetComponent<HP_GunSpriteRenderer>());
         }
     }
 

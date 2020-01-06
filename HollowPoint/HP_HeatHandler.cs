@@ -87,6 +87,11 @@ namespace HollowPoint
             if (currentHeat > 100) currentHeat = 100;
         }
 
+        void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HP_HeatHandler>());
+        }
+
 
     }
 }

@@ -1,17 +1,4 @@
-﻿using System.Reflection;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using MonoMod.Utils;
-using MonoMod;
-using HutongGames;
-using HutongGames.PlayMaker;
-using HutongGames.PlayMaker.Actions;
-using Modding;
-using ModCommon;
-using ModCommon.Util;
-using GlobalEnums;
+﻿using UnityEngine;
 
 namespace HollowPoint
 {
@@ -24,6 +11,7 @@ namespace HollowPoint
         public static bool facingRight;
         public static bool holdingAttack;
         public static bool pressingAttack;
+        public static bool heldAttack;
         public static float finalDegreeDirection;
 
         public void Update()
@@ -34,6 +22,7 @@ namespace HollowPoint
             left = InputHandler.Instance.inputActions.left;
             holdingAttack = InputHandler.Instance.inputActions.attack.WasRepeated;
             pressingAttack = InputHandler.Instance.inputActions.attack.WasPressed;
+            heldAttack = InputHandler.Instance.inputActions.attack.IsPressed;
             facingRight = HeroController.instance.cState.facingRight;
 
             if (facingRight)
@@ -77,6 +66,11 @@ namespace HollowPoint
             }
 
 
+        }
+
+        void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HP_DirectionHandler>());
         }
 
     }

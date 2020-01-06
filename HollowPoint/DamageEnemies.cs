@@ -4,7 +4,6 @@ using UnityEngine;
 using System;
 using System.Collections;
 
-
 namespace HollowPoint
 {
     public static class DamageEnemies
@@ -20,18 +19,26 @@ namespace HollowPoint
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
-            if ((targetHP.IsInvincible && !targetHP.name.Contains("Moss Charger")) && !PlayerData.instance.equippedCharm_15)
+            bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
+
+            if (targetHP.IsInvincible && !specialEnemy && !PlayerData.instance.equippedCharm_25)
             {
                 GameObject blockHit = blockHitPrefab.Spawn();
                 blockHit.transform.position = targetHP.transform.position;
                 return;
             }
 
+            
+            if (targetHP.gameObject.name.Contains("Blocker"))
+            {
+                realDamage = realDamage * 4;
+            }
+
             Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
 
             if (recoil != null && PlayerData.instance.equippedCharm_15)
             {
-                recoil.RecoilByDirection(cardinalDirection, 1.5f);
+                recoil.RecoilByDirection(cardinalDirection, 0.8f);
             }
 
             if (realDamage <= 0)
@@ -57,13 +64,13 @@ namespace HollowPoint
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
-            GameObject HitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
-            Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+            //GameObject HitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
+            //Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
 
-            if (HitPrefab != null && effectOrigin != null)
-            {
-                HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-            }
+            //if (HitPrefab != null && effectOrigin != null)
+            //{
+                //HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+            //}
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
@@ -150,22 +157,5 @@ namespace HollowPoint
 
             return targetHP;
         }
-
-        /*
-        public IEnumerator SplatterBlood(int repeat)
-        {
-            for (int i = 0; i < repeat; i++)
-            {
-                GameObject bloodSplat = Instantiate(HP_Prefabs.blood, gameObject.transform.position, Quaternion.identity);
-                bloodSplat.SetActive(true);
-            }
-            yield return new WaitForEndOfFrame();
-
-
-        }
-
-        StartCoroutine(SplatterBlood(2));
-        */
-
     }
 }

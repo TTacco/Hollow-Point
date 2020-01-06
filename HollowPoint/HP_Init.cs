@@ -2,6 +2,8 @@
 using System.IO;
 using System.Reflection;
 using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
 using System;
 
 
@@ -39,7 +41,6 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
             GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
             GameManager.instance.gameObject.AddComponent<HP_Stats>();
-
         }
 
         private static void SaveGame(SaveGameData sgd)

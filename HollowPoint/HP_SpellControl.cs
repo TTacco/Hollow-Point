@@ -25,10 +25,44 @@ namespace HollowPoint
         float grenadeCooldown = 30f;
         float airstrikeCooldown = 300f;
         float typhoonTimer = 20f;
+        float infuseTimer = 20f;
+
+        PlayMakerFSM spellControl;
+        static GameObject sharpFlash;
+        public static GameObject focusBurstAnim;
+
+        public static float buff_duration = 0;
+        public static bool buffActive = false;
+        float buff_constantSoul_timer = 0;
+
+        public static GameObject artifactActivatedEffect;
+        static GameObject infusionSoundGO;
 
         public void Awake()
         {
             StartCoroutine(InitSpellControl());
+        }
+
+        void Update()
+        {
+            if (HP_DirectionHandler.pressingAttack && typhoonTimer > 0 && HP_Stats.grenadeAmnt > 0)
+            {
+                typhoonTimer = -1;
+                HP_Stats.ReduceGrenades();
+                HP_UIHandler.UpdateDisplay();
+                StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, 8));
+            }
+
+            if (HP_DirectionHandler.pressingAttack && infuseTimer > 0)
+            {
+                if (HP_WeaponHandler.currentGun.gunName == "Nail")
+                {
+                    infuseTimer = -1;
+                    HP_AttackHandler.artifactActive = false;
+                    StartCoroutine(StartInfusion());
+                }
+               
+            }
         }
 
         void FixedUpdate()
@@ -56,11 +90,33 @@ namespace HollowPoint
             if (typhoonTimer > 0)
             {
                 typhoonTimer -= Time.deltaTime * 30f;
-                if (HP_DirectionHandler.pressingAttack)
-                {
-                    typhoonTimer = -1;
-                    StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position,5));
-                }
+            }
+
+            if (infuseTimer > 0)
+            {
+                infuseTimer -= Time.deltaTime * 30f;
+            }
+
+            //BUFFS TIMER HANDLERS
+
+            if(buff_duration > 0)
+            {
+                buff_duration -= Time.deltaTime * 10f;
+            }
+            else
+            {
+                buffActive = false;
+                return;
+            }
+
+            if (buff_constantSoul_timer < 0)
+            {
+                buff_constantSoul_timer = 5f;
+                HeroController.instance.AddMPChargeSpa(3);
+            }
+            else
+            {
+                buff_constantSoul_timer -= Time.deltaTime * 10f;
             }
 
         }
@@ -74,51 +130,70 @@ namespace HollowPoint
 
             try
             {
+                infusionSoundGO = new GameObject("infusionSoundGO", typeof(AudioSource));
+                DontDestroyOnLoad(infusionSoundGO);
 
+                focusBurstAnim = HeroController.instance.spellControl.FsmVariables.GetFsmGameObject("Focus Burst Anim").Value;
+                sharpFlash = HeroController.instance.spellControl.FsmVariables.GetFsmGameObject("SD Sharp Flash").Value;
+
+                //Instantiate(qTrail.Value, HeroController.instance.transform).SetActive(true);
+
+                spellControl = HeroController.instance.spellControl;
                 PlayMakerFSM dive = HeroController.instance.spellControl;
                 nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
-                //dive.RemoveAction("Quake1 Land", 14);
-
-                /*
-                FsmOwnerDefault fsmgo = dive.GetAction<ActivateGameObject>("Quake1 Land", 4).gameObject;
-                Modding.Logger.Log(fsmgo.GameObject.Name);
-                prefab1 = fsmgo.GameObject.Value;
-                */
 
                 FsmGameObject fsmgo = dive.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
                 fsmgo.Value.gameObject.transform.position = new Vector3(0, 0, 0);
                 fsmgo.Value.gameObject.transform.localPosition = new Vector3(0, -3, 0);
                 dive.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = fsmgo;
 
-
                 //Note some of these repeats because after removing an action, their index is pushed backwards to fill in the missing parts
-                HeroController.instance.spellControl.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
-                HeroController.instance.spellControl.RemoveAction("Scream Burst 1", 6);  // same
+                spellControl.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
+                spellControl.RemoveAction("Scream Burst 1", 6);  // same
 
-                HeroController.instance.spellControl.RemoveAction("Scream Burst 2", 7); //Same but for Scream 2
-                HeroController.instance.spellControl.RemoveAction("Scream Burst 2", 7); //Same
+                spellControl.RemoveAction("Scream Burst 2", 7); //Same but for Scream 2
+                spellControl.RemoveAction("Scream Burst 2", 7); //Same
 
-                HeroController.instance.spellControl.RemoveAction("Quake1 Land", 9); // Removes slam effect
-                HeroController.instance.spellControl.RemoveAction("Quake1 Land", 11); // removes pillars
+                spellControl.RemoveAction("Quake1 Land", 9); // Removes slam effect
+                spellControl.RemoveAction("Quake1 Land", 11); // removes pillars
 
-                HeroController.instance.spellControl.RemoveAction("Q2 Land", 11); //slam effects
+                spellControl.RemoveAction("Q2 Land", 11); //slam effects
 
-                HeroController.instance.spellControl.RemoveAction("Q2 Pillar", 2); //pillars 
-                HeroController.instance.spellControl.RemoveAction("Q2 Pillar", 2); // "Q mega" no idea but removing it otherwise
+                spellControl.RemoveAction("Q2 Pillar", 2); //pillars 
+                spellControl.RemoveAction("Q2 Pillar", 2); // "Q mega" no idea but removing it otherwise
 
-
-
-
-                HeroController.instance.spellControl.InsertAction("Can Cast?", new CallMethod
+                spellControl.InsertAction("Can Cast?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
                     methodName = "SwapWeapon",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
-                , 0);      
+                , 0);
 
-                HeroController.instance.spellControl.AddAction("Quake Antic", new CallMethod
+                spellControl.InsertAction("Can Cast? QC", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    methodName = "ForceFireball",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 0);
+
+                spellControl.InsertAction("Can Cast? QC", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    methodName = "CanCastQC_SkipSpellReq",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 3);
+
+                //Removes soul requirement
+                //HeroController.instance.spellControl.RemoveAction("Can Cast? QC", 2);
+
+
+                spellControl.AddAction("Quake Antic", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
                     methodName = "StartQuake",
@@ -127,7 +202,7 @@ namespace HollowPoint
                 }
                 );
 
-                HeroController.instance.spellControl.AddAction("Quake1 Land", new CallMethod
+                spellControl.AddAction("Quake1 Land", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
                     methodName = "StartTyphoon",
@@ -136,7 +211,7 @@ namespace HollowPoint
                 }
                 );
 
-                HeroController.instance.spellControl.AddAction("Q2 Land", new CallMethod
+                spellControl.AddAction("Q2 Land", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
                     methodName = "StartTyphoon",
@@ -145,41 +220,55 @@ namespace HollowPoint
                 }
                 );
 
-                HeroController.instance.spellControl.InsertAction("Has Fireball?", new CallMethod
+                spellControl.InsertAction("Has Fireball?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
-                    methodName = "StartFireball",
+                    methodName = "SpawnFireball",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
                 , 0);
 
-                HeroController.instance.spellControl.InsertAction("Can Cast? QC", new CallMethod
+                spellControl.InsertAction("Has Scream?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
-                    methodName = "ForceFireball",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 3);
-
-                HeroController.instance.spellControl.InsertAction("Scream End", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
-                    methodName = "ScreamEndOne",
+                    methodName = "HasScream_HasFireSupportAmmo",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
                 , 0);
 
-                HeroController.instance.spellControl.InsertAction("Scream End 2", new CallMethod
+                spellControl.InsertAction("Has Quake?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
-                    methodName = "ScreamEndOne",
+                    methodName = "HasQuake_CanCastQuake",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
                 , 0);
+
+                spellControl.InsertAction("Scream End", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    methodName = "ScreamEnd",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 0);
+
+                spellControl.InsertAction("Scream End 2", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    methodName = "ScreamEnd",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 0);
+
+                spellControl.RemoveAction("Scream Burst 1", 3);
+                spellControl.RemoveAction("Scream Burst 2", 4);
+
+                DontDestroyOnLoad(artifactActivatedEffect);
 
             }
             catch (Exception e)
@@ -193,27 +282,19 @@ namespace HollowPoint
         {
             LoadAssets.sfxDictionary.TryGetValue("divetrigger.wav", out AudioClip ac);
             AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-            //audios.clip = ac;
-
             audios.PlayOneShot(ac);
         }
 
         public void StartTyphoon()
         {
-            //LoadAssets.sfxDictionary.TryGetValue("divedetonate.wav", out AudioClip ac);
-            //AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-            //audios.clip = ac;
-            //audios.PlayOneShot(ac);
-
-            //HP_Prefabs.prefabDictionary.TryGetValue("Knight Dung Cloud", out GameObject cloud);
-            //GameObject cloudGO = Instantiate(cloud, HeroController.instance.transform.position + new Vector3(0, 0, -1), Quaternion.identity);
-            //cloudGO.SetActive(true);
-
-            //Activate this if SOUL EATER is equipped
-
+            //Dung Crest cloud on slam
+            if (PlayerData.instance.equippedCharm_10)
+            {
+                HP_Prefabs.prefabDictionary.TryGetValue("Knight Dung Cloud", out GameObject dungCloud);
+                GameObject dungCloudGO = Instantiate(dungCloud, HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                dungCloudGO.SetActive(true);
+            }
             typhoonTimer = 40f;
-
-            //StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, 5));
         }
 
         IEnumerator SpawnTyphoon(Vector3 spawnPos, float explosionAmount)
@@ -232,7 +313,7 @@ namespace HollowPoint
                 typhoon_ball.SetActive(true);
 
                 //Destroy(typhoon_ball, Range(0.115f, 0.315f));
-                Destroy(typhoon_ball, 0.125f);
+                Destroy(typhoon_ball, Range(0.115f, 0.315f));
             }
             yield return null;
 
@@ -283,47 +364,63 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Spell End");
         }
 
+        public void CanCastQC_SkipSpellReq()
+        {
+            HeroController.instance.spellControl.SetState("QC");
+        }
+
         public void ForceFireball()
         {
             //Modding.Logger.Log("Forcing Fireball");
+
             if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0)) return;
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
-            if ((!(HP_WeaponHandler.currentGun.gunName == "Nail")) && (PlayerData.instance.MPCharge >= soulCost) && HP_Stats.grenadeAmnt > 0 && !(grenadeCooldown > 0))
+            if ((!(HP_WeaponHandler.currentGun.gunName == "Nail")) && (PlayerData.instance.MPCharge >= soulCost) && !(grenadeCooldown > 0))
             {
                 grenadeCooldown = 30f;
                 HeroController.instance.TakeMP(soulCost);
                 HeroController.instance.spellControl.SetState("Has Fireball?");
-                HP_Stats.grenadeAmnt -= 1;
-                HP_UIHandler.UpdateDisplay();
+                //HP_Stats.ReduceGrenades();
+                //HP_UIHandler.UpdateDisplay();
             }
             else if (HP_WeaponHandler.currentGun.gunName != "Nail")
             {
-                HeroController.instance.spellControl.SetState("Spell End");
+                HeroController.instance.spellControl.SetState("Inactive");
             }
         }
 
-
-        public void StartFireball()
+        public void HasQuake_CanCastQuake()
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail")
+            if (!HeroController.instance.CanCast() || (PlayerData.instance.quakeLevel == 0)) return;
+
+            int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
+
+            if(PlayerData.instance.MPCharge < soulCost || HP_WeaponHandler.currentGun.gunName != "Nail")
             {
-                HeroController.instance.spellControl.SetState("Spell End");
+                HeroController.instance.spellControl.SetState("Inactive");
+            }
+        }
+
+        public void SpawnFireball()
+        {
+            if (HP_WeaponHandler.currentGun.gunName == "Nail" || PlayerData.instance.fireballLevel == 0)
+            {
+                HeroController.instance.spellControl.SetState("Inactive");
                 return;
             }
-
+            
             try
             {
 
                 HeroController.instance.spellControl.SetState("Spell End");
-
                 float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
                 float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
                 directionMultiplier *= wallClimbMultiplier;
-                // GameObject bullet = Instantiate(HP_Prefabs.bulletPrefab, HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -0.7f, -0.002f), new Quaternion(0, 0, 0, 0));
                 GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
                 bullet.SetActive(true);
                 HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+                hpbb.perfectAccuracy = true;
                 bullet.GetComponent<BoxCollider2D>().size *= 1.5f;
                 hpbb.bulletDegreeDirection = HP_DirectionHandler.finalDegreeDirection;
                 hpbb.specialAttrib = "Explosion";
@@ -352,92 +449,130 @@ namespace HollowPoint
             //nailArtFSM.SetState("Regain Control");
         }
 
-        public void ScreamEndOne()
+        public void HasScream_HasFireSupportAmmo()
         {
-            Modding.Logger.Log("AIR STRIKE AVAILABLE - WAITING FOR COORDINATES");
 
-            if (HP_AttackHandler.flareRound)
+            if (HP_AttackHandler.artifactActive)
             {
-                StartCoroutine(CallSupplies());
-                HP_AttackHandler.flareRound = false;
+                if(artifactActivatedEffect != null) spellControl.SetState("Inactive");
+                artifactActivatedEffect.SetActive(false);
+                HP_AttackHandler.artifactActive = false;
                 return;
             }
 
-
-            if (airstrikeCooldown > 0 || HP_Stats.fireSupportAmnt <= 0)
+            if(HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
             {
-                int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33; //refunds soul when airstrike unavailable
-                HeroController.instance.AddMPCharge(soulCost);
-                return;
+                spellControl.SetState("Inactive");
             }
+        }
 
-            HP_Stats.fireSupportAmnt -= 1;
+        public void ScreamEnd()
+        {
+            artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
+            artifactActivatedEffect.SetActive(true);
             HP_UIHandler.UpdateDisplay();
-            HP_AttackHandler.flareRound = true;
-
-            //AirStrike in progress
-            StartCoroutine(AirStrikeRequestDelay());
+            HP_AttackHandler.artifactActive = true;
+            //infuseTimer = 500f;
         }
-
-        //Delays the airstrike sound file so doesnt sound like quirrel is receiving your request immediately
-        IEnumerator AirStrikeRequestDelay()
-        {
-            yield return new WaitForSeconds(0.5f);
-            PlayAudio("airstrikerequest", false);
-        }
-
 
         //========================================FIRE SUPPORT SPAWN METHODS====================================
 
-        public static IEnumerator CallMortar(Vector3 targetCoordinates)
+        //Regular steel rain (non tracking)
+        public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates)
         {
-            //GameObject bullet = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates + new Vector3(0, 300, -0.1f), new Quaternion(0, 0, 0, 0));
-            //HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
-            yield return new WaitForSeconds(1f);
-            PlayAudio("airstrikeinbound", false);
-            Modding.Logger.Log("STEEL RAIN IS INBOUND");
-            yield return new WaitForSeconds(4f);
-            
-            for (int ammo = 0; ammo < 8; ammo++)
+            HP_UIHandler.UpdateDisplay();
+            Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
+            for (int ammo = 0; ammo < 5; ammo++)
             {
-                //Modding.Logger.Log("ROUND " + ammo);
-                PlayAudio("mortarclose", true);
                 yield return new WaitForSeconds(0.45f);
+                GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
+                hpbb.isFireSupportBullet = true;
+                hpbb.ignoreCollisions = true;
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(2, 8), -0.1f);
+                shell.SetActive(true);
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
 
-                //for (int cannister = 0; cannister < 3; cannister++)
-               // {
-                    GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25,50), -0.1f), new Quaternion(0, 0, 0, 0));
+        //For steel rains that tracks targets
+        public static IEnumerator StartSteelRain(GameObject enemyGO)
+        {
+            HP_UIHandler.UpdateDisplay();
+            //Modding.Logger.Log("SPELL CONTROL STEEL RAIN TRACK");
+            Transform targetCoordinates = enemyGO.transform;
+
+            for (int ammo = 0; ammo < 7; ammo++)
+            {
+                yield return new WaitForSeconds(0.45f);
+                if (enemyGO == null) yield break;
+                try
+                {
+
+                    GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates.position + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
                     HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
                     hpbb.isFireSupportBullet = true;
                     hpbb.ignoreCollisions = true;
-                    hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(2, 8), -0.1f); 
+                    hpbb.targetDestination = targetCoordinates.position + new Vector3(0, Range(2, 8), -0.1f);
                     shell.SetActive(true);
+                }
+                catch (Exception e)
+                {
+
+                }
                 //}
                 yield return new WaitForSeconds(0.5f);
+
             }
-
-            yield return new WaitForSeconds(4.5f);
-            PlayAudio("airstrikeend", false);
-
         }
 
-        public static IEnumerator CallSupplies()
+        public static IEnumerator StartInfusion()
         {
-            //yield return new WaitForSeconds(1f);
-            //PlayAudio("airstrikeinbound", false);
-            //Modding.Logger.Log("SUPPLY DROP IS INBOUND");
-            //yield return new WaitForSeconds(1f);
+            
+            HP_Stats.artifactPower -= 1;
+            artifactActivatedEffect.SetActive(false);
+            LoadAssets.sfxDictionary.TryGetValue("infusionsound.wav", out AudioClip ac);
+            AudioSource aud = infusionSoundGO.GetComponent<AudioSource>();
+            aud.PlayOneShot(ac);
 
-            HeroController.instance.AddMPCharge(99);
+            buff_duration = 80f;
+
+            //Charm 8 Lifeblood Heart
+            buff_duration += (PlayerData.instance.equippedCharm_8) ? 80f : 0;
+
+            if (PlayerData.instance.equippedCharm_27)
+            {
+                buff_duration = -50f;
+                int mpCharge = PlayerData.instance.MPCharge;
+                int grenadeAmount = (int)(mpCharge/15f);
+
+                HP_Stats.grenadeAmnt += grenadeAmount;
+                HeroController.instance.TakeMP(mpCharge);
+            }
+
+            buffActive = true;
+
+            if (PlayerData.instance.equippedCharm_34)
+            {
+                buff_duration = -20f;
+                HeroController.instance.AddHealth(4);
+            }
+
+            GameCameras.instance.cameraShakeFSM.SendEvent("BigShake");
+
+            HP_UIHandler.UpdateDisplay();
 
             //Gives fancy effects to when you infuse yourself, should add a sound soon
+            Instantiate(sharpFlash, HeroController.instance.transform).SetActive(true);
+            Instantiate(focusBurstAnim, HeroController.instance.transform).SetActive(true);
+
             SpriteFlash knightFlash = HeroController.instance.GetAttr<SpriteFlash>("spriteFlash");
             knightFlash.flashBenchRest();
 
             GameObject artChargeEffect = Instantiate(HeroController.instance.artChargedEffect, HeroController.instance.transform.position, Quaternion.identity);
             artChargeEffect.SetActive(true);
             artChargeEffect.transform.SetParent(HeroController.instance.transform);
-            Destroy(artChargeEffect, 0.5f);
+            Destroy(artChargeEffect, buff_duration/10f);
 
             GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform.position, Quaternion.identity);
             artChargeFlash.SetActive(true);
@@ -452,6 +587,8 @@ namespace HollowPoint
             yield return null;
         }
 
+
+
         public static void PlayAudio(string audioName, bool addPitch)
         {
             LoadAssets.sfxDictionary.TryGetValue(audioName.ToLower() + ".wav", out AudioClip ac);
@@ -465,6 +602,11 @@ namespace HollowPoint
             audios.PlayOneShot(audios.clip);
         }
 
+        void OnDestroy()
+        {
+            Destroy(gameObject.GetComponent<HP_SpellControl>());
+            Modding.Logger.Log("SpellControl Destroyed");
+        }
     }
 
 }

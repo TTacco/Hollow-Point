@@ -221,5 +221,13 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\flarebullet.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\furybullet.png" />
+    <EmbeddedResource Include="assets\shadebullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\focussound.wav" />
+    <EmbeddedResource Include="assets\infusionsound.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

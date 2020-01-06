@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using MonoMod.Utils;
 using MonoMod;
+using static Modding.Logger;
 using Modding;
 using ModCommon;
 using ModCommon.Util;
@@ -14,59 +15,73 @@ using static HollowPoint.HP_Enums;
 namespace HollowPoint
 {
     class HP_AttackHandler : MonoBehaviour
-    {
-        static float accumulativeForceTimer = 0f;
-        static float accumulativeForce = 0;
-        static bool accumulativeForceIsActive = false;
-
+    { 
         public static Rigidbody2D knight;
         public static GameObject damageNumberTestGO;
 
         public static bool isFiring = false;
         public static bool isBursting = false;
         public static bool slowWalk = false;
-        public static bool flareRound = false; //Dictates this round will send determine if the bullet is an airstrike marker
+        public static bool artifactActive = false; //Dictates this round will send determine if the bullet is an airstrike marker
 
         static float slowWalkDisableTimer = 0;
+        float clickTimer = 0;
 
         public HeroControllerStates h_state;
 
         GameObject clickAudioGO;
+        GameObject fireAudioGO;
 
         public void Awake()
         {
             On.NailSlash.StartSlash += OnSlash;
+            //On.HeroController.CanDash += HeroController_CanDash;
+            On.GameManager.OnDisable += GameManager_OnDisable;
             StartCoroutine(InitRoutine());        
         }
 
-        private void HeroController_HeroDash(On.HeroController.orig_HeroDash orig, HeroController self)
+        private void GameManager_OnDisable(On.GameManager.orig_OnDisable orig, GameManager self)
         {
-            if (isBursting)
-            {
-                Modding.Logger.Log(self.cState.facingRight);
-                if (self.cState.facingRight)
-                {
-                    self.FaceLeft();
-                }
-                else
-                {
-                    self.FaceRight();
-                }
+            GameObject go = self.gameObject;
 
-                //StartCoroutine(BackDash(self));
-            } 
+            Destroy(go.GetComponent<HP_Prefabs>());
+            Destroy(go.GetComponent<HP_DirectionHandler>());
+            Destroy(go.GetComponent<HP_WeaponHandler>());
+            Destroy(go.GetComponent<HP_WeaponSwapHandler>());
+            Destroy(go.GetComponent<HP_UIHandler>());
+            Destroy(go.GetComponent<HP_DamageCalculator>());
+            Destroy(go.GetComponent<HP_Sprites>());
+            Destroy(go.GetComponent<HP_HeatHandler>());
+            Destroy(go.GetComponent<HP_SpellControl>());
+            Destroy(go.GetComponent<HP_Stats>());
+            Destroy(go.GetComponent<HP_AttackHandler>());
 
             orig(self);
         }
 
+        private bool HeroController_CanDash(On.HeroController.orig_CanDash orig, HeroController self)
+        {
+            if (slowWalk)
+            {
+                if (PlayerData.instance.equippedCharm_31) return orig(self);
+
+                else return false;
+            }
+
+            return orig(self);
+        }
+
         public IEnumerator InitRoutine()
         {
-            while(HeroController.instance == null)
+            while (HeroController.instance == null)
             {
-                yield return null;            
+                yield return null;
             }
-            clickAudioGO = new GameObject("GunEmptyGO",typeof(AudioSource));
+            clickAudioGO = new GameObject("GunEmptyGO", typeof(AudioSource));
+            fireAudioGO = new GameObject("GunFireGO", typeof(AudioSource));
+
             DontDestroyOnLoad(clickAudioGO);
+            DontDestroyOnLoad(fireAudioGO);
 
             h_state = HeroController.instance.cState;
             knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
@@ -77,42 +92,25 @@ namespace HollowPoint
         public void Update()
         {
             //TODO: Replace weapon handler to accomodate "isUsingGun" bool instead of checking what theyre using
-            if (!(HP_WeaponHandler.currentGun.gunName == "Nail") && !isFiring)
+            if (!(HP_WeaponHandler.currentGun.gunName == "Nail") && !isFiring && HeroController.instance.CanCast())
             {
-                if (HP_DirectionHandler.holdingAttack && HP_Stats.canFireBurst)
+                if (HP_DirectionHandler.heldAttack && HP_Stats.canFire)
                 {
-                    if (PlayerData.instance.MPCharge >= HP_Stats.soulBurstCost)
+                    if (PlayerData.instance.MPCharge >= HP_Stats.fireSoulCost)
                     {
                         HP_Stats.StartBothCooldown();
-                        FireGun(FireModes.Burst);
+                        FireGun((PlayerData.instance.equippedCharm_11)? FireModes.Spread : FireModes.Single );
                     }
-                    else
+                    else if(clickTimer <= 0)
                     {
-                        PlaySoundsMisc("cantfire");
-                    }
-                }
-                else if (HP_DirectionHandler.pressingAttack && HP_Stats.canFireSingle)
-                {
-                    if (PlayerData.instance.MPCharge >= HP_Stats.soulSingleCost)
-                    {
-                        HP_Stats.StartBothCooldown();
-                        FireGun(FireModes.Single);
-                    }
-                    else
-                    {
+                        clickTimer = 3f;
                         PlaySoundsMisc("cantfire");
                     }
                 }
             }
             else if (!isFiring)
             {
-                HeroController.instance.WALK_SPEED = 3f;
-            }
-
-            //If the player lands, allow themselves to get lifted from the ground again when firing
-            if (accumulativeForce > 0 && (h_state.onGround || h_state.doubleJumping || h_state.wallSliding))
-            {
-                accumulativeForce = 0;
+                HeroController.instance.WALK_SPEED = 2.5f;
             }
 
             //TODO: Slow down the player while firing MOVE TO HP STATS LATER
@@ -125,6 +123,10 @@ namespace HollowPoint
                 HeroController.instance.cState.inWalkZone = false;
             }
 
+        }
+
+        void FixedUpdate()
+        {
             if (slowWalkDisableTimer > 0 && slowWalk)
             {
                 slowWalkDisableTimer -= Time.deltaTime * 30f;
@@ -134,6 +136,10 @@ namespace HollowPoint
                 }
             }
 
+            if (clickTimer > 0)
+            {
+                clickTimer -= Time.deltaTime * 10;
+            }
         }
 
 
@@ -146,57 +152,51 @@ namespace HollowPoint
 
             float finalDegreeDirectionLocal = HP_DirectionHandler.finalDegreeDirection;
 
-            if (flareRound)
-            {              
+            if (artifactActive)
+            {
                 StartCoroutine(FireFlare());
                 return;
             }
 
-            if (fm == FireModes.Burst)
+            if(fm == FireModes.Single)
             {
-                HeroController.instance.TakeMP(HP_Stats.soulBurstCost);
-                slowWalk = true;
-                isBursting = true;
+                HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
 
-                //Change this depending on the Charm
-                HeroController.instance.WALK_SPEED = 3f;
-
-                if (PlayerData.instance.equippedCharm_11)
-                {
-                    StartCoroutine(SpreadShot(5));
-                }
-                else
-                {
-                    StartCoroutine(BurstShot(3));
-                }
-            }
-            else if(fm == FireModes.Single)
-            {
-                HeroController.instance.TakeMP(HP_Stats.soulSingleCost);
-                slowWalk = true;
-
-                HeroController.instance.WALK_SPEED = (PlayerData.instance.equippedCharm_14) ? 4f : 5.5f;
+                slowWalk = !PlayerData.instance.equippedCharm_32;
+                slowWalk = PlayerData.instance.equippedCharm_37;
+                HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
+                //StartCoroutine(SingleShot());
                 StartCoroutine(SingleShot());
+            }
+            if (fm == FireModes.Spread)
+            {
+                HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
+
+                slowWalk = !PlayerData.instance.equippedCharm_32;
+                slowWalk = PlayerData.instance.equippedCharm_37;
+                HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
+                StartCoroutine(SpreadShot(5));
+
+                StartCoroutine(KnockbackRecoil(3f, finalDegreeDirectionLocal));
+                return;
             }
 
             //Firing below will push the player up
-            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1f, finalDegreeDirectionLocal));
-            else if (finalDegreeDirectionLocal > 215 && finalDegreeDirectionLocal < 325) StartCoroutine(KnockbackRecoil(0.5f, finalDegreeDirectionLocal));
-            /*
-            else if (!HeroController.instance.cState.onGround && (finalDegreeDirectionLocal == 0 || finalDegreeDirectionLocal == 180))
-            {
-                //float force = (HP_DirectionHandler.right || HP_DirectionHandler.left)? 0.025f : 0.75f;
-                StartCoroutine(KnockbackRecoil(0.75f - accumulativeForce, 270));
-                accumulativeForce += 0.125f;
+            float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 1;
+            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1.75f * mult, 270));
+            else if (finalDegreeDirectionLocal < 350 && finalDegreeDirectionLocal > 190) StartCoroutine(KnockbackRecoil(0.07f*mult, 270));
 
-                if (accumulativeForce > 0.75f) accumulativeForce = 0.75f;
-            }
-            */
-            return;
         }
 
         public void OnSlash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
+            if (HP_WeaponHandler.currentGun.gunName == "Nail" && artifactActive)
+            {
+                artifactActive = false;
+                StartCoroutine(HP_SpellControl.StartInfusion());
+                return;
+            }
+
             if (HP_WeaponHandler.currentGun.gunName == "Nail")
             {
                 orig(self);
@@ -204,18 +204,51 @@ namespace HollowPoint
             }
         }
 
+        public IEnumerator SingleShot()
+        {
+            HP_HeatHandler.IncreaseHeat(HP_Stats.heatPerShot);
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+            HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+            hpbb.fm = FireModes.Single;
+
+            //Charm 14 Steady Body
+            hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
+            //Charm 13 Mark of Pride
+            hpbb.perfectAccuracy = (PlayerData.instance.equippedCharm_13 && (HP_HeatHandler.currentHeat < 10)) ? true : false;
+
+            Destroy(bullet, HP_Stats.bulletRange);
+
+            HP_Sprites.StartGunAnims();
+            HP_Sprites.StartFlash();
+            HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
+
+            slowWalkDisableTimer = 10f;
+
+            string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
+
+            if (weaponType.Contains("sniper"))
+            {
+                bullet.transform.localScale = new Vector3(1.3f, 1.3f, 0.1f);
+            }
+
+            PlayGunSounds(weaponType);
+
+            yield return new WaitForSeconds(0.02f);
+            isFiring = false;
+
+        }
+        
+
         public IEnumerator BurstShot(int burst)
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            //HeroController.instance.SetAttr<int>("recoilSteps", 2);
             for (int i = 0; i < burst; i++)
             {
-                HeroController.instance.RecoilLeft();
                 HP_HeatHandler.IncreaseHeat(0.5f);
          
                 GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
-                bullet.GetComponent<HP_BulletBehaviour>().fm = FireModes.Burst;
-                PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
+                PlayGunSounds("rifle");
                 Destroy(bullet, .2f);
 
                 HP_Sprites.StartGunAnims();
@@ -230,28 +263,12 @@ namespace HollowPoint
             slowWalkDisableTimer = 4f * burst;
         }
 
-        public IEnumerator SingleShot()
-        {
-            HP_HeatHandler.IncreaseHeat(0.75f);
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
-            bullet.GetComponent<HP_BulletBehaviour>().fm = FireModes.Single;
-
-            float lifeSpan = (PlayerData.instance.equippedCharm_18) ? .325f : .225f;
-            Destroy(bullet, lifeSpan);
-
-            HP_Sprites.StartGunAnims();
-            HP_Sprites.StartFlash();
-            HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
-
-            slowWalkDisableTimer = 17f;
-            PlayGunSounds(HP_WeaponHandler.currentGun.gunName);
-            yield return new WaitForSeconds(0.04f);
-            isFiring = false;
-        }
-
         public IEnumerator FireFlare()
         {
+            artifactActive = false;
+            HP_Stats.artifactPower -= 1;
+            HP_SpellControl.artifactActivatedEffect.SetActive(false);
+
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
             GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
             PlayGunSounds("flare");
@@ -263,15 +280,14 @@ namespace HollowPoint
             HP_Sprites.StartFlash();
             HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
 
-            flareRound = false;
             yield return new WaitForSeconds(0.04f);
             isFiring = false;
         }
 
         public IEnumerator SpreadShot(int pellets)
         {
-            slowWalkDisableTimer = 25f;
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            slowWalkDisableTimer = 15f;
+            GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
             HP_Sprites.StartGunAnims();
             HP_Sprites.StartFlash();
             HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
@@ -282,27 +298,25 @@ namespace HollowPoint
             {
                 yield return new WaitForEndOfFrame();
                 GameObject bullet = HP_Prefabs.SpawnBullet(direction);
-                bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection += UnityEngine.Random.Range(-20, 20);
-                Destroy(bullet, UnityEngine.Random.Range(0.15f, 0.3f));
+                HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+                hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-20, 20);
+                bullet.transform.localScale = new Vector3(0.3f,0.3f,0.1f);
+
+                Destroy(bullet, HP_Stats.bulletRange);
             }
 
             yield return new WaitForSeconds(0.05f);
             isFiring = false;
-            isBursting = false;
         }
 
         public IEnumerator KnockbackRecoil(float recoilStrength, float applyForceFromDegree)
         {
             //TODO: Develop the direction launch soon 
-
             if (recoilStrength < 0.05) yield break;
-
             float deg = applyForceFromDegree + 180;
-
             deg = deg % 360;
 
             float radian = deg * Mathf.Deg2Rad;
-
             float xDeg = (float) ((4 * recoilStrength) * Math.Cos(radian));
             float yDeg = (float) ((4 * recoilStrength) * Math.Sin(radian));
 
@@ -347,12 +361,13 @@ namespace HollowPoint
             try
             {
                 //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                //AudioManager print = GameManager.instance.AudioManager;
+                //print.GetAttr<float>("volume");
                 LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
-                AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
+                //AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
+                AudioSource audios = fireAudioGO.GetComponent<AudioSource>();
                 audios.clip = ac;
-                //HP_Sprites.gunSpriteGO.GetComponent<AudioSource>().PlayOneShot(ac);
-                audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-
+                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
                 audios.PlayOneShot(audios.clip);
 
                 //Play subsonic WOOOP (lol) whenever you fire
@@ -386,5 +401,11 @@ namespace HollowPoint
             }
         }
 
+        public void OnDestroy()
+        {
+            On.NailSlash.StartSlash -= OnSlash;
+            On.HeroController.CanDash -= HeroController_CanDash;
+            Destroy(gameObject.GetComponent<HP_AttackHandler>());
+        }
     }
 }

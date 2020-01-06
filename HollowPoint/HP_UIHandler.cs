@@ -20,7 +20,7 @@ namespace HollowPoint
         Text grenadeAmountText;
         Text firesupportAmountText;
 
-        static int firesupportAmnt = 0;
+        static int artifactDisplayPowerPercent = 0;
         static int grenadeAmnt = 0;
         static float fadeOutTimer = 0f;
         float alpha = 0;
@@ -55,11 +55,11 @@ namespace HollowPoint
                 canvasGroup = canvas.GetComponent<CanvasGroup>();
                 canvas.GetComponent<Canvas>().sortingOrder = 1;
 
-                grenadeAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 900), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
+                grenadeAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 898), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
                 grenadeAmountText.color = new Color(1f, 1f, 1f, 0f);
                 grenadeAmountText.text = "";
 
-                firesupportAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 875), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
+                firesupportAmountText = CanvasUtil.CreateTextPanel(canvas, "", 21, TextAnchor.MiddleLeft, new CanvasUtil.RectData(new Vector2(600, 50), new Vector2(-200, 877), new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(0.5f, 0.5f)), true).GetComponent<Text>();
                 firesupportAmountText.color = new Color(1f, 1f, 1f, 0f);
                 firesupportAmountText.text = "";
 
@@ -139,19 +139,20 @@ namespace HollowPoint
         public static void UpdateDisplay()
         {
             grenadeAmnt = HP_Stats.grenadeAmnt;
-            firesupportAmnt = HP_Stats.fireSupportAmnt;
+            artifactDisplayPowerPercent = HP_Stats.artifactPower;
             fadeOutTimer = 70f;
         }
         public void OnGUI()
         {
-            grenadeAmountText.text = "GRENADES:       " + grenadeAmnt + " x";
-            firesupportAmountText.text =   "FIRE SUPPORT: " + firesupportAmnt + " x";
+            grenadeAmountText.text =       "GAS  CHARGE  : " + grenadeAmnt + " x";
+            firesupportAmountText.text =   "SHARD  POWER : " + artifactDisplayPowerPercent + " x";
             //heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
             //energybarImage.fillAmount = HP_HeatHandler.currentEnergy/100;
         }
 
         void FixedUpdate()
         {
+
             if (fadeOutTimer > 0)
             {
                 alpha = 1;
@@ -163,6 +164,8 @@ namespace HollowPoint
             }
             else if (alpha > 0)
             {
+                if (HeroController.instance.cState.transitioning) alpha = 0f;
+
                 Color c = new Color(1, 1, 1, alpha);
 
                 grenadeAmountText.color = c;
