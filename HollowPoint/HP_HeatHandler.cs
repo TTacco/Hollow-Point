@@ -55,7 +55,7 @@ namespace HollowPoint
 
             if (currentHeat > 0)
             {
-                currentHeat -= Time.deltaTime * 100f;
+                currentHeat -= Time.deltaTime * 200f;
                 if (currentHeat < 0)
                 {
                     currentHeat = 0;

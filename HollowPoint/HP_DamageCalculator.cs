@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Modding;
+using static Modding.Logger;
 using ModCommon.Util;
 using UnityEngine;
 using GlobalEnums;
@@ -36,16 +37,16 @@ namespace HollowPoint
             DontDestroyOnLoad(healSoundGO);
 
             rand = new System.Random();
-
-            On.HealthManager.Hit += EnemyIsHit;
+            On.HealthManager.Hit += HealthManager_Hit_Hook;
             On.HeroController.TakeDamage += PlayerDamaged;
         }
 
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
 
-            if (go.name.Contains("KnightMadeExplosion") && PlayerData.instance.equippedCharm_5)
+            if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
             {
+                Log("negating bomb damage weary");
                 if (!heroDamageCoroutineActive)
                 {
                     heroDamageCoroutineActive = true;
@@ -180,8 +181,8 @@ namespace HollowPoint
             yield return null;
         }
 
-        //Handles the damage
-        public void EnemyIsHit(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
+        //Intercepts HealthManager's Hit method and allows me to override it with my own calculation
+        public void HealthManager_Hit_Hook(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
             //Modding.Logger.Log(self.gameObject.name + " " + hitInstance.Source.name);
             //Alternative hit damages from other sources like weaver or explosions 
@@ -190,7 +191,7 @@ namespace HollowPoint
             if (hitInstance.Source.name.Contains("Gas"))
             {
                 
-                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 10);
+                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 5);
                 orig(self, hitInstance);
                 return;
             }
@@ -208,56 +209,21 @@ namespace HollowPoint
                 return;
             }
 
-            int soulGainAmt = 0;
-
-            HP_BulletBehaviour hpbb = null;
-
-            hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
+            HP_BulletBehaviour hpbb = hitInstance.Source.GetComponent<HP_BulletBehaviour>();
+            Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
 
             //==============Soul Gain Amount============
-            soulGainAmt = 7; 
-            soulGainAmt += (PlayerData.instance.equippedCharm_20) ? 3 : 0;
-            soulGainAmt += (PlayerData.instance.equippedCharm_21) ? 5 : 0;
-
-            int damage = rand.Next(3, 5) + PlayerData.instance.nailSmithUpgrades * 4;
-
-            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
-            if(!self.IsInvincible) StartCoroutine(SplatterBlood(self.gameObject, 2, cardinalDirection * 90));
+            int soulGainAmt = HP_Stats.CalculateSoulGain();
 
             //==============Damage=================
-            //Fluke damage
-            if (PlayerData.instance.equippedCharm_11)
-            {
-                damage = (int) (damage / 2f);
-                soulGainAmt = (int)(soulGainAmt / 3f);
-            }
-            //For MoP damage
-            if (PlayerData.instance.equippedCharm_13)
-            {
-                Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<HP_BulletBehaviour>().bulletOriginPosition;
-                float travelDistance = Vector3.Distance(bulletOriginPosition, self.transform.position);
-                damage = (int) Mathf.Floor(travelDistance * 1.5f) + damage;
-                Modding.Logger.Log("Travel distance " + travelDistance);
-                soulGainAmt += (int) travelDistance;
-            }
-            if (PlayerData.instance.equippedCharm_6)
-            {
-                damage = (int) (damage * 1.25f);
-            }
-
-            Modding.Logger.Log("DamageCalculator, damage dealt is " + damage);
+            int damage = HP_Stats.CalculateDamage(bulletOriginPosition, self.transform.position);
 
             DamageEnemies.HitEnemy(self, damage, HP_BulletBehaviour.bulletHitInstance, soulGainAmt);
-            return;
-            //HP_DamageNumber.ShowDamageNumbers("" + finalBulletDamage, self, c); //OUTPUTS THE DAMAGE NUMBERS ON THE HEAD   
+            Modding.Logger.Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
 
-            //if the damage is from a bullet, override the damage causing function because the bullets do not function well
-            //with the regular HealthManager.Hit() method, and instead we apply our own damage with the use of our self defined "DamageEnemies" class
-
-            //Modding.Logger.Log(travelDistance);
-            //DamageEnemies.HitEnemy(self, (int)finalBulletDamage, HP_BulletBehaviour.damage, 0); //note the 2nd "damage" var is a hitinstance, not an integer
-
-
+            //==============Blood Splatter Effect================= 
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
+            if (!self.IsInvincible) StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
         }
 
         public static IEnumerator SplatterBlood(GameObject target, int repeat, float directionOfBlood)
@@ -273,11 +239,9 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
-            On.HealthManager.Hit -= EnemyIsHit;
+            On.HealthManager.Hit -= HealthManager_Hit_Hook;
             On.HeroController.TakeDamage -= PlayerDamaged;
             Destroy(gameObject.GetComponent<HP_DamageCalculator>());
         }
     }
-
-    
 }

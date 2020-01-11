@@ -35,7 +35,6 @@ namespace HollowPoint
         public void Awake()
         {
             On.NailSlash.StartSlash += OnSlash;
-            //On.HeroController.CanDash += HeroController_CanDash;
             On.GameManager.OnDisable += GameManager_OnDisable;
             StartCoroutine(InitRoutine());        
         }
@@ -57,18 +56,6 @@ namespace HollowPoint
             Destroy(go.GetComponent<HP_AttackHandler>());
 
             orig(self);
-        }
-
-        private bool HeroController_CanDash(On.HeroController.orig_CanDash orig, HeroController self)
-        {
-            if (slowWalk)
-            {
-                if (PlayerData.instance.equippedCharm_31) return orig(self);
-
-                else return false;
-            }
-
-            return orig(self);
         }
 
         public IEnumerator InitRoutine()
@@ -162,8 +149,8 @@ namespace HollowPoint
             {
                 HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
 
-                slowWalk = !PlayerData.instance.equippedCharm_32;
-                slowWalk = PlayerData.instance.equippedCharm_37;
+                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
+
                 HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
                 //StartCoroutine(SingleShot());
                 StartCoroutine(SingleShot());
@@ -172,8 +159,8 @@ namespace HollowPoint
             {
                 HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
 
-                slowWalk = !PlayerData.instance.equippedCharm_32;
-                slowWalk = PlayerData.instance.equippedCharm_37;
+                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
+
                 HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
                 StartCoroutine(SpreadShot(5));
 
@@ -214,8 +201,9 @@ namespace HollowPoint
 
             //Charm 14 Steady Body
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
-            //Charm 13 Mark of Pride
+            //Charm 13 Mark of Pride gives perfect accuracy and pierce
             hpbb.perfectAccuracy = (PlayerData.instance.equippedCharm_13 && (HP_HeatHandler.currentHeat < 10)) ? true : false;
+            hpbb.pierce = PlayerData.instance.equippedCharm_13;
 
             Destroy(bullet, HP_Stats.bulletRange);
 
@@ -226,17 +214,11 @@ namespace HollowPoint
             slowWalkDisableTimer = 10f;
 
             string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
-
-            if (weaponType.Contains("sniper"))
-            {
-                bullet.transform.localScale = new Vector3(1.3f, 1.3f, 0.1f);
-            }
-
             PlayGunSounds(weaponType);
+            if(weaponType == "sniper") bullet.transform.localScale = new Vector3(1.8f, 1.8f, 0.1f);
 
             yield return new WaitForSeconds(0.02f);
             isFiring = false;
-
         }
         
 
@@ -300,6 +282,7 @@ namespace HollowPoint
                 GameObject bullet = HP_Prefabs.SpawnBullet(direction);
                 HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
                 hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-20, 20);
+                hpbb.pierce = PlayerData.instance.equippedCharm_13;
                 bullet.transform.localScale = new Vector3(0.3f,0.3f,0.1f);
 
                 Destroy(bullet, HP_Stats.bulletRange);
@@ -404,7 +387,6 @@ namespace HollowPoint
         public void OnDestroy()
         {
             On.NailSlash.StartSlash -= OnSlash;
-            On.HeroController.CanDash -= HeroController_CanDash;
             Destroy(gameObject.GetComponent<HP_AttackHandler>());
         }
     }

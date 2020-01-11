@@ -19,15 +19,24 @@ namespace HollowPoint
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
-            bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
-
-            if (targetHP.IsInvincible && !specialEnemy && !PlayerData.instance.equippedCharm_25)
+            bool specialEnemy = (targetHP.name.Contains("Moss Charger"));
+            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy)
             {
+                FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
                 GameObject blockHit = blockHitPrefab.Spawn();
                 blockHit.transform.position = targetHP.transform.position;
+                blockHit.transform.Rotate(new Vector3(0,0,90 *cardinalDirection));
                 return;
             }
 
+            //bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
+
+            //if (targetHP.IsInvincible && !specialEnemy && !PlayerData.instance.equippedCharm_25)
+            //{
+            //    GameObject blockHit = blockHitPrefab.Spawn();
+            //    blockHit.transform.position = targetHP.transform.position;
+            //   return;
+            //}
             
             if (targetHP.gameObject.name.Contains("Blocker"))
             {
@@ -64,13 +73,13 @@ namespace HollowPoint
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
-            //GameObject HitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
-            //Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+            GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
+            Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
 
-            //if (HitPrefab != null && effectOrigin != null)
-            //{
-                //HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-            //}
+            if (HitPrefab != null && effectOrigin != null)
+            {
+                HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+            }
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
@@ -135,7 +144,7 @@ namespace HollowPoint
             SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
             if (f != null)
             {
-                f.flashWhiteQuick();
+                f.flashInfected();
             }
 
         }

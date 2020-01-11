@@ -45,12 +45,12 @@ namespace HollowPoint
 
         void Update()
         {
-            if (HP_DirectionHandler.pressingAttack && typhoonTimer > 0 && HP_Stats.grenadeAmnt > 0)
+            if (HP_DirectionHandler.pressingAttack && typhoonTimer > 0)
             {
                 typhoonTimer = -1;
-                HP_Stats.ReduceGrenades();
-                HP_UIHandler.UpdateDisplay();
-                StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, 8));
+
+                int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 12 : 8; 
+                StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, pelletAmnt));
             }
 
             if (HP_DirectionHandler.pressingAttack && infuseTimer > 0)
@@ -154,6 +154,8 @@ namespace HollowPoint
                 spellControl.RemoveAction("Scream Burst 2", 7); //Same but for Scream 2
                 spellControl.RemoveAction("Scream Burst 2", 7); //Same
 
+                spellControl.RemoveAction("Level Check 2", 0); //removes the action that takes your soul when you slam
+
                 spellControl.RemoveAction("Quake1 Land", 9); // Removes slam effect
                 spellControl.RemoveAction("Quake1 Land", 11); // removes pillars
 
@@ -174,7 +176,7 @@ namespace HollowPoint
                 spellControl.InsertAction("Can Cast? QC", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
-                    methodName = "ForceFireball",
+                    methodName = "CanCastQC",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -290,11 +292,9 @@ namespace HollowPoint
             //Dung Crest cloud on slam
             if (PlayerData.instance.equippedCharm_10)
             {
-                HP_Prefabs.prefabDictionary.TryGetValue("Knight Dung Cloud", out GameObject dungCloud);
-                GameObject dungCloudGO = Instantiate(dungCloud, HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
-                dungCloudGO.SetActive(true);
+                HP_Prefabs.SpawnObjectFromDictionary("Knight Dung Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
             }
-            typhoonTimer = 40f;
+            typhoonTimer = 25f;
         }
 
         IEnumerator SpawnTyphoon(Vector3 spawnPos, float explosionAmount)
@@ -326,16 +326,15 @@ namespace HollowPoint
             string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
             if (animName.Contains("Sit") || animName.Contains("Get Off") || !HeroController.instance.CanCast()) return;
 
-
             if (!canSwap)
             {
-                HeroController.instance.spellControl.SetState("Spell End");
+                HeroController.instance.spellControl.SetState("Inactive");
                 return;
             }
 
-            swapTimer = (PlayerData.instance.equippedCharm_26)? 2f : 45f;
+            swapTimer = (PlayerData.instance.equippedCharm_26)? 2f : 5f;
 
-            HeroController.instance.spellControl.SetState("Spell End");
+            HeroController.instance.spellControl.SetState("Inactive");
             Modding.Logger.Log("Swaping weapons");
 
             AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
@@ -361,7 +360,7 @@ namespace HollowPoint
             }
             isUsingGun = !isUsingGun;
 
-            HeroController.instance.spellControl.SetState("Spell End");
+            HeroController.instance.spellControl.SetState("Inactive");
         }
 
         public void CanCastQC_SkipSpellReq()
@@ -369,24 +368,35 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("QC");
         }
 
-        public void ForceFireball()
+        public void CanCastQC()
         {
             //Modding.Logger.Log("Forcing Fireball");
-
-            if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0)) return;
+            if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0))
+            {
+                spellControl.SetState("Inactive");
+                return;
+            }
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
-            if ((!(HP_WeaponHandler.currentGun.gunName == "Nail")) && (PlayerData.instance.MPCharge >= soulCost) && !(grenadeCooldown > 0))
+
+            //Prevents casting if under the required soul cost
+            //Note, if this method ends, it will transition normally with regards to whatever avaiable spells the player has right now 
+            if (PlayerData.instance.MPCharge < soulCost)
             {
-                grenadeCooldown = 30f;
-                HeroController.instance.TakeMP(soulCost);
-                HeroController.instance.spellControl.SetState("Has Fireball?");
-                //HP_Stats.ReduceGrenades();
-                //HP_UIHandler.UpdateDisplay();
+                //Modding.Logger.Log("Cancelling fire ball");
+                spellControl.SetState("Inactive");
+                return;
+            }
+
+            if ((!(HP_WeaponHandler.currentGun.gunName == "Nail")) && !(grenadeCooldown > 0))
+            {
+                grenadeCooldown = 50f;
+                spellControl.SetState("Has Fireball?");
+
             }
             else if (HP_WeaponHandler.currentGun.gunName != "Nail")
             {
-                HeroController.instance.spellControl.SetState("Inactive");
+                spellControl.SetState("Inactive");
             }
         }
 
@@ -404,48 +414,41 @@ namespace HollowPoint
 
         public void SpawnFireball()
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail" || PlayerData.instance.fireballLevel == 0)
+            int soulCost = (PlayerData.instance.equippedCharm_33) ? 33 : 50;
+            if (HP_WeaponHandler.currentGun.gunName == "Nail" || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
             }
-            
-            try
-            {
+            HeroController.instance.TakeMP(soulCost);
+            HeroController.instance.spellControl.SetState("Spell End");
 
-                HeroController.instance.spellControl.SetState("Spell End");
-                float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
-                float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
-                directionMultiplier *= wallClimbMultiplier;
-                GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
-                bullet.SetActive(true);
-                HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
-                hpbb.perfectAccuracy = true;
-                bullet.GetComponent<BoxCollider2D>().size *= 1.5f;
-                hpbb.bulletDegreeDirection = HP_DirectionHandler.finalDegreeDirection;
-                hpbb.specialAttrib = "Explosion";
-                hpbb.bulletSpeedMult = 2;
+            float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
+            float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
+            directionMultiplier *= wallClimbMultiplier;
+            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+            bullet.SetActive(true);
+            HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+            hpbb.perfectAccuracy = true;
+            bullet.GetComponent<BoxCollider2D>().size *= 1.5f;
+            hpbb.bulletDegreeDirection = HP_DirectionHandler.finalDegreeDirection;
+            hpbb.specialAttrib = "Explosion";
+            hpbb.bulletSpeedMult = 2;
 
-                HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
-                bullet.GetComponent<SpriteRenderer>().sprite = specialBulletTexture;
+            HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
+            bullet.GetComponent<SpriteRenderer>().sprite = specialBulletTexture;
 
-                //HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
-                GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            //HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
 
-                PlayAudio("firerocket", true);
-
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("[SpellControl] StartFireball() " + e);
-            }
+            PlayAudio("firerocket", true);
 
             HP_Sprites.StartGunAnims();
         }
 
         public void CheckNailArt()
         {
-            Modding.Logger.Log("Passing Through Nail Art");
+            //Modding.Logger.Log("Passing Through Nail Art");
             //nailArtFSM.SetState("Regain Control");
         }
 
@@ -470,7 +473,6 @@ namespace HollowPoint
         {
             artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
             artifactActivatedEffect.SetActive(true);
-            HP_UIHandler.UpdateDisplay();
             HP_AttackHandler.artifactActive = true;
             //infuseTimer = 500f;
         }
@@ -478,11 +480,11 @@ namespace HollowPoint
         //========================================FIRE SUPPORT SPAWN METHODS====================================
 
         //Regular steel rain (non tracking)
-        public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates)
+        public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates, int totalShells)
         {
             HP_UIHandler.UpdateDisplay();
             Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
-            for (int ammo = 0; ammo < 5; ammo++)
+            for (int shells = 0; shells < totalShells; shells++)
             {
                 yield return new WaitForSeconds(0.45f);
                 GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
@@ -496,67 +498,66 @@ namespace HollowPoint
         }
 
         //For steel rains that tracks targets
-        public static IEnumerator StartSteelRain(GameObject enemyGO)
+        public static IEnumerator StartSteelRain(GameObject enemyGO, int totalShells)
         {
             HP_UIHandler.UpdateDisplay();
             //Modding.Logger.Log("SPELL CONTROL STEEL RAIN TRACK");
             Transform targetCoordinates = enemyGO.transform;
+            Vector3 enemyPos = targetCoordinates.position;
 
-            for (int ammo = 0; ammo < 7; ammo++)
+
+            for (int shells = 0; shells < totalShells; shells++)
             {
                 yield return new WaitForSeconds(0.45f);
-                if (enemyGO == null) yield break;
-                try
-                {
+                if ((enemyGO != null) || (targetCoordinates != null)) enemyPos = targetCoordinates.position;
 
-                    GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates.position + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                    HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
-                    hpbb.isFireSupportBullet = true;
-                    hpbb.ignoreCollisions = true;
-                    hpbb.targetDestination = targetCoordinates.position + new Vector3(0, Range(2, 8), -0.1f);
-                    shell.SetActive(true);
-                }
-                catch (Exception e)
-                {
+                GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, enemyPos + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
+                hpbb.isFireSupportBullet = true;
+                hpbb.ignoreCollisions = true;
+                hpbb.targetDestination = enemyPos + new Vector3(0, Range(2, 8), -0.1f);
+                shell.SetActive(true);
 
-                }
-                //}
                 yield return new WaitForSeconds(0.5f);
-
             }
         }
 
         public static IEnumerator StartInfusion()
         {
             
-            HP_Stats.artifactPower -= 1;
             artifactActivatedEffect.SetActive(false);
             LoadAssets.sfxDictionary.TryGetValue("infusionsound.wav", out AudioClip ac);
             AudioSource aud = infusionSoundGO.GetComponent<AudioSource>();
             aud.PlayOneShot(ac);
 
-            buff_duration = 80f;
+            buff_duration = (PlayerData.instance.screamLevel > 1) ? 150f : 80f;
 
-            //Charm 8 Lifeblood Heart
-            buff_duration += (PlayerData.instance.equippedCharm_8) ? 80f : 0;
+            //Charm 9 lifeblood core
+            buff_duration += (PlayerData.instance.equippedCharm_9) ? 200f : 0;
 
+            //Joni's Blessing
+            /*
             if (PlayerData.instance.equippedCharm_27)
             {
-                buff_duration = -50f;
+                buff_duration = -40f;
                 int mpCharge = PlayerData.instance.MPCharge;
                 int grenadeAmount = (int)(mpCharge/15f);
 
                 HP_Stats.grenadeAmnt += grenadeAmount;
                 HeroController.instance.TakeMP(mpCharge);
             }
-
+            */
             buffActive = true;
+            HP_Stats.artifactPower -= 1;
 
             if (PlayerData.instance.equippedCharm_34)
             {
-                buff_duration = -20f;
+                buff_duration = -40f;
                 HeroController.instance.AddHealth(4);
             }
+
+            //To make sure the minimum buff duration is always at 30f
+            buff_duration = (buff_duration < 30f) ? 30f : buff_duration;
 
             GameCameras.instance.cameraShakeFSM.SendEvent("BigShake");
 

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using static UnityEngine.Random;
+using static Modding.Logger;
 using Modding;
 using ModCommon.Util;
 using MonoMod;
@@ -39,19 +41,30 @@ namespace HollowPoint
         static float recentlyFiredTimer = 60f;
 
         int soulConsumed = 0;
+        public static int soulGained = 0;
 
         public static bool hasActivatedAdrenaline = false;
 
         int totalGeo = 0;
 
+        //Dash float values
+        float default_dash_cooldown = 0;
+        float default_dash_cooldown_charm;
+        float default_dash_speed = 0;
+        float default_dash_speed_sharp = 0;
+        float default_dash_time = 0;
+        float default_gravity = 0;
+
+
         public static int artifactPower;
         public static int grenadeAmnt = 0;
 
         public static string soundName = "";
-        public static string spriteName = "";
+        public static string bulletSprite = "";
 
         public PlayerData pd_instance;
         public HeroController hc_instance;
+        public AudioManager am_instance;
 
         public void Awake()
         {
@@ -67,6 +80,16 @@ namespace HollowPoint
 
             pd_instance = PlayerData.instance;
             hc_instance = HeroController.instance;
+            am_instance = GameManager.instance.AudioManager;
+
+
+            Log("Default Dash Cooldown " + hc_instance.DASH_COOLDOWN);
+            Log("Default Dash Cooldown Charm " + hc_instance.DASH_COOLDOWN_CH);
+            Log("Default Dash Speed " + hc_instance.DASH_SPEED);
+            Log("Default Dash Speed Sharp " + hc_instance.DASH_SPEED_SHARP);
+            Log("Default Dash Time " + hc_instance.DASH_TIME);
+            Log("Default Dash Gravity " + hc_instance.DEFAULT_GRAVITY);
+            //Log(am_instance.GetAttr<float>("Volume"));
 
             //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
@@ -81,7 +104,7 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 6;
+            return 8;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -155,21 +178,30 @@ namespace HollowPoint
         {
             Modding.Logger.Log("Charm Update Called");
             HP_AttackHandler.artifactActive = false;
-            spriteName = "";
+            bulletSprite = "";
+
+            //Default Dash speeds
+            default_dash_cooldown = 0.6f;
+            default_dash_cooldown_charm = 0.4f;
+            default_dash_speed = 20f;
+            default_dash_speed_sharp = 28f;
+            default_dash_time = 0.25f;
+            default_gravity = 0.79f;
 
             //Initialise stats
             artifactPower = 1;
-            bulletRange = .16f + (PlayerData.instance.nailSmithUpgrades * 0.015f);
-            bulletVelocity = 35f;
-            burstSoulCost = DEFAULT_BURST_COST;
-            fireRateCooldown = 3.75f;
-            fireSoulCost = 3;
+            bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
+            bulletVelocity = 40f;
+            burstSoulCost = 1;
+            fireRateCooldown = 3.5f;
+            fireSoulCost = 4;
             grenadeAmnt = 2 + (int)(Math.Floor((float)(PlayerData.instance.nailSmithUpgrades + 1) / 2));
-            heatPerShot = 0.5f;
-            max_soul_regen = 20;
+            heatPerShot = 1f;
+            max_soul_regen = 25;
+            soulGained = 6;
             soulConsumed = 0;
             soulRegenTimer = 2.75f;
-            walkSpeed = 5.5f;
+            walkSpeed = 3.5f;
 
             //Charm 3 Grubsong
             soulRegenTimer = (PlayerData.instance.equippedCharm_3) ? 1.25f : 2.75f;
@@ -179,19 +211,19 @@ namespace HollowPoint
             {
                 walkSpeed += 2f;
                 soulRegenTimer -= 1f;
-                fireRateCooldown -= 1f;
+                fireRateCooldown -= 0.4f;
             }
 
-            //Charm 9 Lifeblood Core
-            artifactPower += (PlayerData.instance.equippedCharm_9)? 2 : 0;
+            //Charm 8 Lifeblood Heart
+            artifactPower += (PlayerData.instance.equippedCharm_8)? 2 : 0;
 
             //Charm 11 Flukenest, add additional soul cost
             if (PlayerData.instance.equippedCharm_11)
             {
                 heatPerShot += 3f;
                 fireSoulCost += 7;
-                fireRateCooldown += 7.5f;
-                bulletRange += -0.050f;
+                fireRateCooldown += 6.5f;
+                bulletRange += -0.025f;
             }
 
             //Charm 13 Mark of Pride, increase range, increases heat, increases soul cost, decrease firing speed (SNIPER MODULE)
@@ -199,7 +231,7 @@ namespace HollowPoint
             {
                 bulletRange += 0.5f;
                 bulletVelocity += 15f;
-                heatPerShot += 0.5f;
+                heatPerShot -= 0.55f;
                 fireSoulCost += 5;
                 fireRateCooldown += 3.75f;
                 walkSpeed += -1f;
@@ -209,8 +241,8 @@ namespace HollowPoint
             //walkSpeed = (PlayerData.instance.equippedCharm_14) ? (walkSpeed) : walkSpeed;
 
             //Charm 16 Sharp Shadow and Fury of the fallen sprite changes
-            spriteName = (PlayerData.instance.equippedCharm_16) ? "shadebullet.png" : spriteName;
-            spriteName = (PlayerData.instance.equippedCharm_6) ? "furybullet.png" : spriteName;
+            bulletSprite = (PlayerData.instance.equippedCharm_16) ? "shadebullet.png" : bulletSprite;
+            bulletSprite = (PlayerData.instance.equippedCharm_6) ? "furybullet.png" : bulletSprite;
 
             //Charm 18 Long Nail
             bulletVelocity += (PlayerData.instance.equippedCharm_18) ? 20f : 0;
@@ -218,11 +250,14 @@ namespace HollowPoint
             //Charm 19 Shaman Stone
             grenadeAmnt += (PlayerData.instance.equippedCharm_19) ? (PlayerData.instance.nailSmithUpgrades + 2) : 0;
 
+            soulGained += (PlayerData.instance.equippedCharm_20) ? 1 : 0;
+
             //Charm 21 Soul Eater
             if (PlayerData.instance.equippedCharm_21)
             {
-                fireSoulCost -= 4;
+                fireSoulCost -= 2;
                 max_soul_regen += 10;
+                soulGained += 2;
             }
 
             //Charm 23 Fragile/Unbrekable Heart
@@ -234,7 +269,7 @@ namespace HollowPoint
             //Charm 32 Quick Slash, increase firerate, decrease heat, 
             if (PlayerData.instance.equippedCharm_32)
             {
-                heatPerShot -= 0.3f;
+                heatPerShot += 0.3f;
                 fireSoulCost += 1;
                 fireRateCooldown -= 2.5f;
                 walkSpeed += -2.25f;
@@ -248,7 +283,7 @@ namespace HollowPoint
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             fireSoulCost = (fireSoulCost < 2) ? 2 : fireSoulCost;
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
-            fireRateCooldown = (fireRateCooldown < 0.3f)? 0.3f: fireRateCooldown;
+            fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
             HP_UIHandler.UpdateDisplay();
         }
@@ -286,6 +321,7 @@ namespace HollowPoint
             }       
         }
 
+
         void FixedUpdate()
         {
             if (hc_instance.cState.isPaused) return;
@@ -314,6 +350,39 @@ namespace HollowPoint
                 passiveSoulTimer = soulRegenTimer;
                 HeroController.instance.AddMPCharge(1);
             }
+        }
+
+        public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
+        {
+            int damage = Range(2, 5) + PlayerData.instance.nailSmithUpgrades * 3; 
+            //Flukenest
+            if (PlayerData.instance.equippedCharm_11)
+            {
+                damage = (int)(damage * .5f);
+            }
+            //Mark of Pride
+            if (PlayerData.instance.equippedCharm_13)
+            {
+                float travelDistance = Vector3.Distance(bulletOriginPosition, enemyPosition);
+                Modding.Logger.Log("Travel distance " + travelDistance);
+                damage = (int)(damage * 2.5f);
+            }
+            //Fury of the Fallen
+            if (PlayerData.instance.equippedCharm_6)
+            {
+                damage = (int)(damage * 1.2f);
+            }
+
+            return damage;
+        }
+
+        public static int CalculateSoulGain()
+        {
+            int soul = soulGained;
+
+
+
+            return soul;
         }
 
         public static void ReduceGrenades()
