@@ -236,6 +236,7 @@ namespace HollowPoint
                 fireRateCooldown += 3.75f;
                 walkSpeed += -1f;
             }
+            //yeet
 
             //Charm 14 Steady Body 
             //walkSpeed = (PlayerData.instance.equippedCharm_14) ? (walkSpeed) : walkSpeed;
