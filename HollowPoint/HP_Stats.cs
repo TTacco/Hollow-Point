@@ -14,6 +14,8 @@ namespace HollowPoint
 {
     class HP_Stats : MonoBehaviour
     {
+        public static event Action<int> ShardAmountChanged;
+
         public static int fireSoulCost = 1;
         public static int burstSoulCost = 15;
 
@@ -165,7 +167,8 @@ namespace HollowPoint
 
                 if (soulConsumed % 66 == 0)
                 {
-                    if (grenadeAmnt < 10) grenadeAmnt += 1;
+                    if (grenadeAmnt < 10)
+                        grenadeAmnt += 1;
                 }
             }
 
@@ -286,6 +289,8 @@ namespace HollowPoint
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
+            ShardAmountChanged?.Invoke(artifactPower);
+
             HP_UIHandler.UpdateDisplay();
         }
 
@@ -399,6 +404,12 @@ namespace HollowPoint
                 }
             }
             grenadeAmnt -= 1;
+        }
+
+        public static void ReduceArtifactPower()
+        {
+            artifactPower -= 1;
+            ShardAmountChanged?.Invoke(-1 * artifactPower);
         }
 
         //Utility Methods
