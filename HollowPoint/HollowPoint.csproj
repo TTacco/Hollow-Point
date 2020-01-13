@@ -229,5 +229,8 @@
     <EmbeddedResource Include="assets\focussound.wav" />
     <EmbeddedResource Include="assets\infusionsound.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shard.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

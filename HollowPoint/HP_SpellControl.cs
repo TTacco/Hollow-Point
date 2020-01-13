@@ -548,8 +548,9 @@ namespace HollowPoint
             }
             */
             buffActive = true;
-            HP_Stats.artifactPower -= 1;
 
+            HP_Stats.ReduceArtifactPower();
+            
             if (PlayerData.instance.equippedCharm_34)
             {
                 buff_duration = -40f;

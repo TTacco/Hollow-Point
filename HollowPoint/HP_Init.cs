@@ -28,7 +28,7 @@ namespace HollowPoint
 
         }
 
-        private static void NewGame()
+        private void NewGame()
         {
             GameManager.instance.gameObject.AddComponent<HP_Prefabs>();
             GameManager.instance.gameObject.AddComponent<HP_AttackHandler>();
@@ -41,9 +41,10 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
             GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
             GameManager.instance.gameObject.AddComponent<HP_Stats>();
+            GameManager.instance.gameObject.AddComponent<HP_Hud>();
         }
 
-        private static void SaveGame(SaveGameData sgd)
+        private void SaveGame(SaveGameData sgd)
         {
             NewGame();
         }

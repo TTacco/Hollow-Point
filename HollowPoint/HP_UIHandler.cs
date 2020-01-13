@@ -136,19 +136,25 @@ namespace HollowPoint
 
         }
 
+       
+
         public static void UpdateDisplay()
         {
             grenadeAmnt = HP_Stats.grenadeAmnt;
             artifactDisplayPowerPercent = HP_Stats.artifactPower;
             fadeOutTimer = 70f;
         }
+
+        /*
+        -- just commnted the gui for now, you can remove the rest. I don't know how muhc you want to keep.
         public void OnGUI()
         {
             grenadeAmountText.text =       "GAS  CHARGE  : " + grenadeAmnt + " x";
             firesupportAmountText.text =   "SHARD  POWER : " + artifactDisplayPowerPercent + " x";
             //heatbarImage.fillAmount = HP_HeatHandler.currentHeat/100;
             //energybarImage.fillAmount = HP_HeatHandler.currentEnergy/100;
-        }
+        } 
+        */
 
         void FixedUpdate()
         {
