@@ -1,37 +1,54 @@
-using System.Linq;
+﻿using System.Linq;
 using ModCommon.Util;
 using UnityEngine;
 using System;
+using System.Collections;
 
 namespace HollowPoint
 {
     public static class DamageEnemies
     {
+        static System.Random soundRandom = new System.Random();
+
         // This function does damage to the enemy using the damage numbers given by the weapon type
-        public static void hitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
+        public static void HitEnemy(HealthManager targetHP, int expectedDamage, HitInstance hitInstance, int soulGain)
         {
             int realDamage = expectedDamage;
 
-            // TODO: Add possible optional damage multiplier information below.
+            //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
+            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
+            GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
-            /*
-            double multiplier = 1;
-            if (PlayerData.instance.GetBool("equippedCharm_25"))
+            bool specialEnemy = (targetHP.name.Contains("Moss Charger"));
+            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy)
             {
-                multiplier *= 1.5;
-            }
-            if (PlayerData.instance.GetBool("equippedCharm_6") && PlayerData.instance.GetInt("health") == 1)
-            {
-                multiplier *= 1.75f;
+                FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
+                GameObject blockHit = blockHitPrefab.Spawn();
+                blockHit.transform.position = targetHP.transform.position;
+                blockHit.transform.Rotate(new Vector3(0,0,90 *cardinalDirection));
+                return;
             }
 
-            if (gng_bindings.hasNailBinding())
-            {
-                multiplier *= 0.3;
-            }
-            realDamage = (int) Math.Round(realDamage * multiplier);
+            //bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
+
+            //if (targetHP.IsInvincible && !specialEnemy && !PlayerData.instance.equippedCharm_25)
+            //{
+            //    GameObject blockHit = blockHitPrefab.Spawn();
+            //    blockHit.transform.position = targetHP.transform.position;
+            //   return;
+            //}
             
-            */
+            if (targetHP.gameObject.name.Contains("Blocker"))
+            {
+                realDamage = realDamage * 4;
+            }
+
+            Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
+
+            if (recoil != null && PlayerData.instance.equippedCharm_15)
+            {
+                recoil.RecoilByDirection(cardinalDirection, 0.8f);
+            }
 
             if (realDamage <= 0)
             {
@@ -45,92 +62,78 @@ namespace HollowPoint
              * Mostly code copied from the healthmanager class itself.
              */
 
-            try
+
+
+
+            //Modding.Logger.Log("Cardinal is " + cardinalDirection);
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
+            GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
+            if (sendHitGO != null)
             {
-                int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-                GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
-                if (sendHitGO != null)
-                {
-                    FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-                }
-
-                GameObject fireballHitPrefab = targetHP.GetAttr<GameObject>("fireballHitPrefab");
-                Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-
-                if (fireballHitPrefab != null && effectOrigin != null)
-                {
-                    fireballHitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
-                }
-
-                FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
-
-                if ((UnityEngine.Object)targetHP.GetComponent<Recoil>() != (UnityEngine.Object)null)
-                    targetHP.GetComponent<Recoil>().RecoilByDirection(cardinalDirection, hitInstance.MagnitudeMultiplier);
-
-                FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
-                FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
-
             }
-            catch (Exception e)
+
+            GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
+            Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+
+            if (HitPrefab != null && effectOrigin != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 50~ " + e);
+                HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
 
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
+            FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
+
+            FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
+            FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
+
+            
             // Actually do damage to target.
             try
             {
-                if (targetHP.damageOverride)
-                {
-                    targetHP.hp -= 1;
-                }
-                else
-                {
-                    targetHP.hp -= realDamage;
-                    HeroController.instance.AddMPCharge(soulGain);
-                }
+                //TODO: change this audio source
+                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
             }
             catch (Exception e)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 80~ at the Actually Do Damage section " + e);
+                Modding.Logger.Log("Enemy Hurt Exception Thrown " + e);
+            }
+
+            if (targetHP.damageOverride)
+            {
+                targetHP.hp -= 1;
+            }
+            else
+            {
+                targetHP.hp -= realDamage; // the actual damage                                                       
+                HeroController.instance.AddMPCharge(soulGain);
             }
 
             // Trigger Kill animation
-            try
+            if (targetHP.hp <= 0f)
             {
-                if (targetHP.hp <= 0f)
-                {
-                    targetHP.Die(0f, AttackTypes.Nail, true);
-                    return;
-                }
-
-
-                bool? hasAlternateHitAnimation = targetHP.GetAttr<bool?>("hasAlternateHitAnimation");
-                string alternateHitAnimation = targetHP.GetAttr<string>("alternateHitAnimation");
-                if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
-                {
-                    targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
-                }
-
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 100~ at the Trigger Kill Animation section" + e);
+                LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
+                targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
+                return;
             }
 
 
-            try
+            bool? hasAlternateHitAnimation = targetHP.GetAttr<bool?>("hasAlternateHitAnimation");
+            string alternateHitAnimation = targetHP.GetAttr<string>("alternateHitAnimation");
+            if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
             {
-                PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component =>
-                    component.FsmName == "Stun Control" || component.FsmName == "Stun");
-                if (stunControlFSM != null)
-                {
-                    stunControlFSM.SendEvent("STUN DAMAGE");
-                }
+                targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
             }
-            catch (Exception e)
+
+
+            PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component =>
+                component.FsmName == "Stun Control" || component.FsmName == "Stun");
+            if (stunControlFSM != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 120~ at the Stun Damage" + e);
+                //stunControlFSM.SendEvent("STUN DAMAGE");
             }
 
             /*
@@ -138,45 +141,30 @@ namespace HollowPoint
              */
             //GameManager.instance.FreezeMoment(1);
             //GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-
-            try{
-                SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
-                if (f != null)
-                {
-                    f.flashWhiteQuick();
-                }
-            }
-            catch (Exception e)
+            SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
+            if (f != null)
             {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 140~ at the flash quick" + e);
+                f.flashInfected();
             }
 
         }
 
         private static HealthManager getHealthManagerRecursive(GameObject target)
         {
-                HealthManager targetHP = target.GetComponent<HealthManager>();
-            try
+            HealthManager targetHP = target.GetComponent<HealthManager>();
+            int i = 6;
+            while (targetHP == null && i > 0)
             {
-                int i = 6;
-                while (targetHP == null && i > 0)
+                targetHP = target.GetComponent<HealthManager>();
+                if (target.transform.parent == null)
                 {
-                    targetHP = target.GetComponent<HealthManager>();
-                    if (target.transform.parent == null)
-                    {
-                        return targetHP;
-                    }
-                    target = target.transform.parent.gameObject;
-                    i--;
+                    return targetHP;
                 }
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("[HOLLOW POINT DEBUG] Over here at line 150~ at the getHealthManagerRecursive" + e);
+                target = target.transform.parent.gameObject;
+                i--;
             }
 
             return targetHP;
         }
-
     }
 }

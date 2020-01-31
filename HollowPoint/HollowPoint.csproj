@@ -31,29 +31,33 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\mods\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="ModCommon, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\mods\ModCommon.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\ModCommon.dll</HintPath>
     </Reference>
     <Reference Include="PlayMaker, Version=1.6.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\mods\PlayMaker.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.XML" />
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\mods\UnityEngine.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\..\..\mothhome\projects\Hollow-Point\HollowPoint\bin\Release\UnityEngine.AudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\mods\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\mods\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
-      <HintPath>..\..\mods\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\mods\UnityEngine.PhysicsModule.dll</HintPath>
@@ -69,36 +73,164 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Ammunition.cs" />
-    <Compile Include="AmmunitionControl.cs" />
-    <Compile Include="BulletBehavior.cs" />
-    <Compile Include="CharmControl.cs" />
+    <Compile Include="HP_Component_EnemyBelow.cs" />
+    <Compile Include="HP_DamageCalculator.cs" />
+    <Compile Include="HP_Enums.cs" />
+    <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
-    <Compile Include="GunSpriteRenderer.cs" />
-    <Compile Include="HollowPointMain.cs" />
-    <Compile Include="HPControl.cs" />
-    <Compile Include="HPUI.cs" />
+    <Compile Include="HP_AttackHandler.cs" />
+    <Compile Include="HP_Prefabs.cs" />
+    <Compile Include="HP_DirectionHandler.cs" />
+    <Compile Include="HP_Init.cs" />
+    <Compile Include="HP_SpellControl.cs" />
+    <Compile Include="HP_SpriteHandler.cs" />
+    <Compile Include="HP_Stats.cs" />
+    <Compile Include="HP_WeaponHandler.cs" />
     <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="SpellControl.cs" />
+    <Compile Include="HP_UIHandler.cs" />
+    <Compile Include="SoundHandler.cs" />
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\1_pistol.wav" />
-    <EmbeddedResource Include="assets\2_submachine.wav" />
-    <EmbeddedResource Include="assets\3_shotgun.wav" />
-    <EmbeddedResource Include="assets\4_assault.wav" />
-    <EmbeddedResource Include="assets\5_sniper.wav" />
     <EmbeddedResource Include="assets\call_air_support_end.wav" />
     <EmbeddedResource Include="assets\call_air_support_1.wav" />
     <EmbeddedResource Include="assets\call_air_support_2.wav" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\wep1pistol.png" />
-    <EmbeddedResource Include="assets\wep2smg.png" />
-    <EmbeddedResource Include="assets\wep3shotgun.png" />
-    <EmbeddedResource Include="assets\wep4assault.png" />
-    <EmbeddedResource Include="assets\wep5sniper.png" />
+    <EmbeddedResource Include="assets\Weapon_RifleSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\glow.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\muzzleflash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\bulletSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_rifle.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemyhurt1.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemydead1.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemyhurt2.wav" />
+    <EmbeddedResource Include="assets\enemyhurt3.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemydead2.wav" />
+    <EmbeddedResource Include="assets\enemydead3.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\bulletCasingSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\impact_01.wav" />
+    <EmbeddedResource Include="assets\impact_02.wav" />
+    <EmbeddedResource Include="assets\impact_03.wav" />
+    <EmbeddedResource Include="assets\impact_04.wav" />
+    <EmbeddedResource Include="assets\impact_05.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\draw.wav" />
+    <EmbeddedResource Include="assets\holster.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\anim.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarsprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_shotgun.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\bulletSpriteFade.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_submachinegun.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\Weapon_ShotgunSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarspriteestimate.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\heatbarborder.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_sniper.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\exampletext.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\energybarborder.png" />
+    <EmbeddedResource Include="assets\energybarsprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\specialbullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\divedetonate.wav" />
+    <EmbeddedResource Include="assets\divetrigger.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\lightflash.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\firerocket.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\subsonicsfx.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_draw.wav" />
+    <EmbeddedResource Include="assets\weapon_holster.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\mortarclose.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\mortarexplosion.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\airstrikeinbound.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_flare.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\airstrikeend.wav" />
+    <EmbeddedResource Include="assets\airstrikerequest.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\textchanges.xml">
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\cantfire.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\flarebullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\furybullet.png" />
+    <EmbeddedResource Include="assets\shadebullet.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\focussound.wav" />
+    <EmbeddedResource Include="assets\infusionsound.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shard.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

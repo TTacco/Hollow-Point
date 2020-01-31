@@ -1,0 +1,618 @@
+﻿using System;
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+using ModCommon;
+using System.Linq;
+using System.Text;
+using Modding;
+using static Modding.Logger;
+using ModCommon.Util;
+
+
+namespace HollowPoint
+{
+    class HP_Prefabs : MonoBehaviour
+    {
+
+        public static GameObject bulletPrefab;
+        public static GameObject bulletFadePrefab;
+        public static GameObject bulletTrailPrefab;
+
+
+        //public static GameObject greenscreen;
+        public static GameObject blood = null;
+        public static GameObject dungexplosion = null;
+        public static GameObject explosion = null;
+        public static GameObject knight_spore = null;
+        public static GameObject takeDamage = null;
+
+        public static Dictionary<String, Sprite> projectileSprites = new Dictionary<String, Sprite>();
+        public static Dictionary<string, GameObject> prefabDictionary = new Dictionary<string, GameObject>();
+        public void Start()
+        {
+            StartCoroutine(CreateBulletPrefab());
+            ModHooks.Instance.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
+        }
+
+        //On objects spawning on the world
+        private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
+        {
+            //Modding.Logger.Log(go.name);
+            //if (go.name.Contains("Weaverling")) Destroy(go);
+            //else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
+            //{
+            //    prefabDictionary.Add("Orbit Shield", go);
+            //}
+
+            if (go.name.Contains("Grubberfly"))
+            {
+                Destroy(go);
+            }
+
+            return go;
+        }
+
+        public void Instantiated()
+        {
+
+        }
+
+        IEnumerator CreateBulletPrefab()
+        {
+            do
+            {
+                yield return null;
+            }
+            while (HeroController.instance == null || GameManager.instance == null);
+
+            projectileSprites = new Dictionary<String, Sprite>();
+            prefabDictionary = new Dictionary<string, GameObject>();
+
+            Resources.LoadAll<GameObject>("");
+            foreach (var go in Resources.FindObjectsOfTypeAll<GameObject>())
+            {
+                try
+                {
+                    //Modding.Logger.Log(go.name);
+                    //if (go.name.Equals("shadow burst") && blood == null)
+                    if (go.name.Equals("particle_orange blood") && blood == null)
+                    {
+                        //globalPrefabDict.Add("blood", Instantiate(go));
+                        blood = go;
+                        //blood.SetActive(false);
+                        Modding.Logger.Log(go.name);
+                    }
+                    else if (go.name.Equals("Gas Explosion Recycle M") && !prefabDictionary.ContainsKey("Gas Explosion Recycle M"))
+                    {
+                        //globalPrefabDict.Add("explosion medium", Instantiate(go));
+                        explosion = go;
+                        //explosion.SetActive(false);
+                        prefabDictionary.Add("Gas Explosion Recycle M", go);
+                        Modding.Logger.Log(go.name);
+
+                    }
+                    else if (go.name.Equals("Dung Explosion") && !prefabDictionary.ContainsKey("Dung Explosion"))
+                    {
+                        prefabDictionary.Add("Dung Explosion", go);
+                        Modding.Logger.Log(go.name);
+                    }
+                    else if (go.name.Equals("Knight Spore Cloud") && !prefabDictionary.ContainsKey("Knight Spore Cloud"))
+                    {
+                        prefabDictionary.Add("Knight Spore Cloud", go);
+                        Modding.Logger.Log(go.name);
+                    }
+                    else if (go.name.Equals("Knight Dung Cloud") && !prefabDictionary.ContainsKey("Knight Dung Cloud"))
+                    {
+                        prefabDictionary.Add("Knight Dung Cloud", go);
+                        Modding.Logger.Log(go.name);
+                    }
+                    else if (go.name.Equals("soul_particles") && !prefabDictionary.ContainsKey("soul_particles"))
+                    {
+                        prefabDictionary.Add("soul_particles", go);
+                        Modding.Logger.Log(go.name);
+                    }
+                    else if (go.name.Equals("Focus Effects") && !prefabDictionary.ContainsKey("Focus Effects"))
+                    {
+                        prefabDictionary.Add("Focus Effects", go);
+                        Modding.Logger.Log(go.name);
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Modding.Logger.Log(e);
+                }
+
+            }
+
+
+            LoadAssets.spriteDictionary.TryGetValue("bulletSprite.png", out Texture2D bulletTexture);
+            LoadAssets.spriteDictionary.TryGetValue("bulletSpriteFade.png", out Texture2D fadeTexture);
+
+            //Prefab instantiation
+            bulletPrefab = new GameObject("bulletPrefabObject", typeof(Rigidbody2D), typeof(SpriteRenderer), typeof(BoxCollider2D), typeof(HP_BulletBehaviour), typeof(AudioSource));
+            bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(bulletTexture,
+                new Rect(0, 0, bulletTexture.width, bulletTexture.height),
+                new Vector2(0.5f, 0.5f), 42);
+
+
+
+            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png"};
+            //Special bullet sprite
+            /*
+            LoadAssets.spriteDictionary.TryGetValue("specialbullet.png", out Texture2D specialBulletTexture);
+            projectileSprites.Add("specialbullet.png", Sprite.Create(specialBulletTexture,
+                new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
+                new Vector2(0.5f, 0.5f), 42));
+            */
+            
+            foreach(string tn in textureNames)
+            {
+                try
+                {
+                    LoadAssets.spriteDictionary.TryGetValue(tn, out Texture2D specialBulletTexture);
+                    projectileSprites.Add(tn, Sprite.Create(specialBulletTexture,
+                        new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
+                        new Vector2(0.5f, 0.5f), 42));
+                }
+                catch(Exception e)
+                {
+                    Modding.Logger.Log(e);
+                }
+            }
+
+
+            //Rigidbody
+            bulletPrefab.GetComponent<Rigidbody2D>().isKinematic = true;
+            bulletPrefab.transform.localScale = new Vector3(1.2f, 1.2f, 0);
+
+            //Collider Changes
+            BoxCollider2D bulletCol = bulletPrefab.GetComponent<BoxCollider2D>();
+            bulletCol.enabled = false;
+            bulletCol.isTrigger = true;
+            bulletCol.size = bulletPrefab.GetComponent<SpriteRenderer>().size + new Vector2(-0.30f, -0.60f);
+            bulletCol.offset = new Vector2(0, 0);
+
+            bulletFadePrefab = new GameObject("bulletFadePrefabObject", typeof(SpriteRenderer));
+            bulletFadePrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(fadeTexture,
+                new Rect(0, 0, fadeTexture.width, fadeTexture.height),
+                new Vector2(0.5f, 0.5f), 70);
+
+
+            //Trail
+            bulletTrailPrefab = new GameObject("bulletTrailPrefab", typeof(TrailRenderer));
+            TrailRenderer bulletTR = bulletTrailPrefab.GetComponent<TrailRenderer>();
+            //bulletTR.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
+            bulletTR.material = new Material(Shader.Find("Diffuse")); 
+            //bulletTR.material = new Material(Shader.Find("Particles/Additive"));
+            //bulletTR.widthMultiplier = 0.05f;
+            bulletTR.startWidth = 0.08f;
+            bulletTR.endWidth = 0.04f;
+            bulletTR.numCornerVertices = 50;
+            bulletTR.numCapVertices = 30;
+            bulletTR.enabled = true;
+            //bulletTR.time = 0.045f; //0.075
+            bulletTR.time = 0.03f;
+            bulletTR.startColor = new Color(240, 234, 196);
+            bulletTR.endColor = new Color(237, 206, 154);
+
+            bulletPrefab.SetActive(false);
+
+            //Get the cool af white particles from fireball and add it to the bullets
+            DontDestroyOnLoad(bulletPrefab);
+            DontDestroyOnLoad(bulletFadePrefab);
+            DontDestroyOnLoad(bulletTrailPrefab);
+
+            Modding.Logger.Log("[HOLLOW POINT] Initalized BulletObject");
+
+        }
+
+        public static GameObject SpawnBullet(float bulletDegreeDirection)
+        {
+            float directionOffsetY = 0;
+
+            if(bulletDegreeDirection > 10 && bulletDegreeDirection < 170)
+            {
+                directionOffsetY = 0.8f;
+            }
+            else if(bulletDegreeDirection > 190 && bulletDegreeDirection < 350)
+            {
+                directionOffsetY = -1.1f;
+            }
+   
+            float directionMultiplierX = (HeroController.instance.cState.facingRight) ? 1f : -1f;
+
+            float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
+
+            if (bulletDegreeDirection == 90 || bulletDegreeDirection == 270) directionMultiplierX = 0.2f * directionMultiplierX;
+
+            directionMultiplierX *= wallClimbMultiplier;
+                
+            GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.5f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
+            bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
+            bullet.SetActive(true);
+
+            return bullet;
+        }
+
+        public void OnDestroy()
+        {
+            ModHooks.Instance.ObjectPoolSpawnHook -= Instance_ObjectPoolSpawnHook;
+            Destroy(gameObject.GetComponent<HP_Prefabs>());
+        }
+
+        public static GameObject SpawnObjectFromDictionary(string key, Vector3 spawnPosition, Quaternion rotation)
+        {
+            try
+            {
+                HP_Prefabs.prefabDictionary.TryGetValue(key, out GameObject spawnedGO);
+                GameObject spawnedGO_Instance = Instantiate(spawnedGO, spawnPosition, rotation);
+                spawnedGO_Instance.SetActive(true);
+                return spawnedGO_Instance;
+            }
+            catch (Exception e)
+            {
+                Log("HP_Prefabs SpawnObjectFromDictionary(): Could not find GameObject with key " + key);
+                return null;
+            }
+        }
+    }
+   
+    class HP_BulletBehaviour : MonoBehaviour
+    {
+        GameObject bulletTrailObjectClone;
+        Rigidbody2D rb2d;
+        BoxCollider2D bc2d;
+        SpriteRenderer bulletSprite;
+        HealthManager hm;
+        double xDeg, yDeg;
+        double bulletSpeed = 10;
+       
+        bool noDamage = false;
+        public string specialAttrib;
+        public bool pierce = false;
+
+        public int bulletDamage;
+        public float bulletSpeedMult = 1; 
+        public float bulletDegreeDirection = 0;
+        public Vector3 bulletOriginPosition;
+
+        public bool ignoreCollisions = false;
+        public bool hasSporeCloud = true;
+
+        //Fire Support Attribs
+        public bool flareRound = false;
+        public bool isFireSupportBullet = false;
+
+        public bool noDeviation = false;
+        public bool noHeat = false;
+        public bool perfectAccuracy = false;
+
+        public Vector3 targetDestination;
+
+        public HP_Enums.FireModes fm = HP_Enums.FireModes.Single;
+        public HP_Enums.BulletType bt = HP_Enums.BulletType.Standard;
+
+        HealthManager pureVesselHM = null;
+
+        static System.Random rand = new System.Random();
+
+        public static HitInstance bulletHitInstance = new HitInstance
+        {
+            DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 3),
+            Multiplier = 1,
+            IgnoreInvulnerable = false,
+            CircleDirection = true,
+            IsExtraDamage = false,
+            Direction = 0,
+            MoveAngle = 180,
+            MoveDirection = false,
+            MagnitudeMultiplier = 1,
+            SpecialType = SpecialTypes.None,          
+        };        
+
+        public void Start()
+        {
+
+            rb2d = GetComponent<Rigidbody2D>();
+            bc2d = GetComponent<BoxCollider2D>();
+            bulletSprite = GetComponent<SpriteRenderer>();
+            bc2d.enabled = !ignoreCollisions;
+
+            gameObject.tag = "Wall Breaker";
+            //Trail    
+            bulletTrailObjectClone = Instantiate(HP_Prefabs.bulletTrailPrefab, gameObject.transform);
+
+            //Increase the bullet size
+            bc2d.size = new Vector2(1f, 0.65f);
+
+            //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
+            if (isFireSupportBullet)
+            {
+                bulletSprite.transform.Rotate(0, 0, 270);
+                bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
+                HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
+
+                gameObject.transform.localScale = new Vector3(1.2f, 1.2f, 0.90f);
+                bulletSprite.sprite = fireSupportBulletSprite;
+
+                rb2d.velocity = new Vector2(0, -120);
+
+                return;
+            }
+
+            //===================================REGULAR BULLET ATTRIBUTES=========================================
+
+
+            //Bullet sprite changer
+            string sn = HP_Stats.bulletSprite;
+            if (sn != "" && false)
+            {
+                HP_Prefabs.projectileSprites.TryGetValue(HP_Stats.bulletSprite, out Sprite regularBulletSprite);
+                bulletSprite.sprite = regularBulletSprite;
+            }
+
+
+            //Bullet Origin for Distance Calculation
+            bulletOriginPosition = gameObject.transform.position;
+
+            //Bullet Direction
+            float heat = HP_HeatHandler.currentHeat;
+            // heat -= (fm == HP_Enums.FireModes.Single && PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? -40 : 0 ;
+            // heat = (heat < 0)? 0 :  heat;
+
+            noDeviation = (PlayerData.instance.equippedCharm_14);
+
+            float deviationFromMovement = (noDeviation) ? 0 : SpreadDeviationControl.ExtraDeviation();
+
+            float currentHeat = HP_HeatHandler.currentHeat;
+
+            //Heat add basically dictates how high the multiplier will be depending on your heat level
+            //0-32 = 0.05 | 34-65 = 0.15 | 66 - 100 = 0.25  
+            int heatCount = (int)(currentHeat / 33);
+
+
+            float heatMult = 0.05f + (heatCount*0.10f);
+            float deviationFromHeat = (noHeat) ? 0 : (HP_HeatHandler.currentHeat * heatMult);
+            deviationFromHeat *= (PlayerData.instance.equippedCharm_37)? 1.25f : 1; //Increase movement penalty when equipping sprint master
+            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 15 : 0; //Decrease innacuracy when on ground and steady body is equipped
+
+            float deviation = (perfectAccuracy)? 0 : (deviationFromHeat + deviationFromMovement);
+            deviation = (deviation < 0) ? 0 : deviation; //just set up the minimum value, bullets starts acting weird when deviation is negative
+
+            bulletSpeed = HP_Stats.bulletVelocity;
+
+            //Bullet Sprite Size
+            float size = 0.90f;
+
+            //===================================FIRE SUPPORT=========================================
+            if (flareRound)
+            {
+                //OFFENSIVE FIRE SUPPORT
+                HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite flareBulletTexture);
+                size *= 1.5f;
+
+                bulletSprite.sprite = flareBulletTexture;
+
+            }
+
+            gameObject.transform.localScale = new Vector3(size, size, 0.90f);
+            gameObject.transform.localScale = new Vector3(size, size, 0.90f);
+
+            //Handles weapon spread
+            //HP_DirectionHandler.finalDegreeDirection
+
+            float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
+            float radian = (float)(degree * Math.PI / 180);
+
+            xDeg = bulletSpeed * Math.Cos(radian);
+            yDeg = bulletSpeed * Math.Sin(radian);
+
+            //Changes the degree of bullet sprite rotation and the bullet direction when wall sliding
+            if (HeroController.instance.cState.wallSliding)
+            {
+                xDeg *= -1;
+                degree += 180;
+
+                if (HeroController.instance.cState.facingRight) degree += 180;
+            }
+
+            rb2d.velocity = new Vector2((float)xDeg, (float)yDeg);
+
+            //Bullet Rotation
+            bulletSprite.transform.Rotate(0, 0, degree + HP_Sprites.SpriteRotationWallSlide(), 0);
+        }
+
+        //For tracking fire support target
+        void FixedUpdate()
+        {
+            if(isFireSupportBullet)
+            {
+                if(gameObject.transform.position.y < targetDestination.y)
+                {
+                    Destroy(gameObject);
+                }
+            }
+        }
+
+        //Handles the colliders
+        void OnTriggerEnter2D(Collider2D col)
+        {
+            hm = col.GetComponentInChildren<HealthManager>();
+            bulletHitInstance.Source = gameObject;
+
+            //Log(col.name);
+
+            //PURE VESSEL CHECK
+            if (col.gameObject.name.Contains("Idle"))
+            {
+                //Modding.Logger.Log("PV IS HIT");
+                if(pureVesselHM != null)
+                {
+                    hm = pureVesselHM;
+                }
+
+                Component[] pvc = col.gameObject.GetComponents<Component>();
+
+                foreach(Component c in pvc){
+                    Type type = c.GetType();
+
+                    //Transform BoxCollider2D DamageHero
+                    if (type.Name.Contains("Transform")){
+                        Transform pvt = (Transform) c;
+                        Component[] parent_pvt = pvt.GetComponentsInParent(typeof(Component));
+
+                        foreach(Component cp in parent_pvt)
+                        {
+                            Type type_2 = cp.GetType();
+                            if (type_2.Name.Contains("HealthManager"))
+                            {
+                                hm = (HealthManager) cp;
+                                pureVesselHM = hm;
+                                break;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+
+            if (hm == null && col.gameObject.layer.Equals(8))
+            {
+                StartCoroutine(WallHitDust());
+
+                if (col.gameObject.GetComponent<Breakable>() != null)
+                {
+                    Breakable br = col.gameObject.GetComponent<Breakable>();
+                    bulletHitInstance.Direction = 270f;
+                    br.Hit(bulletHitInstance);
+                }
+                //TODO: change this audio source location
+                LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
+                //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
+                HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
+
+                //Mark target for fire support
+                if (flareRound)
+                {
+                    OffensiveFireSupport_Target(gameObject, null, false);
+                    return;
+                }
+
+
+                Destroy(gameObject);
+            }
+            //Damages the enemy and destroys the bullet
+            else if (hm != null)
+            {
+                HeroController.instance.ResetAirMoves();
+
+                if (flareRound)
+                {
+                    OffensiveFireSupport_Target(gameObject, col.gameObject, true);
+                    hm.Hit(bulletHitInstance);
+                    return;
+                }
+
+                if (!pierce) Destroy(gameObject);
+
+                hm.Hit(bulletHitInstance);
+            }
+        }
+
+        /* ======================================================FIRE SUPPORT OFFENSIVE TARGET===========================
+         * NOTE:
+            Heres the thing with this method
+                
+            Turns out if the game object that gets deleted, whatever coroutine they do also gets deleted
+            Which is why the coroutine only fires 1 round before destroying itself
+            This method just ensures that theres a long enough lifespan on the bullet once it hits that it'll be able to
+            deplete all the rounds
+        */
+        public void OffensiveFireSupport_Target(GameObject fireSupportGO, GameObject enemyGO, bool trackTarget)
+        {
+
+            Vector3 pos = gameObject.transform.position;
+            Modding.Logger.Log("CALL AN AIR STRIKE AT THIS POSITION " + pos);
+
+            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling fire support on wtv it collides on
+            fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up visually
+            fireSupportGO.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0); //Stop the bullet movement, so the line renderer wont show up
+            int totalShells = (PlayerData.instance.screamLevel > 1) ? 6 : 3;
+            //Modding.Logger.Log(enemyGO.transform == null);
+            if (trackTarget && enemyGO != null)
+            {
+                StartCoroutine(HP_SpellControl.StartSteelRain(enemyGO, totalShells));
+            }
+            else
+            {
+
+                StartCoroutine(HP_SpellControl.StartSteelRainNoTrack(pos, totalShells));
+            }
+
+            Destroy(fireSupportGO, 25f);
+        }
+
+        public IEnumerator WallHitDust() 
+        {
+            ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
+
+            Destroy(wallDust, 0.5f);
+            wallDust.transform.position = gameObject.transform.position;
+            wallDust.Emit(200);
+            ParticleSystem.VelocityOverLifetimeModule v = wallDust.velocityOverLifetime;
+            
+            v.enabled = true;
+            float rad = Mathf.Deg2Rad * (gameObject.transform.eulerAngles.z + 180);
+            v.xMultiplier = 3f * Mathf.Cos(rad);
+            v.yMultiplier = 3f * Mathf.Sin(rad);
+
+            yield return new WaitForSeconds(0.3f);
+            v.enabled = false;
+        }
+    
+        public float DamageFalloffCalculation()
+        {
+            return 0f;
+        }
+
+        public void OnDestroy()
+        {
+            Destroy(Instantiate(HP_Prefabs.bulletFadePrefab, gameObject.transform.position, gameObject.transform.localRotation), 0.03f); //bullet fade out sprite
+           
+            if(specialAttrib.Contains("Explosion") && PlayerData.instance.equippedCharm_17)
+            {
+                HP_Prefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
+                GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                sporeCloudGO.SetActive(true);
+            }
+
+            if (specialAttrib.Contains("DungExplosion"))
+            {
+                HP_Prefabs.prefabDictionary.TryGetValue("Dung Explosion", out GameObject dungExplosion);
+                GameObject dungExplosionGO = Instantiate(dungExplosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                dungExplosionGO.SetActive(true);
+                dungExplosionGO.name += " KnightMadeDungExplosion";
+
+                if (specialAttrib.Contains("Small"))
+                {
+                    dungExplosionGO.transform.localScale = new Vector3(0.75f, 0.75f, 0);
+                }
+            }
+
+            //If its from a grenade launch or a offensive fire support projectile, make it explode
+            else if (gameObject.GetComponent<HP_BulletBehaviour>().specialAttrib.Contains("Explosion") || isFireSupportBullet)
+            {
+                GameObject explosionClone = HP_Prefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                explosionClone.name += " KnightMadeExplosion";
+
+                //Shrinks the explosion when its not a fire support bullet or its not an upgraded vengeful, as a nerf/downgrade
+                if (isFireSupportBullet) HP_SpellControl.PlayAudio("mortarexplosion", true);             
+                else if(PlayerData.instance.fireballLevel > 1) explosionClone.transform.localScale = new Vector3(1.3f, 1.3f, 0);
+                else explosionClone.transform.localScale = new Vector3(0.7f, 0.7f, 0);
+            }
+        }
+       
+    }
+}
