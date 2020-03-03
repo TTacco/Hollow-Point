@@ -84,6 +84,12 @@ A: Please message me! I take suggestions with consideration. Just do note some c
 
 A: If you find any, please message me of WHAT it is and HOW you got it, and I’ll try my best to address it.
 
+##### Q: IS THE TITLE A GUNGEON REFERENCE??!!?111!?!?!.
 
+A: No, a Hollow Point is an actual low penetration type bullet mostly used by law enforcement and I got from other games that incorporate that bullet type. But yes, I am aware of the Gungeon enemy and I have played Gungeon before. 
+
+##### Q: Worst Boss?
+
+A: Definitely Gatling Gull.
 
 
