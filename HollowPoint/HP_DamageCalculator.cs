@@ -47,6 +47,7 @@ namespace HollowPoint
             if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
             {
                 Log("negating bomb damage weary");
+                //TODO: remove this because it sometimes causes the player to still receive damage when rocket jumping
                 if (!heroDamageCoroutineActive)
                 {
                     heroDamageCoroutineActive = true;
@@ -190,20 +191,21 @@ namespace HollowPoint
 
             if (hitInstance.Source.name.Contains("Gas"))
             {
-                
+                //Explosion damage
                 hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 5);
                 orig(self, hitInstance);
                 return;
             }
             else if (hitInstance.Source.name.Contains("Damager"))
             {
+                //Glowing Womblings
                 HeroController.instance.AddMPCharge(15);
                 orig(self, hitInstance);
                 return;
             }
-
             if (!hitInstance.Source.name.Contains("bullet"))
             {
+                //Nail Damage TODO: Change this because this apparently affects environmental damage that are supposed to be OHKO
                 hitInstance.DamageDealt = 3 + PlayerData.instance.nailSmithUpgrades * 3;
                 orig(self, hitInstance);
                 return;
@@ -222,8 +224,8 @@ namespace HollowPoint
             Modding.Logger.Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
 
             //==============Blood Splatter Effect================= 
-            int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
-            if (!self.IsInvincible) StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
+            //int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
+            //if (!self.IsInvincible) StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
         }
 
         public static IEnumerator SplatterBlood(GameObject target, int repeat, float directionOfBlood)

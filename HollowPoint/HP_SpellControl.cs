@@ -332,7 +332,7 @@ namespace HollowPoint
                 return;
             }
 
-            swapTimer = (PlayerData.instance.equippedCharm_26)? 2f : 5f;
+            swapTimer = (PlayerData.instance.equippedCharm_26)? 1.5f : 7f;
 
             HeroController.instance.spellControl.SetState("Inactive");
             Modding.Logger.Log("Swaping weapons");
@@ -463,7 +463,8 @@ namespace HollowPoint
                 return;
             }
 
-            if(HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
+            //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
+            if (PlayerData.instance.MPCharge < 99 || HP_WeaponHandler.currentGun.gunName != "Nail")
             {
                 spellControl.SetState("Inactive");
             }
@@ -471,6 +472,8 @@ namespace HollowPoint
 
         public void ScreamEnd()
         {
+            //Prepare the airstrike by taking 99 MP
+            HeroController.instance.TakeMP(99);
             artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
             artifactActivatedEffect.SetActive(true);
             HP_AttackHandler.artifactActive = true;

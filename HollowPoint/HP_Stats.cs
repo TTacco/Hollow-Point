@@ -192,16 +192,16 @@ namespace HollowPoint
             default_gravity = 0.79f;
 
             //Initialise stats
-            artifactPower = 1;
+            artifactPower = 20;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 40f;
+            bulletVelocity = 44f;
             burstSoulCost = 1;
-            fireRateCooldown = 3.5f;
-            fireSoulCost = 4;
+            fireRateCooldown = 3f;
+            fireSoulCost = 5;
             grenadeAmnt = 2 + (int)(Math.Floor((float)(PlayerData.instance.nailSmithUpgrades + 1) / 2));
             heatPerShot = 1f;
             max_soul_regen = 25;
-            soulGained = 6;
+            soulGained = 2;
             soulConsumed = 0;
             soulRegenTimer = 2.75f;
             walkSpeed = 3.5f;
@@ -351,15 +351,25 @@ namespace HollowPoint
             {
                 passiveSoulTimer -= Time.deltaTime * 30f;
             }
-            else if(pd_instance.MPCharge < max_soul_regen)
+            else if(artifactPower < 15) //pd_instance.MPCharge < max_soul_regen
             {
                 passiveSoulTimer = soulRegenTimer;
-                HeroController.instance.AddMPCharge(1);
+                IncreaseArtifactPower();
+                //HeroController.instance.AddMPCharge(1);
             }
         }
 
         public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
         {
+            int dam = 2;
+            float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
+
+
+            dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 1.75f); 
+
+            Log("dealt " + dam);
+
+            return dam;
             int damage = Range(2, 5) + PlayerData.instance.nailSmithUpgrades * 3; 
             //Flukenest
             if (PlayerData.instance.equippedCharm_11)
@@ -404,6 +414,12 @@ namespace HollowPoint
                 }
             }
             grenadeAmnt -= 1;
+        }
+
+        public static void IncreaseArtifactPower()
+        {
+            artifactPower += 1;
+            ShardAmountChanged?.Invoke(1 * artifactPower);
         }
 
         public static void ReduceArtifactPower()

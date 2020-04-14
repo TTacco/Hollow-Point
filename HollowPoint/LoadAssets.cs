@@ -15,13 +15,9 @@ namespace HollowPoint
 
         public static XmlDocument textChanges = new XmlDocument();
 
-        static WAV wav_instance;
-   
-
         public static void LoadResources()
         {
             //InitializeFont();
-
 
             foreach (string res in Assembly.GetExecutingAssembly().GetManifestResourceNames())
             {

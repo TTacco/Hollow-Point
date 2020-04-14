@@ -79,6 +79,7 @@
     <Compile Include="HP_HeatHandler.cs" />
     <Compile Include="DamageEnemies.cs" />
     <Compile Include="HP_AttackHandler.cs" />
+    <Compile Include="HP_Hud.cs" />
     <Compile Include="HP_Prefabs.cs" />
     <Compile Include="HP_DirectionHandler.cs" />
     <Compile Include="HP_Init.cs" />
@@ -91,11 +92,6 @@
     <Compile Include="HP_UIHandler.cs" />
     <Compile Include="SoundHandler.cs" />
     <Compile Include="WavUtility.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="assets\call_air_support_end.wav" />
-    <EmbeddedResource Include="assets\call_air_support_1.wav" />
-    <EmbeddedResource Include="assets\call_air_support_2.wav" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\Weapon_RifleSprite.png" />

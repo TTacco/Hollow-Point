@@ -373,10 +373,10 @@ namespace HollowPoint
             int heatCount = (int)(currentHeat / 33);
 
 
-            float heatMult = 0.05f + (heatCount*0.10f);
+            float heatMult = 0.01f + (heatCount*0.035f);
             float deviationFromHeat = (noHeat) ? 0 : (HP_HeatHandler.currentHeat * heatMult);
-            deviationFromHeat *= (PlayerData.instance.equippedCharm_37)? 1.25f : 1; //Increase movement penalty when equipping sprint master
-            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 15 : 0; //Decrease innacuracy when on ground and steady body is equipped
+            deviationFromHeat *= (PlayerData.instance.equippedCharm_37)? 1.25f : 1.15f; //Increase movement penalty when equipping sprint master
+            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
 
             float deviation = (perfectAccuracy)? 0 : (deviationFromHeat + deviationFromMovement);
             deviation = (deviation < 0) ? 0 : deviation; //just set up the minimum value, bullets starts acting weird when deviation is negative
@@ -539,7 +539,7 @@ namespace HollowPoint
             fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling fire support on wtv it collides on
             fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up visually
             fireSupportGO.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0); //Stop the bullet movement, so the line renderer wont show up
-            int totalShells = (PlayerData.instance.screamLevel > 1) ? 6 : 3;
+            int totalShells = (PlayerData.instance.screamLevel > 1) ? 10 : 6;
             //Modding.Logger.Log(enemyGO.transform == null);
             if (trackTarget && enemyGO != null)
             {
@@ -558,7 +558,7 @@ namespace HollowPoint
         {
             ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
 
-            Destroy(wallDust, 0.5f);
+            Destroy(wallDust, 0.75f);
             wallDust.transform.position = gameObject.transform.position;
             wallDust.Emit(200);
             ParticleSystem.VelocityOverLifetimeModule v = wallDust.velocityOverLifetime;

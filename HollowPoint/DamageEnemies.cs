@@ -74,11 +74,15 @@ namespace HollowPoint
             }
 
             GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
+            GameObject ImpactPrefab = targetHP.GetAttr<GameObject>("slashImpactPrefab");
             Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-
             if (HitPrefab != null && effectOrigin != null)
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+            }
+            if (ImpactPrefab != null && effectOrigin != null)
+            {
+                ImpactPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);

@@ -83,8 +83,15 @@ namespace HollowPoint
             {
                 if (HP_DirectionHandler.heldAttack && HP_Stats.canFire)
                 {
-                    if (PlayerData.instance.MPCharge >= HP_Stats.fireSoulCost)
+                    if (HP_Stats.artifactPower > 0)
                     {
+                        HP_Stats.ReduceArtifactPower();
+                        HP_Stats.StartBothCooldown();
+                        FireGun((PlayerData.instance.equippedCharm_11) ? FireModes.Spread : FireModes.Single);
+                    }
+                    else if (PlayerData.instance.MPCharge >= HP_Stats.fireSoulCost)
+                    {
+                        HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
                         HP_Stats.StartBothCooldown();
                         FireGun((PlayerData.instance.equippedCharm_11)? FireModes.Spread : FireModes.Single );
                     }
@@ -147,7 +154,7 @@ namespace HollowPoint
 
             if(fm == FireModes.Single)
             {
-                HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
+                //HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
 
                 slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
 
@@ -157,7 +164,7 @@ namespace HollowPoint
             }
             if (fm == FireModes.Spread)
             {
-                HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
+                //HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
 
                 slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
 
@@ -204,8 +211,11 @@ namespace HollowPoint
             //Charm 13 Mark of Pride gives perfect accuracy and pierce
             hpbb.perfectAccuracy = (PlayerData.instance.equippedCharm_13 && (HP_HeatHandler.currentHeat < 10)) ? true : false;
             hpbb.pierce = PlayerData.instance.equippedCharm_13;
+            
+            //set the origin position of where the bullet was spawned
+            hpbb.bulletOriginPosition = bullet.transform.position;
 
-            Destroy(bullet, HP_Stats.bulletRange);
+            Destroy(bullet, HP_Stats.bulletRange + 3f);
 
             HP_Sprites.StartGunAnims();
             HP_Sprites.StartFlash();
