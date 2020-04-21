@@ -22,7 +22,7 @@ namespace HollowPoint
         public static bool isFiring = false;
         public static bool isBursting = false;
         public static bool slowWalk = false;
-        public static bool artifactActive = false; //Dictates this round will send determine if the bullet is an airstrike marker
+        public static bool airStrikeActive = false; //Dictates this round will send determine if the bullet is an airstrike marker
 
         static float slowWalkDisableTimer = 0;
         float clickTimer = 0;
@@ -81,20 +81,21 @@ namespace HollowPoint
             //TODO: Replace weapon handler to accomodate "isUsingGun" bool instead of checking what theyre using
             if (!(HP_WeaponHandler.currentGun.gunName == "Nail") && !isFiring && HeroController.instance.CanCast())
             {
-                if (HP_DirectionHandler.heldAttack && HP_Stats.canFire)
+                if (HP_DirectionHandler.pressingAttack && HP_Stats.canFire)
                 {
-                    if (HP_Stats.artifactPower > 0)
+                    if (HP_Stats.currentPrimaryAmmo > 0)
                     {
-                        HP_Stats.ReduceArtifactPower();
+                        //HP_Stats.ReduceAmmunition();
                         HP_Stats.StartBothCooldown();
                         FireGun((PlayerData.instance.equippedCharm_11) ? FireModes.Spread : FireModes.Single);
                     }
-                    else if (PlayerData.instance.MPCharge >= HP_Stats.fireSoulCost)
+                    /*else if (PlayerData.instance.MPCharge >= HP_Stats.fireSoulCost)
                     {
                         HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
                         HP_Stats.StartBothCooldown();
                         FireGun((PlayerData.instance.equippedCharm_11)? FireModes.Spread : FireModes.Single );
                     }
+                    */
                     else if(clickTimer <= 0)
                     {
                         clickTimer = 3f;
@@ -146,7 +147,7 @@ namespace HollowPoint
 
             float finalDegreeDirectionLocal = HP_DirectionHandler.finalDegreeDirection;
 
-            if (artifactActive)
+            if (airStrikeActive)
             {
                 StartCoroutine(FireFlare());
                 return;
@@ -154,23 +155,15 @@ namespace HollowPoint
 
             if(fm == FireModes.Single)
             {
-                //HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
-
-                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-
+                //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
                 HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
-                //StartCoroutine(SingleShot());
                 StartCoroutine(SingleShot());
             }
             if (fm == FireModes.Spread)
             {
-                //HeroController.instance.TakeMPQuick(HP_Stats.fireSoulCost);
-
                 slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-
                 HeroController.instance.WALK_SPEED = HP_Stats.walkSpeed;
                 StartCoroutine(SpreadShot(5));
-
                 StartCoroutine(KnockbackRecoil(3f, finalDegreeDirectionLocal));
                 return;
             }
@@ -179,18 +172,10 @@ namespace HollowPoint
             float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 1;
             if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1.75f * mult, 270));
             else if (finalDegreeDirectionLocal < 350 && finalDegreeDirectionLocal > 190) StartCoroutine(KnockbackRecoil(0.07f*mult, 270));
-
         }
 
         public void OnSlash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail" && artifactActive)
-            {
-                artifactActive = false;
-                StartCoroutine(HP_SpellControl.StartInfusion());
-                return;
-            }
-
             if (HP_WeaponHandler.currentGun.gunName == "Nail")
             {
                 orig(self);
@@ -224,7 +209,7 @@ namespace HollowPoint
             slowWalkDisableTimer = 10f;
 
             string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
-            PlayGunSounds(weaponType);
+            PlayGunSounds("sniper");
             if(weaponType == "sniper") bullet.transform.localScale = new Vector3(1.8f, 1.8f, 0.1f);
 
             yield return new WaitForSeconds(0.02f);
@@ -257,8 +242,8 @@ namespace HollowPoint
 
         public IEnumerator FireFlare()
         {
-            artifactActive = false;
-            HP_Stats.artifactPower -= 1;
+            airStrikeActive = false;
+            HP_Stats.currentPrimaryAmmo -= 1;
             HP_SpellControl.artifactActivatedEffect.SetActive(false);
 
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");

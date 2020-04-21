@@ -10,7 +10,7 @@ namespace HollowPoint
         public static bool left;
         public static bool facingRight;
         public static bool holdingAttack;
-        public static bool pressingAttack;
+        public static bool pressingAttack = true;
         public static bool heldAttack;
         public static float finalDegreeDirection;
 

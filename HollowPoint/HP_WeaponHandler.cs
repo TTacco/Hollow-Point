@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using On;
 using UnityEngine;
 
 namespace HollowPoint
@@ -19,8 +20,74 @@ namespace HollowPoint
         float swapWeaponTimer = 0;
         bool swapWeaponStart = false;
 
+        public void Awake()
+        {
+            StartCoroutine(InitRoutine());
+        }
+
+        public IEnumerator InitRoutine()
+        {
+            while (HeroController.instance == null)
+            {
+                yield return null;
+            }
+
+            On.HeroController.CanDreamNail += CanDreamNail_Hook;
+        }
+
+        private bool CanDreamNail_Hook(On.HeroController.orig_CanDreamNail orig, HeroController self)
+        {
+
+            if(HP_WeaponHandler.currentGun.gunName != "Nail")
+            {
+                return false;
+            }
+
+
+            return orig(self);
+        }
+
         public void Update()
         {
+
+            bool isUsingGun = HP_WeaponHandler.currentGun.gunName != "Nail";
+            bool dnailPressed = InputHandler.Instance.inputActions.dreamNail.WasPressed;
+            bool soulReload = (PlayerData.instance.MPCharge >= 0);
+            if (isUsingGun && dnailPressed && soulReload)
+            {
+                Modding.Logger.Log("RELOADING");
+                HeroController.instance.TakeMP(33);
+                AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
+                LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
+                audios.PlayOneShot(ac);
+                HP_Stats.ReloadGun(10);
+            }
+
+            return;
+
+            if (swapWeaponTimer > 0)
+            {
+                swapWeaponTimer -= Time.deltaTime * 30f;
+            }
+            else
+            {
+                tapUp = 0;
+            }
+
+            if (InputHandler.Instance.inputActions.down.WasPressed)
+            {
+                if (tapUp == 0)
+                {
+                    swapWeaponTimer = 5f;
+                    tapUp = 1;
+                }
+                else if (tapUp == 1)
+                {
+                    Modding.Logger.Log("RELOADING");
+                    tapUp = 0;
+                }
+            }
+
         }
 
         public void CheckIndexBound()

@@ -187,13 +187,13 @@ namespace HollowPoint
             bulletTR.material = new Material(Shader.Find("Diffuse")); 
             //bulletTR.material = new Material(Shader.Find("Particles/Additive"));
             //bulletTR.widthMultiplier = 0.05f;
-            bulletTR.startWidth = 0.08f;
+            bulletTR.startWidth = 0.1f;
             bulletTR.endWidth = 0.04f;
             bulletTR.numCornerVertices = 50;
             bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
             //bulletTR.time = 0.045f; //0.075
-            bulletTR.time = 0.03f;
+            bulletTR.time = 0.05f;
             bulletTR.startColor = new Color(240, 234, 196);
             bulletTR.endColor = new Color(237, 206, 154);
 

@@ -19,8 +19,8 @@ namespace HollowPoint
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
-            bool specialEnemy = (targetHP.name.Contains("Moss Charger"));
-            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy)
+            bool specialEnemy = (targetHP.name.Contains("Charger"));
+            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy || realDamage <= 0)
             {
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
                 GameObject blockHit = blockHitPrefab.Spawn();
@@ -28,6 +28,8 @@ namespace HollowPoint
                 blockHit.transform.Rotate(new Vector3(0,0,90 *cardinalDirection));
                 return;
             }
+
+
 
             //bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
 
@@ -61,9 +63,6 @@ namespace HollowPoint
              * Play animations and such...
              * Mostly code copied from the healthmanager class itself.
              */
-
-
-
 
             //Modding.Logger.Log("Cardinal is " + cardinalDirection);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
@@ -121,6 +120,7 @@ namespace HollowPoint
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip ac);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(ac);
                 targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
+                HeroController.instance.AddMPCharge(3);
                 return;
             }
 

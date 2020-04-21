@@ -12,6 +12,7 @@
         public enum BulletType
         {
             Standard,
+            Soul,
             Flare,
             FireSupport,
             Typhoon,

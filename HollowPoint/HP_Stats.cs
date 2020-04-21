@@ -32,8 +32,8 @@ namespace HollowPoint
         float passiveSoulTimer = 3f;
 
         public static float walkSpeed = 3f;
-        public static float fireRateCooldown = 3.75f;
-        public static float fireRateCooldownTimer = fireRateCooldown;
+        public static float fireRateCooldown = 5.75f;
+        public static float fireRateCooldownTimer = 5.75f;
 
         public static float bulletRange = 0;
         public static float heatPerShot = 0;
@@ -57,8 +57,7 @@ namespace HollowPoint
         float default_dash_time = 0;
         float default_gravity = 0;
 
-
-        public static int artifactPower;
+        public static int currentPrimaryAmmo;
         public static int grenadeAmnt = 0;
 
         public static string soundName = "";
@@ -179,8 +178,8 @@ namespace HollowPoint
 
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
-            Modding.Logger.Log("Charm Update Called");
-            HP_AttackHandler.artifactActive = false;
+            Log("Charm Update Called");
+            HP_AttackHandler.airStrikeActive = false;
             bulletSprite = "";
 
             //Default Dash speeds
@@ -192,11 +191,11 @@ namespace HollowPoint
             default_gravity = 0.79f;
 
             //Initialise stats
-            artifactPower = 20;
+            currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 44f;
             burstSoulCost = 1;
-            fireRateCooldown = 3f;
+            fireRateCooldown = 12.5f;
             fireSoulCost = 5;
             grenadeAmnt = 2 + (int)(Math.Floor((float)(PlayerData.instance.nailSmithUpgrades + 1) / 2));
             heatPerShot = 1f;
@@ -218,7 +217,7 @@ namespace HollowPoint
             }
 
             //Charm 8 Lifeblood Heart
-            artifactPower += (PlayerData.instance.equippedCharm_8)? 2 : 0;
+            currentPrimaryAmmo += (PlayerData.instance.equippedCharm_8)? 2 : 0;
 
             //Charm 11 Flukenest, add additional soul cost
             if (PlayerData.instance.equippedCharm_11)
@@ -289,7 +288,7 @@ namespace HollowPoint
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
-            ShardAmountChanged?.Invoke(artifactPower);
+            ShardAmountChanged?.Invoke(currentPrimaryAmmo);
 
             HP_UIHandler.UpdateDisplay();
         }
@@ -298,7 +297,18 @@ namespace HollowPoint
 
         void Update()
         {
-            if(HP_SpellControl.buffActive && PlayerData.instance.equippedCharm_35)
+            if (fireRateCooldownTimer >= 0)
+            {
+                fireRateCooldownTimer -= Time.deltaTime * 30f;
+                //canFire = false;
+            }
+            else
+            {
+                canFire = true;
+            }
+
+
+            if (HP_SpellControl.buffActive && PlayerData.instance.equippedCharm_35)
             {
                 HeroController.instance.SetAttr<bool>("doubleJumped", false);
             }
@@ -332,16 +342,6 @@ namespace HollowPoint
         {
             if (hc_instance.cState.isPaused) return;
 
-            if (fireRateCooldownTimer > 0)
-            {
-                fireRateCooldownTimer -= Time.deltaTime * 30f;
-                canFire = false;
-            }
-            else
-            {
-                canFire= true;
-            }
-
             //Soul Gain Timer
             if (recentlyFiredTimer >= 0)
             {
@@ -351,21 +351,24 @@ namespace HollowPoint
             {
                 passiveSoulTimer -= Time.deltaTime * 30f;
             }
-            else if(artifactPower < 15) //pd_instance.MPCharge < max_soul_regen
+            else if(currentPrimaryAmmo < 15) //pd_instance.MPCharge < max_soul_regen
             {
                 passiveSoulTimer = soulRegenTimer;
-                IncreaseArtifactPower();
+                //IncreaseArtifactPower();
                 //HeroController.instance.AddMPCharge(1);
             }
         }
 
         public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
         {
-            int dam = 2;
+            int dam = 6;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
 
 
-            dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 1.75f); 
+            //dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f); 
+            //dam = (int)((distance >= 8) ? dam * 0.5f : ((distance >= 0 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f);
+            dam = (int)((distance >= 8)? dam * 0.75f : ((distance >= 4)? dam * 1 : dam * 1.25f));
+
 
             Log("dealt " + dam);
 
@@ -394,10 +397,7 @@ namespace HollowPoint
 
         public static int CalculateSoulGain()
         {
-            int soul = soulGained;
-
-
-
+            int soul = 3;//soulGained;
             return soul;
         }
 
@@ -416,21 +416,34 @@ namespace HollowPoint
             grenadeAmnt -= 1;
         }
 
-        public static void IncreaseArtifactPower()
+        public static void ReloadGun(int reloadAmount)
         {
-            artifactPower += 1;
-            ShardAmountChanged?.Invoke(1 * artifactPower);
+            currentPrimaryAmmo = reloadAmount;
+            ShardAmountChanged?.Invoke(1 * currentPrimaryAmmo);
         }
 
-        public static void ReduceArtifactPower()
+        public static void IncreaseArtifactPower(int increaseAmount)
         {
-            artifactPower -= 1;
-            ShardAmountChanged?.Invoke(-1 * artifactPower);
+            currentPrimaryAmmo += increaseAmount;
+            ShardAmountChanged?.Invoke(1 * currentPrimaryAmmo);
+        }
+
+        public static void ReduceAmmunition()
+        {
+            currentPrimaryAmmo -= 1;
+            ShardAmountChanged?.Invoke(-1 * currentPrimaryAmmo);
+        }
+
+        public static void DisplayAmmoCount()
+        {
+
         }
 
         //Utility Methods
         public static void StartBothCooldown()
         {
+            //Log("Starting cooldown");
+            fireRateCooldownTimer = -1;
             fireRateCooldownTimer = fireRateCooldown;
             //fireRateCooldownTimer = 0.1f;
             canFire = false;

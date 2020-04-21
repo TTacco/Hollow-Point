@@ -10,6 +10,8 @@ namespace HollowPoint
         /*
          * I am using this space to say that I hate TTaccoo#7358 for removing the grenades count.
          * He is no longer my hero. 😤
+         * 
+         * i cant believe Sid would do this i am literally shaking and crying right now
         */
 
         private GameObject _hudshard;
@@ -25,7 +27,7 @@ namespace HollowPoint
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            _hudshard = CreateStatObject("Shard", HP_Stats.artifactPower.ToString(), prefab, hudCanvas.transform, shardSprite, new Vector3(2.2f, 11.4f));
+            _hudshard = CreateStatObject("Shard", HP_Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, shardSprite, new Vector3(2.2f, 11.4f));
 
             HP_Stats.ShardAmountChanged += ShardChanged;
         }
@@ -33,12 +35,12 @@ namespace HollowPoint
         private void ShardChanged(int amt)
         {
             var shardText = _hudshard.GetComponent<DisplayItemAmount>().textObject;
-
-            Color color = new Color(0.2f, .4f, .75f);
+            
+            Color color = new Color(0.55f, 0.55f, 0.55f);
             if (amt <= 0)
             {
                 amt *= -1;
-                color = new Color(0.7f, .35f, 0);
+                color = new Color(0.55f, 0.55f, 0.55f);
             }
             StartCoroutine(BadAnimation(shardText, amt.ToString(), color));
         }
@@ -49,6 +51,7 @@ namespace HollowPoint
             shardText.color = color;         
             yield return new WaitForSeconds(0.8f);
             shardText.color = Color.white;
+
         }
 
         private GameObject CreateStatObject(string name, string text, GameObject prefab, Transform parent, Sprite sprite, Vector3 postoAdd)
@@ -59,7 +62,7 @@ namespace HollowPoint
             go.GetComponent<DisplayItemAmount>().textObject.text = text;
             go.GetComponent<SpriteRenderer>().sprite = sprite;
             go.SetActive(true);
-            go.GetComponent<BoxCollider2D>().size = new Vector2(1.5f, 0.98f);
+            go.GetComponent<BoxCollider2D>().size = new Vector2(1.5f, 0.95f);
             go.GetComponent<BoxCollider2D>().offset = new Vector2(0.5f, 0f);
             return go;
         }

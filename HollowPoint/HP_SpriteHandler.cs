@@ -249,7 +249,6 @@ namespace HollowPoint
             if (BadAnimFace())
             {
                 gunSpriteGO.transform.SetPositionZ(0.01f);
-
             }
 
             else if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
@@ -322,22 +321,6 @@ namespace HollowPoint
 
         IEnumerator SprintingShakeRotation()
         {
-            /*
-            while (true)
-            {
-                yield return new WaitForSeconds(0.09f);
-                if (!HeroController.instance.cState.dashing)
-                {
-                    gunSpriteGO.transform.SetRotationZ(shakeNum.Next(18, 26));
-                }
-                else
-                {
-                    gunSpriteGO.transform.SetRotationZ(shakeNum.Next(26, 40));
-                }
- 
-            }
-            */
-
             while (true)
             {
                 yield return new WaitForSeconds(0.082f);
@@ -484,7 +467,7 @@ namespace HollowPoint
         {
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
 
-            LoadAssets.spriteDictionary.TryGetValue("Weapon_RifleSprite.png", out Texture2D rifleTextureInit);
+            LoadAssets.spriteDictionary.TryGetValue("Weapon_ShotgunSprite.png", out Texture2D rifleTextureInit);
             gunRenderer.sprite = Sprite.Create(rifleTextureInit,
                 new Rect(0, 0, rifleTextureInit.width, rifleTextureInit.height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);

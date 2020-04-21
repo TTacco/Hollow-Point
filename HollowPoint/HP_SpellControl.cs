@@ -58,7 +58,7 @@ namespace HollowPoint
                 if (HP_WeaponHandler.currentGun.gunName == "Nail")
                 {
                     infuseTimer = -1;
-                    HP_AttackHandler.artifactActive = false;
+                    HP_AttackHandler.airStrikeActive = false;
                     StartCoroutine(StartInfusion());
                 }
                
@@ -455,11 +455,11 @@ namespace HollowPoint
         public void HasScream_HasFireSupportAmmo()
         {
 
-            if (HP_AttackHandler.artifactActive)
+            if (HP_AttackHandler.airStrikeActive)
             {
                 if(artifactActivatedEffect != null) spellControl.SetState("Inactive");
                 artifactActivatedEffect.SetActive(false);
-                HP_AttackHandler.artifactActive = false;
+                HP_AttackHandler.airStrikeActive = false;
                 return;
             }
 
@@ -476,7 +476,7 @@ namespace HollowPoint
             HeroController.instance.TakeMP(99);
             artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
             artifactActivatedEffect.SetActive(true);
-            HP_AttackHandler.artifactActive = true;
+            HP_AttackHandler.airStrikeActive = true;
             //infuseTimer = 500f;
         }
 
@@ -552,7 +552,7 @@ namespace HollowPoint
             */
             buffActive = true;
 
-            HP_Stats.ReduceArtifactPower();
+            HP_Stats.ReduceAmmunition();
             
             if (PlayerData.instance.equippedCharm_34)
             {

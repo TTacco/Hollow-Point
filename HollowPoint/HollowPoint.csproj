@@ -228,5 +228,11 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\shard.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\Weapon_PistolSprite.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_pistol.wav" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

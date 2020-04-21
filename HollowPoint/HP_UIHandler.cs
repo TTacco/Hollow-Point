@@ -141,7 +141,7 @@ namespace HollowPoint
         public static void UpdateDisplay()
         {
             grenadeAmnt = HP_Stats.grenadeAmnt;
-            artifactDisplayPowerPercent = HP_Stats.artifactPower;
+            artifactDisplayPowerPercent = HP_Stats.currentPrimaryAmmo;
             fadeOutTimer = 70f;
         }
 
