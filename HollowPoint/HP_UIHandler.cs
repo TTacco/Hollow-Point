@@ -136,15 +136,7 @@ namespace HollowPoint
 
         }
 
-       
-
-        public static void UpdateDisplay()
-        {
-            grenadeAmnt = HP_Stats.grenadeAmnt;
-            artifactDisplayPowerPercent = HP_Stats.currentPrimaryAmmo;
-            fadeOutTimer = 70f;
-        }
-
+     
         /*
         -- just commnted the gui for now, you can remove the rest. I don't know how muhc you want to keep.
         public void OnGUI()

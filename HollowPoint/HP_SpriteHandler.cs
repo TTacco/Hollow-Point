@@ -8,6 +8,7 @@ using GlobalEnums;
 using static Modding.Logger;
 using ModCommon.Util;
 using System.Reflection;
+using static HollowPoint.HP_Enums;
 
 namespace HollowPoint
 {
@@ -126,8 +127,8 @@ namespace HollowPoint
             if (isWallClimbing) directionMultiplier *= -1;
 
             //fuck your standard naming conventions, if it works, it fucking works
-            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail") ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
-            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponHandler.currentGun.gunName == "Nail") ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
+            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
+            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
 
             ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
             //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
@@ -243,19 +244,17 @@ namespace HollowPoint
         }
 
         void WeaponBehindBack()
-        {
-
-            
+        {      
             if (BadAnimFace())
             {
                 gunSpriteGO.transform.SetPositionZ(0.01f);
             }
 
-            else if (HP_WeaponHandler.currentGun.gunName == "Nail") //HP_HeatHandler.overheat
+            else if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
             {
                 gunSpriteGO.transform.SetRotationZ(-34); //-23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);
-                // gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
+                //gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
 
                 if (HeroController.instance.hero_state == ActorStates.running )
                 {
@@ -269,7 +268,7 @@ namespace HollowPoint
         }
 
 
-        //Player is facing the front
+        //Player is facing the front, not like, hes literally staring in front, like when they enter a room thats not either left or right
         bool BadAnimFace()
         {
             //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
@@ -384,7 +383,7 @@ namespace HollowPoint
             startFiringAnim = true;
             isFiring = false;
             isFiring = true;
-            lowerGunTimer = 0.4f;
+            lowerGunTimer = 0.7f;
         }
 
         public static void StartFlash()

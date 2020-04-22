@@ -12,10 +12,22 @@
         public enum BulletType
         {
             Standard,
-            Soul,
+            Secondary,
             Flare,
             FireSupport,
             Typhoon,
+        }
+
+        public enum GunType
+        {
+            Primary, 
+            Secondary,
+        }
+
+        public enum WeaponType
+        {
+            Melee,
+            Ranged,
         }
 
     }

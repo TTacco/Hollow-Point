@@ -8,6 +8,7 @@ using ModCommon.Util;
 using MonoMod;
 using Language;
 using System.Xml;
+using static HollowPoint.HP_Enums;
 
 
 namespace HollowPoint
@@ -42,7 +43,6 @@ namespace HollowPoint
         public static bool canFire = false;
         static float recentlyFiredTimer = 60f;
 
-        int soulConsumed = 0;
         public static int soulGained = 0;
 
         public static bool hasActivatedAdrenaline = false;
@@ -50,15 +50,7 @@ namespace HollowPoint
         int totalGeo = 0;
 
         //Dash float values
-        float default_dash_cooldown = 0;
-        float default_dash_cooldown_charm;
-        float default_dash_speed = 0;
-        float default_dash_speed_sharp = 0;
-        float default_dash_time = 0;
-        float default_gravity = 0;
-
         public static int currentPrimaryAmmo;
-        public static int grenadeAmnt = 0;
 
         public static string soundName = "";
         public static string bulletSprite = "";
@@ -105,7 +97,7 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 8;
+            return 2;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -129,7 +121,7 @@ namespace HollowPoint
 
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
-            if (HP_WeaponHandler.currentGun.gunName == "Nail")
+            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee)
                 return orig(self);
 
             return false;
@@ -159,18 +151,6 @@ namespace HollowPoint
         {
             //return (float)PlayerData.instance.GetInt("MPCharge") / 35.0f;
             recentlyFiredTimer = 60;
-
-            if (PlayerData.instance.equippedCharm_27)
-            {
-                soulConsumed += 1;
-
-                if (soulConsumed % 66 == 0)
-                {
-                    if (grenadeAmnt < 10)
-                        grenadeAmnt += 1;
-                }
-            }
-
             if (hasActivatedAdrenaline && PlayerData.instance.equippedCharm_23) return 3f;
 
             return 1f;
@@ -183,25 +163,23 @@ namespace HollowPoint
             bulletSprite = "";
 
             //Default Dash speeds
-            default_dash_cooldown = 0.6f;
-            default_dash_cooldown_charm = 0.4f;
-            default_dash_speed = 20f;
-            default_dash_speed_sharp = 28f;
-            default_dash_time = 0.25f;
-            default_gravity = 0.79f;
+            //default_dash_cooldown = 0.6f;
+            //default_dash_cooldown_charm = 0.4f;
+            //default_dash_speed = 20f;
+            //default_dash_speed_sharp = 28f;
+            //default_dash_time = 0.25f;
+            //default_gravity = 0.79f;
 
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 44f;
+            bulletVelocity = 40f;
             burstSoulCost = 1;
-            fireRateCooldown = 12.5f;
+            fireRateCooldown = 12f;
             fireSoulCost = 5;
-            grenadeAmnt = 2 + (int)(Math.Floor((float)(PlayerData.instance.nailSmithUpgrades + 1) / 2));
             heatPerShot = 1f;
             max_soul_regen = 25;
             soulGained = 2;
-            soulConsumed = 0;
             soulRegenTimer = 2.75f;
             walkSpeed = 3.5f;
 
@@ -250,10 +228,7 @@ namespace HollowPoint
             //Charm 18 Long Nail
             bulletVelocity += (PlayerData.instance.equippedCharm_18) ? 20f : 0;
 
-            //Charm 19 Shaman Stone
-            grenadeAmnt += (PlayerData.instance.equippedCharm_19) ? (PlayerData.instance.nailSmithUpgrades + 2) : 0;
-
-            soulGained += (PlayerData.instance.equippedCharm_20) ? 1 : 0;
+            //soulGained += (PlayerData.instance.equippedCharm_20) ? 1 : 0;
 
             //Charm 21 Soul Eater
             if (PlayerData.instance.equippedCharm_21)
@@ -289,8 +264,6 @@ namespace HollowPoint
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
             ShardAmountChanged?.Invoke(currentPrimaryAmmo);
-
-            HP_UIHandler.UpdateDisplay();
         }
 
 
@@ -303,23 +276,12 @@ namespace HollowPoint
                 //canFire = false;
             }
             else
-            {
-                canFire = true;
-            }
-
-
-            if (HP_SpellControl.buffActive && PlayerData.instance.equippedCharm_35)
-            {
-                HeroController.instance.SetAttr<bool>("doubleJumped", false);
-            }
-
-            if (HP_SpellControl.buffActive && PlayerData.instance.equippedCharm_4)
-            {
-                //HeroController.instance.cState.invulnerable = true;
+            { 
+                if(!canFire) canFire = true;
             }
 
             //actually put this on the weapon handler so its not called 24/7
-            if (HP_WeaponHandler.currentGun.gunName != "Nail") // && !HP_HeatHandler.overheat
+            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
             {
                 hc_instance.ATTACK_DURATION = 0.0f;
                 hc_instance.ATTACK_DURATION_CH = 0f;
@@ -361,13 +323,13 @@ namespace HollowPoint
 
         public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
         {
-            int dam = 6;
+            int dam = 2;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
 
 
             //dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f); 
             //dam = (int)((distance >= 8) ? dam * 0.5f : ((distance >= 0 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f);
-            dam = (int)((distance >= 8)? dam * 0.75f : ((distance >= 4)? dam * 1 : dam * 1.25f));
+            dam = (int)((distance >= 8)? dam * 0.75f : ((distance >= 3)? dam * 1 : dam * 1.5f));
 
 
             Log("dealt " + dam);
@@ -397,23 +359,8 @@ namespace HollowPoint
 
         public static int CalculateSoulGain()
         {
-            int soul = 3;//soulGained;
+            int soul = 1;//soulGained;
             return soul;
-        }
-
-        public static void ReduceGrenades()
-        {
-            if (PlayerData.instance.equippedCharm_33)
-            {
-                int chance = UnityEngine.Random.Range(0, 3);
-                Modding.Logger.Log("chance " + chance);
-                if (chance != 0)
-                {
-                    grenadeAmnt -= 0;
-                    return;
-                }
-            }
-            grenadeAmnt -= 1;
         }
 
         public static void ReloadGun(int reloadAmount)

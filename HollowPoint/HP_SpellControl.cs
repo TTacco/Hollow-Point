@@ -10,6 +10,7 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine.SceneManagement;
 using static UnityEngine.Random ;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
+using static HollowPoint.HP_Enums;
 
 
 namespace HollowPoint
@@ -51,17 +52,6 @@ namespace HollowPoint
 
                 int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 12 : 8; 
                 StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, pelletAmnt));
-            }
-
-            if (HP_DirectionHandler.pressingAttack && infuseTimer > 0)
-            {
-                if (HP_WeaponHandler.currentGun.gunName == "Nail")
-                {
-                    infuseTimer = -1;
-                    HP_AttackHandler.airStrikeActive = false;
-                    StartCoroutine(StartInfusion());
-                }
-               
             }
         }
 
@@ -338,7 +328,7 @@ namespace HollowPoint
             Modding.Logger.Log("Swaping weapons");
 
             AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-            if (isUsingGun)
+            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 //Holster gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_holster.wav", out AudioClip ac);
@@ -348,15 +338,15 @@ namespace HollowPoint
                  * on animation because even at 0 animation time, sometimes they play for a quarter of a milisecond
                  * thus giving that weird head jerk anim playing on the knight
                 */
-                HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f); 
-                HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[0];
+                HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
+                HP_WeaponSwapHandler.SwapBetweenNail();
             }
             else
-            {
+            {             
                 //Equip gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
                 audios.PlayOneShot(ac);
-                HP_WeaponHandler.currentGun = HP_WeaponHandler.allGuns[1];
+                HP_WeaponSwapHandler.SwapBetweenNail();
             }
             isUsingGun = !isUsingGun;
 
@@ -377,24 +367,15 @@ namespace HollowPoint
                 return;
             }
 
-            int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
-
-            //Prevents casting if under the required soul cost
-            //Note, if this method ends, it will transition normally with regards to whatever avaiable spells the player has right now 
-            if (PlayerData.instance.MPCharge < soulCost)
-            {
-                //Modding.Logger.Log("Cancelling fire ball");
-                spellControl.SetState("Inactive");
-                return;
-            }
-
-            if ((!(HP_WeaponHandler.currentGun.gunName == "Nail")) && !(grenadeCooldown > 0))
+            if ((HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
                 grenadeCooldown = 50f;
                 spellControl.SetState("Has Fireball?");
 
+
+                HP_WeaponSwapHandler.SwapBetweenGun();
             }
-            else if (HP_WeaponHandler.currentGun.gunName != "Nail")
+            else if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
@@ -406,7 +387,7 @@ namespace HollowPoint
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
 
-            if(PlayerData.instance.MPCharge < soulCost || HP_WeaponHandler.currentGun.gunName != "Nail")
+            if(PlayerData.instance.MPCharge < soulCost || HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
             }
@@ -415,7 +396,7 @@ namespace HollowPoint
         public void SpawnFireball()
         {
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 33 : 50;
-            if (HP_WeaponHandler.currentGun.gunName == "Nail" || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
+            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
@@ -464,7 +445,7 @@ namespace HollowPoint
             }
 
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (PlayerData.instance.MPCharge < 99 || HP_WeaponHandler.currentGun.gunName != "Nail")
+            if (PlayerData.instance.MPCharge < 99 || HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
@@ -485,7 +466,6 @@ namespace HollowPoint
         //Regular steel rain (non tracking)
         public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates, int totalShells)
         {
-            HP_UIHandler.UpdateDisplay();
             Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
             for (int shells = 0; shells < totalShells; shells++)
             {
@@ -503,7 +483,6 @@ namespace HollowPoint
         //For steel rains that tracks targets
         public static IEnumerator StartSteelRain(GameObject enemyGO, int totalShells)
         {
-            HP_UIHandler.UpdateDisplay();
             //Modding.Logger.Log("SPELL CONTROL STEEL RAIN TRACK");
             Transform targetCoordinates = enemyGO.transform;
             Vector3 enemyPos = targetCoordinates.position;
@@ -564,8 +543,6 @@ namespace HollowPoint
             buff_duration = (buff_duration < 30f) ? 30f : buff_duration;
 
             GameCameras.instance.cameraShakeFSM.SendEvent("BigShake");
-
-            HP_UIHandler.UpdateDisplay();
 
             //Gives fancy effects to when you infuse yourself, should add a sound soon
             Instantiate(sharpFlash, HeroController.instance.transform).SetActive(true);

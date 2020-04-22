@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using On;
 using UnityEngine;
+using static HollowPoint.HP_Enums;
 
 namespace HollowPoint
 {
-
     //===========================================================
     //Weapon Swap
     //===========================================================
@@ -19,6 +19,8 @@ namespace HollowPoint
         int weaponIndex;
         float swapWeaponTimer = 0;
         bool swapWeaponStart = false;
+        public static WeaponType currentWeapon = WeaponType.Melee;
+        public static GunType currentGun = GunType.Primary;
 
         public void Awake()
         {
@@ -27,79 +29,38 @@ namespace HollowPoint
 
         public IEnumerator InitRoutine()
         {
+            //Initialize all the ammunitions for each gun
             while (HeroController.instance == null)
             {
                 yield return null;
             }
 
-            On.HeroController.CanDreamNail += CanDreamNail_Hook;
-        }
-
-        private bool CanDreamNail_Hook(On.HeroController.orig_CanDreamNail orig, HeroController self)
-        {
-
-            if(HP_WeaponHandler.currentGun.gunName != "Nail")
-            {
-                return false;
-            }
-
-
-            return orig(self);
+            currentWeapon = WeaponType.Melee;
+            currentGun = GunType.Primary;
         }
 
         public void Update()
         {
-
-            bool isUsingGun = HP_WeaponHandler.currentGun.gunName != "Nail";
-            bool dnailPressed = InputHandler.Instance.inputActions.dreamNail.WasPressed;
-            bool soulReload = (PlayerData.instance.MPCharge >= 0);
-            if (isUsingGun && dnailPressed && soulReload)
-            {
-                Modding.Logger.Log("RELOADING");
-                HeroController.instance.TakeMP(33);
-                AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-                LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
-                audios.PlayOneShot(ac);
-                HP_Stats.ReloadGun(10);
-            }
-
             return;
-
-            if (swapWeaponTimer > 0)
-            {
-                swapWeaponTimer -= Time.deltaTime * 30f;
-            }
-            else
-            {
-                tapUp = 0;
-            }
-
-            if (InputHandler.Instance.inputActions.down.WasPressed)
-            {
-                if (tapUp == 0)
-                {
-                    swapWeaponTimer = 5f;
-                    tapUp = 1;
-                }
-                else if (tapUp == 1)
-                {
-                    Modding.Logger.Log("RELOADING");
-                    tapUp = 0;
-                }
-            }
-
         }
 
-        public void CheckIndexBound()
+        //Swap inbetween primary and secondary guns
+        public static void SwapBetweenGun()
         {
-            if (weaponIndex > HP_WeaponHandler.allGuns.Length - 1)
-            {
-                weaponIndex = 0;
-            }
-            else if(weaponIndex < 0)
-            {
-                weaponIndex = HP_WeaponHandler.allGuns.Length - 1;
-            }
+
+            GunType prevGun = currentGun;
+            currentGun = (currentGun == GunType.Primary) ? GunType.Secondary : GunType.Primary;
+
+            Modding.Logger.Log(String.Format("Swapping guns from {0} to {1}", prevGun, currentGun));
+        }
+
+        //Swap between guns or nail
+        public static void SwapBetweenNail()
+        {
+            WeaponType prevWep = currentWeapon;
+            currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
+
+            Modding.Logger.Log(String.Format("Swapping weapons from {0} to {1}", prevWep, currentWeapon));
         }
 
         void OnDestroy()
@@ -114,7 +75,7 @@ namespace HollowPoint
     //===========================================================
     class HP_WeaponHandler : MonoBehaviour
     {
-        public static HP_Gun currentGun;
+        //public static HP_Gun currentGun;
         public static HP_Gun[] allGuns; 
 
         public void Awake()
@@ -136,7 +97,7 @@ namespace HollowPoint
             allGuns[1] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Primary Fire");
             //Add an LMG and a flamethrower later
 
-            currentGun = allGuns[0];
+            //currentGun = allGuns[0];
         }
 
         void OnDestroy()
