@@ -173,7 +173,7 @@ namespace HollowPoint
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 40f;
+            bulletVelocity = 45f;
             burstSoulCost = 1;
             fireRateCooldown = 12f;
             fireSoulCost = 5;
@@ -329,9 +329,9 @@ namespace HollowPoint
 
             //dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f); 
             //dam = (int)((distance >= 8) ? dam * 0.5f : ((distance >= 0 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f);
-            dam = (int)((distance >= 8)? dam * 0.75f : ((distance >= 3)? dam * 1 : dam * 1.5f));
+            dam = (int)((distance >= 6)? dam * 0f : (distance >= 4) ? dam * 0.5f : (distance >= 2)? dam * 1 : dam * 1.5f);
 
-
+            Log("distance " + distance);
             Log("dealt " + dam);
 
             return dam;

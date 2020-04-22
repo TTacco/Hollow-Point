@@ -183,7 +183,9 @@ namespace HollowPoint
         {
             HP_HeatHandler.IncreaseHeat(HP_Stats.heatPerShot);
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+            float direction = HP_DirectionHandler.finalDegreeDirection;
+            bool fixXOrientation = (direction == 270 || direction == 90) ? true : false;
+            GameObject bullet = HP_Prefabs.SpawnBullet(direction, fixXOrientation);
             HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
             hpbb.fm = FireModes.Single;
 
@@ -219,8 +221,10 @@ namespace HollowPoint
             for (int i = 0; i < burst; i++)
             {
                 HP_HeatHandler.IncreaseHeat(0.5f);
-         
-                GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+
+                float direction = HP_DirectionHandler.finalDegreeDirection;
+                bool fixXOrientation = (direction == 270 || direction == 90) ? true : false;
+                GameObject bullet = HP_Prefabs.SpawnBullet(direction, fixXOrientation);
                 PlayGunSounds("rifle");
                 Destroy(bullet, .2f);
 
@@ -236,6 +240,42 @@ namespace HollowPoint
             slowWalkDisableTimer = 4f * burst;
         }
 
+        public IEnumerator SpreadShot(int pellets)
+        {
+            slowWalkDisableTimer = 15f;
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake"); //SmallShake
+            HP_Sprites.StartGunAnims();
+            HP_Sprites.StartFlash();
+            HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
+            PlayGunSounds("Shotgun");
+
+            float direction = HP_DirectionHandler.finalDegreeDirection; //90 degrees
+            float coneDegree = 30;
+            float angleToSpawnBullet = direction - (coneDegree / 2); //90 - (30 / 2) = 75, start at 75 degrees
+            float angleIncreasePerPellet = coneDegree / (pellets + 2); // 30 / (5 + 2) = 4.3, move angle to fire for every pellet by 4.3 degrees
+
+            angleToSpawnBullet = angleToSpawnBullet + angleIncreasePerPellet;
+
+            //Checks if the player is firing upwards, and enables the x offset so the bullets spawns directly ontop of the knight
+            //from the gun's barrel instead of spawning to the upper right/left of them 
+            bool fixYOrientation = (direction == 270 || direction == 90) ? true : false;
+            for (int i = 0; i < pellets; i++)
+            {
+                yield return new WaitForEndOfFrame();
+                GameObject bullet = HP_Prefabs.SpawnBullet(angleToSpawnBullet, fixYOrientation);
+                HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+                hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
+                //hpbb.pierce = PlayerData.instance.equippedCharm_13;
+                bullet.transform.localScale = new Vector3(0.2f,0.2f,0.1f);
+
+                angleToSpawnBullet += angleIncreasePerPellet;
+                Destroy(bullet, 1f);
+            }
+
+            yield return new WaitForSeconds(0.05f);
+            isFiring = false;
+        }
+
         public IEnumerator FireFlare()
         {
             airStrikeActive = false;
@@ -243,7 +283,10 @@ namespace HollowPoint
             HP_SpellControl.artifactActivatedEffect.SetActive(false);
 
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+
+            float direction = HP_DirectionHandler.finalDegreeDirection;
+            bool fixXOrientation = (direction == 270 || direction == 90) ? true : false;
+            GameObject bullet = HP_Prefabs.SpawnBullet(direction, fixXOrientation);
             PlayGunSounds("flare");
 
             HP_BulletBehaviour bullet_behaviour = bullet.GetComponent<HP_BulletBehaviour>();
@@ -254,32 +297,6 @@ namespace HollowPoint
             HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
 
             yield return new WaitForSeconds(0.04f);
-            isFiring = false;
-        }
-
-        public IEnumerator SpreadShot(int pellets)
-        {
-            slowWalkDisableTimer = 15f;
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake"); //SmallShake
-            HP_Sprites.StartGunAnims();
-            HP_Sprites.StartFlash();
-            HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
-            PlayGunSounds("Shotgun");
-
-            float direction = HP_DirectionHandler.finalDegreeDirection;
-            for (int i = 0; i < pellets; i++)
-            {
-                yield return new WaitForEndOfFrame();
-                GameObject bullet = HP_Prefabs.SpawnBullet(direction);
-                HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
-                hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-15, 15);
-                hpbb.pierce = PlayerData.instance.equippedCharm_13;
-                bullet.transform.localScale = new Vector3(0.3f,0.3f,0.1f);
-
-                Destroy(bullet, 0.2f);
-            }
-
-            yield return new WaitForSeconds(0.05f);
             isFiring = false;
         }
 

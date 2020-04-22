@@ -407,7 +407,10 @@ namespace HollowPoint
             float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
             directionMultiplier *= wallClimbMultiplier;
-            GameObject bullet = HP_Prefabs.SpawnBullet(HP_DirectionHandler.finalDegreeDirection);
+
+            float direction = HP_DirectionHandler.finalDegreeDirection;
+            bool fixXOrientation = (direction == 270 || direction == 90) ? true : false;
+            GameObject bullet = HP_Prefabs.SpawnBullet(direction, fixXOrientation);
             bullet.SetActive(true);
             HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
             hpbb.perfectAccuracy = true;

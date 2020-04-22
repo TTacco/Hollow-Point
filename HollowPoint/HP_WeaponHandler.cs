@@ -14,11 +14,6 @@ namespace HollowPoint
     //===========================================================
     class HP_WeaponSwapHandler : MonoBehaviour
     {
-        int tapDown;
-        int tapUp;
-        int weaponIndex;
-        float swapWeaponTimer = 0;
-        bool swapWeaponStart = false;
         public static WeaponType currentWeapon = WeaponType.Melee;
         public static GunType currentGun = GunType.Primary;
 

@@ -192,10 +192,13 @@ namespace HollowPoint
             bulletTR.numCornerVertices = 50;
             bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
-            //bulletTR.time = 0.045f; //0.075
-            bulletTR.time = 0.05f;
-            bulletTR.startColor = new Color(240, 234, 196);
-            bulletTR.endColor = new Color(237, 206, 154);
+            bulletTR.time = 0.1f;
+
+            //bulletTR.startColor = new Color(240, 234, 196);
+            //bulletTR.endColor = new Color(237, 206, 154);
+
+            bulletTR.startColor = new Color(102, 178, 255);
+            bulletTR.endColor = new Color(204, 229, 255);
 
             bulletPrefab.SetActive(false);
 
@@ -208,10 +211,14 @@ namespace HollowPoint
 
         }
 
-        public static GameObject SpawnBullet(float bulletDegreeDirection)
+        public static GameObject SpawnBullet(float bulletDegreeDirection, bool xOrientationFix)
         {
+            bulletDegreeDirection = bulletDegreeDirection % 360; 
+
             float directionOffsetY = 0;
 
+            //If the player is aiming upwards, change the bullet offset of where it will spawn
+            //Otherwise the bullet will spawn too high or inbetween the knight
             if(bulletDegreeDirection > 10 && bulletDegreeDirection < 170)
             {
                 directionOffsetY = 0.8f;
@@ -225,11 +232,16 @@ namespace HollowPoint
 
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
 
-            if (bulletDegreeDirection == 90 || bulletDegreeDirection == 270) directionMultiplierX = 0.2f * directionMultiplierX;
+            //Checks if the player is firing upwards, and enables the x offset so the bullets spawns directly ontop of the knight
+            //from the gun's barrel instead of spawning to the upper right/left of them 
+            if (xOrientationFix)
+            {
+                directionMultiplierX = 0.2f * directionMultiplierX;
+            }
 
             directionMultiplierX *= wallClimbMultiplier;
                 
-            GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.5f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
+            GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.4f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
             bullet.GetComponent<HP_BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
             bullet.SetActive(true);
 
@@ -294,6 +306,8 @@ namespace HollowPoint
         public HP_Enums.FireModes fm = HP_Enums.FireModes.Single;
         public HP_Enums.BulletType bt = HP_Enums.BulletType.Standard;
 
+        public GameObject bulletTrailClone;
+
         HealthManager pureVesselHM = null;
 
         static System.Random rand = new System.Random();
@@ -322,7 +336,7 @@ namespace HollowPoint
 
             gameObject.tag = "Wall Breaker";
             //Trail    
-            bulletTrailObjectClone = Instantiate(HP_Prefabs.bulletTrailPrefab, gameObject.transform);
+            bulletTrailClone = Instantiate(HP_Prefabs.bulletTrailPrefab, gameObject.transform);
 
             //Increase the bullet size
             bc2d.size = new Vector2(1f, 0.65f);
@@ -579,6 +593,9 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
+            bulletTrailClone.transform.parent = null;
+            Destroy(bulletTrailClone, 1f); //just to make sure theres no lingering game objects in the background
+
             Destroy(Instantiate(HP_Prefabs.bulletFadePrefab, gameObject.transform.position, gameObject.transform.localRotation), 0.03f); //bullet fade out sprite
            
             if(specialAttrib.Contains("Explosion") && PlayerData.instance.equippedCharm_17)
