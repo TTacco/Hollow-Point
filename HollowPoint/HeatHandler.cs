@@ -7,7 +7,7 @@ using System.Collections;
 
 namespace HollowPoint
 {
-    class HP_HeatHandler : MonoBehaviour
+    class HeatHandler : MonoBehaviour
     {
         public static float currentHeat;
         public static float currentEnergy = 100;
@@ -89,7 +89,7 @@ namespace HollowPoint
 
         void OnDestroy()
         {
-            Destroy(gameObject.GetComponent<HP_HeatHandler>());
+            Destroy(gameObject.GetComponent<HeatHandler>());
         }
 
 

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace HollowPoint
 {
-    internal class HP_Hud : MonoBehaviour
+    internal class HudController : MonoBehaviour
     {
         /*
          * I am using this space to say that I hate TTaccoo#7358 for removing the grenades count.
@@ -27,9 +27,9 @@ namespace HollowPoint
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            _hudshard = CreateStatObject("Shard", HP_Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, shardSprite, new Vector3(2.2f, 11.4f));
+            _hudshard = CreateStatObject("Shard", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, shardSprite, new Vector3(2.2f, 11.4f));
 
-            HP_Stats.ShardAmountChanged += ShardChanged;
+            Stats.ShardAmountChanged += ShardChanged;
         }
 
         private void ShardChanged(int amt)
@@ -68,6 +68,6 @@ namespace HollowPoint
         }
 
         void Destroy()
-            => HP_Stats.ShardAmountChanged -= ShardChanged;
+            => Stats.ShardAmountChanged -= ShardChanged;
     }
 }

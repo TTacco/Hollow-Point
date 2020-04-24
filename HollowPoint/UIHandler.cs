@@ -13,7 +13,7 @@ using TMPro;
 
 namespace HollowPoint
 {
-    class HP_UIHandler : MonoBehaviour
+    class UIHandler : MonoBehaviour
     {
         GameObject canvas;
         CanvasGroup canvasGroup;
@@ -182,7 +182,7 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
-            Destroy(gameObject.GetComponent<HP_UIHandler>());
+            Destroy(gameObject.GetComponent<UIHandler>());
             Destroy(canvas);
         }
 

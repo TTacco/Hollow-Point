@@ -8,12 +8,12 @@ using ModCommon.Util;
 using MonoMod;
 using Language;
 using System.Xml;
-using static HollowPoint.HP_Enums;
+using static HollowPoint.HollowPointEnums;
 
 
 namespace HollowPoint
 {
-    class HP_Stats : MonoBehaviour
+    class Stats : MonoBehaviour
     {
         public static event Action<int> ShardAmountChanged;
 
@@ -121,7 +121,7 @@ namespace HollowPoint
 
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
-            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee)
+            if (WeaponSwapHandler.currentWeapon == WeaponType.Melee)
                 return orig(self);
 
             return false;
@@ -159,7 +159,7 @@ namespace HollowPoint
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
             Log("Charm Update Called");
-            HP_AttackHandler.airStrikeActive = false;
+            AttackHandler.airStrikeActive = false;
             bulletSprite = "";
 
             //Default Dash speeds
@@ -175,13 +175,13 @@ namespace HollowPoint
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 45f;
             burstSoulCost = 1;
-            fireRateCooldown = 12f;
+            fireRateCooldown = 4f; 
             fireSoulCost = 5;
             heatPerShot = 1f;
             max_soul_regen = 25;
             soulGained = 2;
             soulRegenTimer = 2.75f;
-            walkSpeed = 3.5f;
+            walkSpeed = 3f;
 
             //Charm 3 Grubsong
             soulRegenTimer = (PlayerData.instance.equippedCharm_3) ? 1.25f : 2.75f;
@@ -281,7 +281,7 @@ namespace HollowPoint
             }
 
             //actually put this on the weapon handler so its not called 24/7
-            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
+            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
             {
                 hc_instance.ATTACK_DURATION = 0.0f;
                 hc_instance.ATTACK_DURATION_CH = 0f;
@@ -321,40 +321,18 @@ namespace HollowPoint
             }
         }
 
-        public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
+        public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
         {
-            int dam = 2;
+            int dam = 3;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
-
 
             //dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f); 
             //dam = (int)((distance >= 8) ? dam * 0.5f : ((distance >= 0 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f);
-            dam = (int)((distance >= 6)? dam * 0f : (distance >= 4) ? dam * 0.5f : (distance >= 2)? dam * 1 : dam * 1.5f);
+            //dam = (int)((distance >= 6)? dam * 0.5f : (distance >= 4) ? dam * 0.75f : (distance >= 2)? dam * 1 : dam * 1f);
 
-            Log("distance " + distance);
-            Log("dealt " + dam);
+            DamageSeverity ds = (distance >= 7) ? DamageSeverity.Minor : (distance >= 5) ? DamageSeverity.Major : DamageSeverity.Critical;
 
-            return dam;
-            int damage = Range(2, 5) + PlayerData.instance.nailSmithUpgrades * 3; 
-            //Flukenest
-            if (PlayerData.instance.equippedCharm_11)
-            {
-                damage = (int)(damage * .5f);
-            }
-            //Mark of Pride
-            if (PlayerData.instance.equippedCharm_13)
-            {
-                float travelDistance = Vector3.Distance(bulletOriginPosition, enemyPosition);
-                Modding.Logger.Log("Travel distance " + travelDistance);
-                damage = (int)(damage * 2.5f);
-            }
-            //Fury of the Fallen
-            if (PlayerData.instance.equippedCharm_6)
-            {
-                damage = (int)(damage * 1.2f);
-            }
-
-            return damage;
+            return (dam, ds);
         }
 
         public static int CalculateSoulGain()
@@ -405,7 +383,7 @@ namespace HollowPoint
             ModHooks.Instance.SoulGainHook -= Instance_SoulGainHook;
             ModHooks.Instance.BlueHealthHook -= Instance_BlueHealthHook;
             On.HeroController.CanNailCharge -= HeroController_CanNailCharge;
-            Destroy(gameObject.GetComponent<HP_Stats>());
+            Destroy(gameObject.GetComponent<Stats>());
         }
         
     }

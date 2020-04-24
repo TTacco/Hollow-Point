@@ -1,6 +1,6 @@
 ﻿namespace HollowPoint
 {
-    class HP_Enums
+    public class HollowPointEnums
     {
         public enum FireModes
         {
@@ -30,5 +30,20 @@
             Ranged,
         }
 
+        public enum DirectionalOrientation
+        {
+            Vertical,
+            Horizontal,
+            Diagonal,
+        }
+
+
+        public enum DamageSeverity
+        {
+            Critical,
+            Major,
+            Minor,
+            Nullified,
+        }
     }
 }

@@ -5,14 +5,14 @@ using System.Linq;
 using System.Text;
 using On;
 using UnityEngine;
-using static HollowPoint.HP_Enums;
+using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
 {
     //===========================================================
     //Weapon Swap
     //===========================================================
-    class HP_WeaponSwapHandler : MonoBehaviour
+    class WeaponSwapHandler : MonoBehaviour
     {
         public static WeaponType currentWeapon = WeaponType.Melee;
         public static GunType currentGun = GunType.Primary;
@@ -46,7 +46,7 @@ namespace HollowPoint
             GunType prevGun = currentGun;
             currentGun = (currentGun == GunType.Primary) ? GunType.Secondary : GunType.Primary;
 
-            Modding.Logger.Log(String.Format("Swapping guns from {0} to {1}", prevGun, currentGun));
+            Modding.Logger.Log(String.Format("Changing guns from {0} to {1}", prevGun, currentGun));
         }
 
         //Swap between guns or nail
@@ -55,12 +55,12 @@ namespace HollowPoint
             WeaponType prevWep = currentWeapon;
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
 
-            Modding.Logger.Log(String.Format("Swapping weapons from {0} to {1}", prevWep, currentWeapon));
+            Modding.Logger.Log(String.Format("Changing weapons from {0} to {1}", prevWep, currentWeapon));
         }
 
         void OnDestroy()
         {
-            Destroy(gameObject.GetComponent<HP_WeaponSwapHandler>());
+            Destroy(gameObject.GetComponent<WeaponSwapHandler>());
         }
     }
 
@@ -68,7 +68,7 @@ namespace HollowPoint
     //===========================================================
     //Weapon Initializer
     //===========================================================
-    class HP_WeaponHandler : MonoBehaviour
+    class WeaponHandler : MonoBehaviour
     {
         //public static HP_Gun currentGun;
         public static HP_Gun[] allGuns; 
@@ -97,7 +97,7 @@ namespace HollowPoint
 
         void OnDestroy()
         {
-            Destroy(gameObject.GetComponent<HP_WeaponHandler>());
+            Destroy(gameObject.GetComponent<WeaponHandler>());
         }
     }
 
@@ -151,17 +151,17 @@ namespace HollowPoint
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
-                return 9;
+                return 14;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
             {
-                return 5;
+                return 7;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
             {
-                return 7;
+                return 11;
             }
 
             return 1;

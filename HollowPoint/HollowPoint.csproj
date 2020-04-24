@@ -73,23 +73,22 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="HP_Component_EnemyBelow.cs" />
-    <Compile Include="HP_DamageCalculator.cs" />
-    <Compile Include="HP_Enums.cs" />
-    <Compile Include="HP_HeatHandler.cs" />
-    <Compile Include="DamageEnemies.cs" />
-    <Compile Include="HP_AttackHandler.cs" />
-    <Compile Include="HP_Hud.cs" />
-    <Compile Include="HP_Prefabs.cs" />
-    <Compile Include="HP_DirectionHandler.cs" />
-    <Compile Include="HP_Init.cs" />
-    <Compile Include="HP_SpellControl.cs" />
-    <Compile Include="HP_SpriteHandler.cs" />
-    <Compile Include="HP_Stats.cs" />
-    <Compile Include="HP_WeaponHandler.cs" />
+    <Compile Include="Component_EnemyBelow.cs" />
+    <Compile Include="DamageOverride.cs" />
+    <Compile Include="HollowPointEnums.cs" />
+    <Compile Include="HeatHandler.cs" />
+    <Compile Include="AttackHandler.cs" />
+    <Compile Include="HudController.cs" />
+    <Compile Include="HollowPointPrefabs.cs" />
+    <Compile Include="OrientationHandler.cs" />
+    <Compile Include="Init.cs" />
+    <Compile Include="SpellControlOverride.cs" />
+    <Compile Include="SpriteHandler.cs" />
+    <Compile Include="Stats.cs" />
+    <Compile Include="WeaponHandler.cs" />
     <Compile Include="LoadAssets.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="HP_UIHandler.cs" />
+    <Compile Include="UIHandler.cs" />
     <Compile Include="SoundHandler.cs" />
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
@@ -233,6 +232,11 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_pistol.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\enemyhurt4.wav" />
+    <EmbeddedResource Include="assets\enemyhurt5.wav" />
+    <EmbeddedResource Include="assets\enemyhurt6.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

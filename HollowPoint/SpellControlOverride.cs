@@ -10,12 +10,12 @@ using HutongGames.PlayMaker.Actions;
 using UnityEngine.SceneManagement;
 using static UnityEngine.Random ;
 using USceneManager = UnityEngine.SceneManagement.SceneManager;
-using static HollowPoint.HP_Enums;
+using static HollowPoint.HollowPointEnums;
 
 
 namespace HollowPoint
 {
-    class HP_SpellControl : MonoBehaviour
+    class SpellControlOverride : MonoBehaviour
     {
         public static bool isUsingGun = false;
         //static UnityEngine.Random rand = new UnityEngine.Random();
@@ -46,7 +46,7 @@ namespace HollowPoint
 
         void Update()
         {
-            if (HP_DirectionHandler.pressingAttack && typhoonTimer > 0)
+            if (OrientationHandler.pressingAttack && typhoonTimer > 0)
             {
                 typhoonTimer = -1;
 
@@ -156,7 +156,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Can Cast?", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "SwapWeapon",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -165,7 +165,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Can Cast? QC", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "CanCastQC",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -174,7 +174,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Can Cast? QC", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "CanCastQC_SkipSpellReq",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -187,7 +187,7 @@ namespace HollowPoint
 
                 spellControl.AddAction("Quake Antic", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartQuake",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -196,7 +196,7 @@ namespace HollowPoint
 
                 spellControl.AddAction("Quake1 Land", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartTyphoon",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -205,7 +205,7 @@ namespace HollowPoint
 
                 spellControl.AddAction("Q2 Land", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartTyphoon",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -214,7 +214,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Has Fireball?", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "SpawnFireball",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -223,7 +223,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Has Scream?", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "HasScream_HasFireSupportAmmo",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -232,7 +232,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Has Quake?", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "HasQuake_CanCastQuake",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -241,7 +241,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Scream End", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "ScreamEnd",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -250,7 +250,7 @@ namespace HollowPoint
 
                 spellControl.InsertAction("Scream End 2", new CallMethod
                 {
-                    behaviour = GameManager.instance.GetComponent<HP_SpellControl>(),
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "ScreamEnd",
                     parameters = new FsmVar[0],
                     everyFrame = false
@@ -273,7 +273,7 @@ namespace HollowPoint
         public void StartQuake()
         {
             LoadAssets.sfxDictionary.TryGetValue("divetrigger.wav", out AudioClip ac);
-            AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
+            AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
             audios.PlayOneShot(ac);
         }
 
@@ -282,7 +282,7 @@ namespace HollowPoint
             //Dung Crest cloud on slam
             if (PlayerData.instance.equippedCharm_10)
             {
-                HP_Prefabs.SpawnObjectFromDictionary("Knight Dung Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                HollowPointPrefabs.SpawnObjectFromDictionary("Knight Dung Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
             }
             typhoonTimer = 25f;
         }
@@ -296,8 +296,8 @@ namespace HollowPoint
             {
                 yield return new WaitForEndOfFrame();
                 degreeTotal += addedDegree;
-                GameObject typhoon_ball = Instantiate(HP_Prefabs.bulletPrefab, spawnPos, new Quaternion(0, 0, 0, 0));
-                HP_BulletBehaviour hpbb = typhoon_ball.GetComponent<HP_BulletBehaviour>();
+                GameObject typhoon_ball = Instantiate(HollowPointPrefabs.bulletPrefab, spawnPos, new Quaternion(0, 0, 0, 0));
+                BulletBehaviour hpbb = typhoon_ball.GetComponent<BulletBehaviour>();
                 hpbb.bulletDegreeDirection = degreeTotal;
                 hpbb.specialAttrib = "DungExplosionSmall";            
                 typhoon_ball.SetActive(true);
@@ -327,8 +327,8 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Inactive");
             Modding.Logger.Log("Swaping weapons");
 
-            AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
+            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 //Holster gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_holster.wav", out AudioClip ac);
@@ -339,14 +339,14 @@ namespace HollowPoint
                  * thus giving that weird head jerk anim playing on the knight
                 */
                 HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
-                HP_WeaponSwapHandler.SwapBetweenNail();
+                WeaponSwapHandler.SwapBetweenNail();
             }
             else
             {             
                 //Equip gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
                 audios.PlayOneShot(ac);
-                HP_WeaponSwapHandler.SwapBetweenNail();
+                WeaponSwapHandler.SwapBetweenNail();
             }
             isUsingGun = !isUsingGun;
 
@@ -367,15 +367,15 @@ namespace HollowPoint
                 return;
             }
 
-            if ((HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
+            if ((WeaponSwapHandler.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
                 grenadeCooldown = 50f;
                 spellControl.SetState("Has Fireball?");
 
 
-                HP_WeaponSwapHandler.SwapBetweenGun();
+                WeaponSwapHandler.SwapBetweenGun();
             }
-            else if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            else if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
@@ -387,7 +387,7 @@ namespace HollowPoint
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
 
-            if(PlayerData.instance.MPCharge < soulCost || HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            if(PlayerData.instance.MPCharge < soulCost || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
             }
@@ -395,8 +395,10 @@ namespace HollowPoint
 
         public void SpawnFireball()
         {
+            HeroController.instance.spellControl.SetState("Inactive");
+
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 33 : 50;
-            if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
+            if (WeaponSwapHandler.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
@@ -408,18 +410,18 @@ namespace HollowPoint
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
             directionMultiplier *= wallClimbMultiplier;
 
-            float direction = HP_DirectionHandler.finalDegreeDirection;
-            bool fixXOrientation = (direction == 270 || direction == 90) ? true : false;
-            GameObject bullet = HP_Prefabs.SpawnBullet(direction, fixXOrientation);
+            float direction = OrientationHandler.finalDegreeDirection;
+            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
+            GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
             bullet.SetActive(true);
-            HP_BulletBehaviour hpbb = bullet.GetComponent<HP_BulletBehaviour>();
+            BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
             hpbb.perfectAccuracy = true;
             bullet.GetComponent<BoxCollider2D>().size *= 1.5f;
-            hpbb.bulletDegreeDirection = HP_DirectionHandler.finalDegreeDirection;
+            hpbb.bulletDegreeDirection = OrientationHandler.finalDegreeDirection;
             hpbb.specialAttrib = "Explosion";
             hpbb.bulletSpeedMult = 2;
 
-            HP_Prefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
+            HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
             bullet.GetComponent<SpriteRenderer>().sprite = specialBulletTexture;
 
             //HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
@@ -427,7 +429,7 @@ namespace HollowPoint
 
             PlayAudio("firerocket", true);
 
-            HP_Sprites.StartGunAnims();
+            HollowPointSprites.StartGunAnims();
         }
 
         public void CheckNailArt()
@@ -439,16 +441,16 @@ namespace HollowPoint
         public void HasScream_HasFireSupportAmmo()
         {
 
-            if (HP_AttackHandler.airStrikeActive)
+            if (AttackHandler.airStrikeActive)
             {
                 if(artifactActivatedEffect != null) spellControl.SetState("Inactive");
                 artifactActivatedEffect.SetActive(false);
-                HP_AttackHandler.airStrikeActive = false;
+                AttackHandler.airStrikeActive = false;
                 return;
             }
 
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (PlayerData.instance.MPCharge < 99 || HP_WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            if (PlayerData.instance.MPCharge < 99 || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
@@ -460,7 +462,7 @@ namespace HollowPoint
             HeroController.instance.TakeMP(99);
             artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
             artifactActivatedEffect.SetActive(true);
-            HP_AttackHandler.airStrikeActive = true;
+            AttackHandler.airStrikeActive = true;
             //infuseTimer = 500f;
         }
 
@@ -473,8 +475,8 @@ namespace HollowPoint
             for (int shells = 0; shells < totalShells; shells++)
             {
                 yield return new WaitForSeconds(0.45f);
-                GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
+                GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.isFireSupportBullet = true;
                 hpbb.ignoreCollisions = true;
                 hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(2, 8), -0.1f);
@@ -496,8 +498,8 @@ namespace HollowPoint
                 yield return new WaitForSeconds(0.45f);
                 if ((enemyGO != null) || (targetCoordinates != null)) enemyPos = targetCoordinates.position;
 
-                GameObject shell = Instantiate(HP_Prefabs.bulletPrefab, enemyPos + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                HP_BulletBehaviour hpbb = shell.GetComponent<HP_BulletBehaviour>();
+                GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, enemyPos + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.isFireSupportBullet = true;
                 hpbb.ignoreCollisions = true;
                 hpbb.targetDestination = enemyPos + new Vector3(0, Range(2, 8), -0.1f);
@@ -534,7 +536,7 @@ namespace HollowPoint
             */
             buffActive = true;
 
-            HP_Stats.ReduceAmmunition();
+            Stats.ReduceAmmunition();
             
             if (PlayerData.instance.equippedCharm_34)
             {
@@ -589,7 +591,7 @@ namespace HollowPoint
 
         void OnDestroy()
         {
-            Destroy(gameObject.GetComponent<HP_SpellControl>());
+            Destroy(gameObject.GetComponent<SpellControlOverride>());
             Modding.Logger.Log("SpellControl Destroyed");
         }
     }

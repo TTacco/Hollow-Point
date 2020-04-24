@@ -1,9 +1,8 @@
 ﻿using Modding;
 using System.IO;
 using System.Reflection;
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 using System;
 
 
@@ -30,18 +29,19 @@ namespace HollowPoint
 
         private void NewGame()
         {
-            GameManager.instance.gameObject.AddComponent<HP_Prefabs>();
-            GameManager.instance.gameObject.AddComponent<HP_AttackHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_DirectionHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_WeaponHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_WeaponSwapHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_UIHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_DamageCalculator>();
-            GameManager.instance.gameObject.AddComponent<HP_Sprites>();
-            GameManager.instance.gameObject.AddComponent<HP_HeatHandler>();
-            GameManager.instance.gameObject.AddComponent<HP_SpellControl>();
-            GameManager.instance.gameObject.AddComponent<HP_Stats>();
-            GameManager.instance.gameObject.AddComponent<HP_Hud>();
+            GameManager.instance.gameObject.AddComponent<HollowPointPrefabs>();
+            GameManager.instance.gameObject.AddComponent<AttackHandler>();
+            GameManager.instance.gameObject.AddComponent<OrientationHandler>();
+            GameManager.instance.gameObject.AddComponent<WeaponHandler>();
+            GameManager.instance.gameObject.AddComponent<WeaponSwapHandler>();
+            GameManager.instance.gameObject.AddComponent<UIHandler>();
+            GameManager.instance.gameObject.AddComponent<DamageOverride>();
+            GameManager.instance.gameObject.AddComponent<HollowPointSprites>();
+            GameManager.instance.gameObject.AddComponent<HeatHandler>();
+            GameManager.instance.gameObject.AddComponent<SpellControlOverride>();
+            GameManager.instance.gameObject.AddComponent<Stats>();
+            GameManager.instance.gameObject.AddComponent<HudController>();
+            GameManager.instance.gameObject.AddComponent<AudioHandler>();
         }
 
         private void SaveGame(SaveGameData sgd)

@@ -8,11 +8,11 @@ using GlobalEnums;
 using static Modding.Logger;
 using ModCommon.Util;
 using System.Reflection;
-using static HollowPoint.HP_Enums;
+using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
 {
-    class HP_Sprites : MonoBehaviour
+    class HollowPointSprites : MonoBehaviour
     {
         //Holds all the projectile sprites
 
@@ -127,8 +127,8 @@ namespace HollowPoint
             if (isWallClimbing) directionMultiplier *= -1;
 
             //fuck your standard naming conventions, if it works, it fucking works
-            float howFarTheGunIsAwayFromTheKnightsBody = (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
-            float howHighTheGunIsAwayFromTheKnightsBody = (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
+            float howFarTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
+            float howHighTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
 
             ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
             //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
@@ -185,7 +185,7 @@ namespace HollowPoint
                 isFiring = true;
                 idleAnim = false;
                 startFiringAnim = false;
-                StartCoroutine(ShootAnimation(HP_DirectionHandler.finalDegreeDirection));
+                StartCoroutine(ShootAnimation(OrientationHandler.finalDegreeDirection));
             }
         }
 
@@ -250,7 +250,7 @@ namespace HollowPoint
                 gunSpriteGO.transform.SetPositionZ(0.01f);
             }
 
-            else if (HP_WeaponSwapHandler.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
+            else if (WeaponSwapHandler.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
             {
                 gunSpriteGO.transform.SetRotationZ(-34); //-23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);
@@ -383,7 +383,7 @@ namespace HollowPoint
             startFiringAnim = true;
             isFiring = false;
             isFiring = true;
-            lowerGunTimer = 0.7f;
+            lowerGunTimer = 0.4f;
         }
 
         public static void StartFlash()
@@ -402,10 +402,10 @@ namespace HollowPoint
             float wallSlideOffset = (HeroController.instance.cState.wallSliding) ? -1 : 1;
             float flashOffsetX = (float)(wallSlideOffset * 1.6f * Math.Cos(radian));
             float flashOffsetY = (float)(1.6f * Math.Sin(radian));
-            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !HP_DirectionHandler.facingRight) ? 180 : 0;
+            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !OrientationHandler.facingRight) ? 180 : 0;
 
             //If the player is aiming upwards or downwards, nudge the muzzle flash a bit because facing the right or left, the muzzle is a bit "forward"
-            flashOffsetX += (bulletDegreeDirection == 90) ? (HP_DirectionHandler.facingRight) ? -0.2f : 0.2f : 0;
+            flashOffsetX += (bulletDegreeDirection == 90) ? (OrientationHandler.facingRight) ? -0.2f : 0.2f : 0;
 
             //So if the player is firing forward or upwards while wall sliding, make it so to lower the muzzle flash so it doesnt look weird
             flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 0) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
@@ -444,7 +444,7 @@ namespace HollowPoint
 
         public void OnDestroy()
         { 
-            Destroy(gameObject.GetComponent<HP_Sprites>());
+            Destroy(gameObject.GetComponent<HollowPointSprites>());
             Destroy(gunSpriteGO);
             Destroy(whiteFlashGO);
             Destroy(transformSlave);
@@ -465,8 +465,9 @@ namespace HollowPoint
         public void Start()
         {
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
+        
 
-            LoadAssets.spriteDictionary.TryGetValue("Weapon_ShotgunSprite.png", out Texture2D rifleTextureInit);
+            LoadAssets.spriteDictionary.TryGetValue("Weapon_RifleSprite.png", out Texture2D rifleTextureInit);
             gunRenderer.sprite = Sprite.Create(rifleTextureInit,
                 new Rect(0, 0, rifleTextureInit.width, rifleTextureInit.height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);

@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace HollowPoint
 {
-    class HP_Component_EnemyBelow : MonoBehaviour
+    class Component_EnemyBelow : MonoBehaviour
     {
         GameObject transformSlave;
         BoxCollider2D bx;
