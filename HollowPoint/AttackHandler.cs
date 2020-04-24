@@ -30,9 +30,6 @@ namespace HollowPoint
         public HeroControllerStates h_state;
         public HeroController hc_instance;
 
-        GameObject clickAudioGO;
-        GameObject fireAudioGO;
-
         public void Awake()
         {
             On.NailSlash.StartSlash += OnSlash;
@@ -65,11 +62,6 @@ namespace HollowPoint
             {
                 yield return null;
             }
-            clickAudioGO = new GameObject("GunEmptyGO", typeof(AudioSource));
-            fireAudioGO = new GameObject("GunFireGO", typeof(AudioSource));
-
-            DontDestroyOnLoad(clickAudioGO);
-            DontDestroyOnLoad(fireAudioGO);
 
             hc_instance = HeroController.instance;
             h_state = HeroController.instance.cState;
@@ -101,7 +93,7 @@ namespace HollowPoint
                     else if(clickTimer <= 0)
                     {
                         clickTimer = 3f;
-                        PlaySoundsMisc("cantfire");
+                        AudioHandler.PlaySoundsMisc("cantfire");
                     }
                 }
             }
@@ -218,7 +210,8 @@ namespace HollowPoint
             slowWalkDisableTimer = 14f;
 
             string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
-            PlayGunSounds("rifle");
+            //PlayGunSounds("rifle");
+            AudioHandler.PlayGunSounds("rifle");
             if(weaponType == "sniper") bullet.transform.localScale = new Vector3(1.8f, 1.8f, 0.1f);
 
             yield return new WaitForSeconds(0.02f);
@@ -237,7 +230,7 @@ namespace HollowPoint
                 DirectionalOrientation orientation = OrientationHandler.directionOrientation;
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
 
-                PlayGunSounds("rifle");
+                AudioHandler.PlayGunSounds("rifle");
                 Destroy(bullet, .4f);
 
                 HollowPointSprites.StartGunAnims();
@@ -259,7 +252,7 @@ namespace HollowPoint
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
             HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection);
-            PlayGunSounds("Shotgun");
+            AudioHandler.PlayGunSounds("Shotgun");
 
             float direction = OrientationHandler.finalDegreeDirection; //90 degrees
             DirectionalOrientation orientation = OrientationHandler.directionOrientation; 
@@ -302,7 +295,7 @@ namespace HollowPoint
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
             GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
-            PlayGunSounds("flare");
+            AudioHandler.PlayGunSounds("flare");
 
             BulletBehaviour bullet_behaviour = bullet.GetComponent<BulletBehaviour>();
             bullet_behaviour.flareRound = true;
@@ -360,52 +353,6 @@ namespace HollowPoint
             }
 
             yield return null;
-        }
-
-
-        public void PlayGunSounds(string gunName)
-        {
-            try
-            {
-                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
-                //AudioManager print = GameManager.instance.AudioManager;
-                //print.GetAttr<float>("volume");
-                LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
-                //AudioSource audios = HP_Sprites.gunSpriteGO.GetComponent<AudioSource>();
-                AudioSource audios = fireAudioGO.GetComponent<AudioSource>();
-                audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
-                audios.PlayOneShot(audios.clip);
-
-                //Play subsonic WOOOP (lol) whenever you fire
-                //LoadAssets.sfxDictionary.TryGetValue("subsonicsfx.wav", out ac);
-                //audios.PlayOneShot(ac);
-
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("HP_AttackHandler.cs, cannot find the SFX " + gunName + " " + e);
-            }
-        }
-
-        public void PlaySoundsMisc(string soundName)
-        {
-            try
-            {
-                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
-                LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
-                AudioSource audios = clickAudioGO.GetComponent<AudioSource>();
-                
-                audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-                audios.PlayOneShot(audios.clip);
-
-
-            }
-            catch (Exception e)
-            {
-                Modding.Logger.Log("HP_AttackHandler.cs, cannot find the SFX " + soundName + " " + e);
-            }
         }
 
         public void OnDestroy()

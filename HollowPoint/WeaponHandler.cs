@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using On;
 using UnityEngine;
+using GlobalEnums;
 using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
@@ -12,7 +13,7 @@ namespace HollowPoint
     //===========================================================
     //Weapon Swap
     //===========================================================
-    class WeaponSwapHandler : MonoBehaviour
+    public class WeaponSwapHandler : MonoBehaviour
     {
         public static WeaponType currentWeapon = WeaponType.Melee;
         public static GunType currentGun = GunType.Primary;
@@ -56,6 +57,27 @@ namespace HollowPoint
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
 
             Modding.Logger.Log(String.Format("Changing weapons from {0} to {1}", prevWep, currentWeapon));
+        }
+
+        public static float ExtraCooldown()
+        {
+            ActorStates hstate = HeroController.instance.hero_state;
+
+            switch (hstate)
+            {
+                case ActorStates.airborne:
+                    return 1.25f;
+
+                case ActorStates.running:
+                    return 0.75f;
+
+                case ActorStates.wall_sliding:
+                    return 1; 
+
+                default:
+                    return 0;
+
+            }
         }
 
         void OnDestroy()

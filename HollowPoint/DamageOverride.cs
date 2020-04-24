@@ -105,7 +105,7 @@ namespace HollowPoint
         
         public IEnumerator RocketJump(GameObject damagerGO)
         {
-            Modding.Logger.Log("Player has been damaged by " + damagerGO.name);
+            Log("Player has been damaged by " + damagerGO.name);
             float explodeX = damagerGO.transform.position.x;
             float explodeY = damagerGO.transform.position.y;
 
@@ -114,16 +114,16 @@ namespace HollowPoint
 
             float slope = (explodeY - knightY) / (explodeX - knightX);
 
-            Modding.Logger.Log("The slope is " + slope);
+            Log("The slope is " + slope);
 
             float angle = (float) Math.Atan(slope);
             angle  = (float) (angle * 180 / Math.PI);
 
-            Modding.Logger.Log("angle is " + angle);
+            Log("angle is " + angle);
             StartCoroutine(LaunchTowardsAngle(10f, angle));
 
             yield return new WaitForSeconds(1.2f);
-            Modding.Logger.Log("Coroutine has ended");
+           Log("Coroutine has ended");
             heroDamageCoroutineActive = false;
         }
 
@@ -307,11 +307,11 @@ namespace HollowPoint
             switch (ds)
             {
                 case DamageSeverity.Critical:
-                    damageDealt = (int) (damageDealt*1.5f);
+                    damageDealt = (int) (damageDealt*1.25f);
                     if(f != null) f.FlashGrimmflame();                  
                     break;
                 case DamageSeverity.Major:
-                    damageDealt = (int)(damageDealt * 1f);
+                    damageDealt = (int)(damageDealt * 0.75f);
                     if (f != null) f.flashInfected();
                     break;
                 case DamageSeverity.Minor:
@@ -357,8 +357,10 @@ namespace HollowPoint
             }
             else
             {
-                targetHP.hp -= damageDealt; // the actual damage                                                       
-                HeroController.instance.AddMPCharge(soulGain);
+                targetHP.hp -= damageDealt; // the actual damage          
+
+                int sg = (ds.Equals(DamageSeverity.Minor)) ? 0 : soulGain;
+                HeroController.instance.AddMPCharge(sg);
             }
 
             // Trigger Kill animation

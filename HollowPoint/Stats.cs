@@ -175,7 +175,7 @@ namespace HollowPoint
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 45f;
             burstSoulCost = 1;
-            fireRateCooldown = 4f; 
+            fireRateCooldown = 3.5f; 
             fireSoulCost = 5;
             heatPerShot = 1f;
             max_soul_regen = 25;
@@ -325,13 +325,7 @@ namespace HollowPoint
         {
             int dam = 3;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
-
-            //dam = (int)((distance <= 2 || distance >= 8) ? dam*0.5f : ((distance > 2 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f); 
-            //dam = (int)((distance >= 8) ? dam * 0.5f : ((distance >= 0 && distance <= 4) || (distance > 5 && distance <= 7)) ? dam * 1f : dam * 2f);
-            //dam = (int)((distance >= 6)? dam * 0.5f : (distance >= 4) ? dam * 0.75f : (distance >= 2)? dam * 1 : dam * 1f);
-
-            DamageSeverity ds = (distance >= 7) ? DamageSeverity.Minor : (distance >= 5) ? DamageSeverity.Major : DamageSeverity.Critical;
-
+            DamageSeverity ds = (distance >= 7) ? DamageSeverity.Minor : (distance >= 4) ? DamageSeverity.Major : DamageSeverity.Critical;
             return (dam, ds);
         }
 
@@ -369,7 +363,9 @@ namespace HollowPoint
         {
             //Log("Starting cooldown");
             fireRateCooldownTimer = -1;
-            fireRateCooldownTimer = fireRateCooldown;
+
+
+            fireRateCooldownTimer = fireRateCooldown + WeaponSwapHandler.ExtraCooldown();
             //fireRateCooldownTimer = 0.1f;
             canFire = false;
             recentlyFiredTimer = 60;

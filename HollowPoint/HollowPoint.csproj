@@ -73,6 +73,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AudioHandler.cs" />
     <Compile Include="Component_EnemyBelow.cs" />
     <Compile Include="DamageOverride.cs" />
     <Compile Include="HollowPointEnums.cs" />
