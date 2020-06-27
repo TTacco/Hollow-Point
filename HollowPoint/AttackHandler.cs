@@ -23,6 +23,8 @@ namespace HollowPoint
         public static bool isBursting = false;
         public static bool slowWalk = false;
         public static bool airStrikeActive = false; //Dictates this round will send determine if the bullet is an airstrike marker
+        public static bool fireSpread = false;
+
 
         static float slowWalkDisableTimer = 0;
         float clickTimer = 0;
@@ -72,10 +74,25 @@ namespace HollowPoint
 
         public void Update()
         {
-            //TODO: Replace weapon handler to accomodate "isUsingGun" bool instead of checking what theyre using
+            //Melee attack with the gun out
+
             if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged && !isFiring && hc_instance.CanCast())
             {
-                if(OrientationHandler.heldAttack && Stats.canFire)
+
+                if (InputHandler.Instance.inputActions.dreamNail.WasPressed)
+                {
+                    //Log("Concussion Blast");
+                    Stats.StartBothCooldown();
+                    FireGun(FireModes.Concuss);
+                }
+                else if (fireSpread && Stats.canFire)
+                {
+                    Stats.StartBothCooldown();
+                    FireGun(FireModes.Spread);
+                    //FireGun(FireModes.Burst);
+                    fireSpread = false;
+                }
+                else if(OrientationHandler.heldAttack && Stats.canFire)
                 {
                     Stats.StartBothCooldown();
                     FireGun(FireModes.Single);
@@ -155,8 +172,8 @@ namespace HollowPoint
 
             if(fm == FireModes.Single)
             {
-                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-                HeroController.instance.WALK_SPEED = Stats.walkSpeed;
+                //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
+                //HeroController.instance.WALK_SPEED = Stats.walkSpeed;
                 StartCoroutine(SingleShot());
             }
             if (fm == FireModes.Burst)
@@ -167,10 +184,17 @@ namespace HollowPoint
             }
             if (fm == FireModes.Spread)
             {
-                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
+                //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
                 HeroController.instance.WALK_SPEED = Stats.walkSpeed;
                 StartCoroutine(SpreadShot(5));
                 //StartCoroutine(KnockbackRecoil(1f, finalDegreeDirectionLocal));
+                return;
+            }
+            if (fm == FireModes.Concuss)
+            {
+                slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
+                HeroController.instance.WALK_SPEED = Stats.walkSpeed;
+                StartCoroutine(ConcussShot());
                 return;
             }
 
@@ -183,7 +207,7 @@ namespace HollowPoint
         public IEnumerator SingleShot()
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            HeatHandler.IncreaseHeat(1f);
+            HeatHandler.IncreaseHeat(1.1f);
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
@@ -201,16 +225,15 @@ namespace HollowPoint
             //set the origin position of where the bullet was spawned
             hpbb.bulletOriginPosition = bullet.transform.position;
 
-            Destroy(bullet, Stats.bulletRange + 3f);
+            Destroy(bullet, 0.55f);
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
-            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection);
+            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
             slowWalkDisableTimer = 14f;
 
             string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
-            //PlayGunSounds("rifle");
             AudioHandler.PlayGunSounds("rifle");
             if(weaponType == "sniper") bullet.transform.localScale = new Vector3(1.8f, 1.8f, 0.1f);
 
@@ -235,7 +258,7 @@ namespace HollowPoint
 
                 HollowPointSprites.StartGunAnims();
                 HollowPointSprites.StartFlash();
-                HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection);
+                HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
                 yield return new WaitForSeconds(0.1f); //0.12f This yield will determine the time inbetween shots   
 
                 if (h_state.dashing) break;
@@ -251,7 +274,7 @@ namespace HollowPoint
             GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake"); //SmallShake
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
-            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection);
+            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
             AudioHandler.PlayGunSounds("Shotgun");
 
             float direction = OrientationHandler.finalDegreeDirection; //90 degrees
@@ -284,6 +307,58 @@ namespace HollowPoint
             isFiring = false;
         }
 
+        public IEnumerator ConcussShot()
+        {
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            HeatHandler.IncreaseHeat(1.1f);
+
+
+            //set the origin position of where the bullet was spawned
+
+            HollowPointSprites.StartGunAnims();
+            HollowPointSprites.StartFlash();
+            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 2);
+
+            slowWalkDisableTimer = 14f;
+            AudioHandler.PlayGunSounds("sniper");
+
+            float direction = OrientationHandler.finalDegreeDirection; //90 degrees
+            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
+
+            int pellets = 3;
+            float coneDegree = 15;
+            float angleToSpawnBullet = direction - (coneDegree / 2); //90 - (30 / 2) = 75, start at 75 degrees
+            float angleIncreasePerPellet = coneDegree / (pellets + 2); // 30 / (5 + 2) = 4.3, move angle to fire for every pellet by 4.3 degrees
+
+            angleToSpawnBullet = angleToSpawnBullet + angleIncreasePerPellet;
+
+            //Checks if the player is firing upwards, and enables the x offset so the bullets spawns directly ontop of the knight
+            //from the gun's barrel instead of spawning to the upper right/left of them 
+            bool fixYOrientation = (direction == 270 || direction == 90) ? true : false;
+            for (int i = 0; i < pellets; i++)
+            {
+                yield return new WaitForEndOfFrame();
+
+                GameObject bullet = HollowPointPrefabs.SpawnBullet(angleToSpawnBullet, orientation);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.fm = FireModes.Concuss;
+                hpbb.bulletOriginPosition = bullet.transform.position;
+                hpbb.pierce = true;
+                //hpbb.pierce = PlayerData.instance.equippedCharm_13;
+                bullet.transform.localScale = new Vector3(2f, 2f, 0.1f);
+
+
+                angleToSpawnBullet += angleIncreasePerPellet;
+                Destroy(bullet, 0.07f);
+            }
+
+            yield return new WaitForSeconds(0.05f);
+            isFiring = false;
+
+            yield return new WaitForSeconds(0.02f);
+            isFiring = false;
+        }
+
         public IEnumerator FireFlare()
         {
             airStrikeActive = false;
@@ -302,7 +377,7 @@ namespace HollowPoint
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
-            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection);
+            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
             yield return new WaitForSeconds(0.04f);
             isFiring = false;

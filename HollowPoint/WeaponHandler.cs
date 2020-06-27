@@ -66,17 +66,16 @@ namespace HollowPoint
             switch (hstate)
             {
                 case ActorStates.airborne:
-                    return 1.25f;
+                    return 1f;
 
                 case ActorStates.running:
-                    return 0.75f;
+                    return 0.50f;
 
                 case ActorStates.wall_sliding:
                     return 1; 
 
                 default:
                     return 0;
-
             }
         }
 
@@ -173,17 +172,17 @@ namespace HollowPoint
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
             {
-                return 14;
+                return 0;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
             {
-                return 7;
+                return 0;
             }
 
             if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
             {
-                return 11;
+                return 0;
             }
 
             return 1;

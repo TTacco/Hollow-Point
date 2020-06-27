@@ -12,6 +12,8 @@ namespace HollowPoint
     {
         public override string GetVersion() => Assembly.GetExecutingAssembly().GetName().Version.ToString();
 
+        //public HollowPointInit() : base("Hollow Point");
+
         public HollowPointInit()
         {
             FieldInfo field = typeof(Mod).GetField

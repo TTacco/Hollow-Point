@@ -33,7 +33,7 @@ namespace HollowPoint
         float passiveSoulTimer = 3f;
 
         public static float walkSpeed = 3f;
-        public static float fireRateCooldown = 5.75f;
+        public static float fireRateCooldown = 5f;
         public static float fireRateCooldownTimer = 5.75f;
 
         public static float bulletRange = 0;
@@ -41,6 +41,7 @@ namespace HollowPoint
         public static float bulletVelocity = 0;
 
         public static bool canFire = false;
+        public static bool usingGunMelee = false;
         static float recentlyFiredTimer = 60f;
 
         public static int soulGained = 0;
@@ -71,6 +72,7 @@ namespace HollowPoint
                 yield return null;
             }
 
+
             pd_instance = PlayerData.instance;
             hc_instance = HeroController.instance;
             am_instance = GameManager.instance.AudioManager;
@@ -92,7 +94,15 @@ namespace HollowPoint
             ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
             ModHooks.Instance.BlueHealthHook += Instance_BlueHealthHook;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
+            On.HeroController.CanDreamNail += HeroController_CanDreamNail;
             //On.HeroController.AddGeo += HeroController_AddGeo;
+        }
+
+        private bool HeroController_CanDreamNail(On.HeroController.orig_CanDreamNail orig, HeroController self)
+        {
+            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged) return false;
+
+            return orig(self); 
         }
 
         private int Instance_SoulGainHook(int num)
@@ -173,11 +183,11 @@ namespace HollowPoint
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 45f;
+            bulletVelocity = 40f;
             burstSoulCost = 1;
-            fireRateCooldown = 3.5f; 
+            fireRateCooldown = 4.5f; 
             fireSoulCost = 5;
-            heatPerShot = 1f;
+            heatPerShot = 0.7f;
             max_soul_regen = 25;
             soulGained = 2;
             soulRegenTimer = 2.75f;
@@ -278,6 +288,8 @@ namespace HollowPoint
             else
             { 
                 if(!canFire) canFire = true;
+
+                if (usingGunMelee) usingGunMelee = false;
             }
 
             //actually put this on the weapon handler so its not called 24/7
@@ -321,11 +333,23 @@ namespace HollowPoint
             }
         }
 
-        public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition)
+        public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
-            int dam = 3;
+            int dam = 2;
+            DamageSeverity ds = DamageSeverity.Minor;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
-            DamageSeverity ds = (distance >= 7) ? DamageSeverity.Minor : (distance >= 4) ? DamageSeverity.Major : DamageSeverity.Critical;
+            //DamageSeverity ds = (distance >= 9) ? DamageSeverity.Minor : (distance >= 6) ? DamageSeverity.Major : DamageSeverity.Critical;
+
+            if (distance <= 15)
+            {
+                ds = DamageSeverity.Major;
+            }
+            else
+            {
+                ds = DamageSeverity.Minor;
+            }
+
+
             return (dam, ds);
         }
 
@@ -363,9 +387,7 @@ namespace HollowPoint
         {
             //Log("Starting cooldown");
             fireRateCooldownTimer = -1;
-
-
-            fireRateCooldownTimer = fireRateCooldown + WeaponSwapHandler.ExtraCooldown();
+            fireRateCooldownTimer = fireRateCooldown; // + WeaponSwapHandler.ExtraCooldown();
             //fireRateCooldownTimer = 0.1f;
             canFire = false;
             recentlyFiredTimer = 60;

@@ -132,10 +132,12 @@ namespace HollowPoint
                 PlayMakerFSM dive = HeroController.instance.spellControl;
                 nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
+
                 FsmGameObject fsmgo = dive.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
                 fsmgo.Value.gameObject.transform.position = new Vector3(0, 0, 0);
                 fsmgo.Value.gameObject.transform.localPosition = new Vector3(0, -3, 0);
                 dive.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = fsmgo;
+
 
                 //Note some of these repeats because after removing an action, their index is pushed backwards to fill in the missing parts
                 spellControl.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
@@ -369,11 +371,13 @@ namespace HollowPoint
 
             if ((WeaponSwapHandler.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
-                grenadeCooldown = 50f;
-                spellControl.SetState("Has Fireball?");
+                grenadeCooldown = 30f;
 
+                StartCoroutine(SpreadShot(1));
+                //spellControl.SetState("Has Fireball?"); 
+                spellControl.SetState("Inactive");
 
-                WeaponSwapHandler.SwapBetweenGun();
+                //WeaponSwapHandler.SwapBetweenGun();
             }
             else if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
             {
@@ -406,6 +410,10 @@ namespace HollowPoint
             HeroController.instance.TakeMP(soulCost);
             HeroController.instance.spellControl.SetState("Spell End");
 
+            //AttackHandler.fireSpread = true;
+            StartCoroutine(SpreadShot(1));
+
+            /*
             float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
             directionMultiplier *= wallClimbMultiplier;
@@ -428,8 +436,48 @@ namespace HollowPoint
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
 
             PlayAudio("firerocket", true);
-
             HollowPointSprites.StartGunAnims();
+            */
+
+        }
+
+        public IEnumerator SpreadShot(int pellets)
+        {
+            GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake"); //SmallShake
+            HollowPointSprites.StartGunAnims();
+            HollowPointSprites.StartFlash();
+            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
+            AudioHandler.PlayGunSounds("Shotgun");
+
+            float direction = OrientationHandler.finalDegreeDirection; //90 degrees
+            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
+
+            float coneDegree = 40;
+            float angleToSpawnBullet = direction - (coneDegree / 2); //90 - (30 / 2) = 75, start at 75 degrees
+            float angleIncreasePerPellet = coneDegree / (pellets + 2); // 30 / (5 + 2) = 4.3, move angle to fire for every pellet by 4.3 degrees
+
+            angleToSpawnBullet = angleToSpawnBullet + angleIncreasePerPellet;
+
+            //Checks if the player is firing upwards, and enables the x offset so the bullets spawns directly ontop of the knight
+            //from the gun's barrel instead of spawning to the upper right/left of them 
+            bool fixYOrientation = (direction == 270 || direction == 90) ? true : false;
+            for (int i = 0; i < pellets; i++)
+            {
+                yield return new WaitForEndOfFrame();
+
+                GameObject bullet = HollowPointPrefabs.SpawnBullet(angleToSpawnBullet, orientation);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
+                //hpbb.pierce = PlayerData.instance.equippedCharm_13;
+                bullet.transform.localScale = new Vector3(0.2f, 0.2f, 0.1f);
+                hpbb.specialAttrib = "Explosion";
+
+                angleToSpawnBullet += angleIncreasePerPellet;
+                Destroy(bullet, 0.7f);
+            }
+
+            yield return new WaitForSeconds(0.05f);
+            AttackHandler.isFiring = false;
         }
 
         public void CheckNailArt()

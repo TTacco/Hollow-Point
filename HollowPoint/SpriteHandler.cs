@@ -44,6 +44,8 @@ namespace HollowPoint
 
         private tk2dSpriteAnimator tk2d = null;
 
+        public static MonoBehaviour instance;
+
         public void Start()
         {
             Log("[HOLLOW POINT] Intializing Weapon Sprites");
@@ -59,6 +61,7 @@ namespace HollowPoint
             }
             while (HeroController.instance == null || GameManager.instance == null);
 
+            instance = this;
 
             try
             {
@@ -335,7 +338,7 @@ namespace HollowPoint
             float face = (HeroController.instance.cState.facingRight) ? 1 : -1;
 
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
-            gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + shakeNum.Next(-5,6));
+            gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + shakeNum.Next(-7,8));
             yield return new WaitForSeconds(0.15f);
 
             // float faceX = (HeroController.instance.cState.facingRight) ? 0.1f : -0.1f;
@@ -380,10 +383,12 @@ namespace HollowPoint
 
         public static void StartGunAnims()
         {
+            if (lowerGunTimer > 0.28) return;
+               
             startFiringAnim = true;
             isFiring = false;
             isFiring = true;
-            lowerGunTimer = 0.4f;
+            lowerGunTimer = 0.40f;
         }
 
         public static void StartFlash()
@@ -393,7 +398,7 @@ namespace HollowPoint
             Destroy(flash, 0.1f);
         }
 
-        public static void StartMuzzleFlash(float bulletDegreeDirection)
+        public static void StartMuzzleFlash(float bulletDegreeDirection, float size)
         {
             //MuzzleFlash Rotation and Spawn
             float degree = bulletDegreeDirection;
@@ -410,36 +415,34 @@ namespace HollowPoint
             //So if the player is firing forward or upwards while wall sliding, make it so to lower the muzzle flash so it doesnt look weird
             flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 0) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
 
-   
-
-            GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f), new Quaternion(0, 0, 0, 0));
-            muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + SpriteRotationWallSlide() + muzzleFlashWallSlide, 0);
+            Vector3 muzzleFlashSpawnPos = gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f);
+            GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, muzzleFlashSpawnPos, new Quaternion(0, 0, 0, 0));
+            muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + muzzleFlashWallSlide, 0);
+            muzzleFlashClone.transform.localScale = new Vector3(size, size, 0.1f);
 
             //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
 
             Destroy(muzzleFlashClone, 0.04f);
+
+            instance.StartCoroutine(MuzzleSmoke(muzzleFlashClone));
         }
 
-        public static float SpriteRotationWallSlide()
+        public static IEnumerator MuzzleSmoke(GameObject muzzleFlashSpawnPos)
         {
-            if (HeroController.instance.cState.wallSliding)
-            {
-                if (InputHandler.Instance.inputActions.up.IsPressed)
-                {
-                    if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
-                    {
-                        return 90;
-                    }
-                }
-                else if (InputHandler.Instance.inputActions.down.IsPressed)
-                {
-                    if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
-                    {
-                        return -90;
-                    }
-                }
-            }
-            return 0;
+            ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
+
+            Destroy(wallDust, 0.75f);
+            wallDust.transform.position = muzzleFlashSpawnPos.transform.position;
+            wallDust.Emit(50);
+            ParticleSystem.VelocityOverLifetimeModule v = wallDust.velocityOverLifetime;
+
+            v.enabled = true;
+            float rad = Mathf.Deg2Rad * (muzzleFlashSpawnPos.transform.eulerAngles.z);
+            v.xMultiplier = 5.5f * Mathf.Cos(rad);
+            v.yMultiplier = 5.5f * Mathf.Sin(rad);
+
+            yield return new WaitForSeconds(0.3f);
+            v.enabled = false;
         }
 
         public void OnDestroy()

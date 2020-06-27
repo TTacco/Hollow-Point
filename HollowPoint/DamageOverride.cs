@@ -205,8 +205,9 @@ namespace HollowPoint
                 return;
             }
             else if (srcName.Contains("Slash"))
-            {            
-                hitInstance.DamageDealt = 2 * (PlayerData.instance.nailSmithUpgrades * 2);
+            {
+                Log("Player is slashing!");
+                hitInstance.DamageDealt = 2 + (PlayerData.instance.nailSmithUpgrades * 2);
                 orig(self, hitInstance);
                 return;
             }
@@ -220,7 +221,7 @@ namespace HollowPoint
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<BulletBehaviour>().bulletOriginPosition;   
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
 
-            var (damage, severity) = Stats.CalculateDamage(bulletOriginPosition, self.transform.position);
+            var (damage, severity) = Stats.CalculateDamage(bulletOriginPosition, self.transform.position, hpbb);
             int soulGainAmt = Stats.CalculateSoulGain();
 
             //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
@@ -229,7 +230,7 @@ namespace HollowPoint
                 StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
             }
 
-            HealthManagerOverride.HitEnemy(self, damage, severity, BulletBehaviour.bulletHitInstance, soulGainAmt);
+            HealthManagerOverride.HitEnemy(self, damage, severity, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
           
         }
 
@@ -258,9 +259,11 @@ namespace HollowPoint
         static System.Random soundRandom = new System.Random();
 
         // This function does damage to the enemy using the damage numbers given by the weapon type
-        public static void HitEnemy(HealthManager targetHP, int damageDealt, DamageSeverity ds, HitInstance hitInstance, int soulGain)
+        public static void HitEnemy(HealthManager targetHP, int damageDealt, DamageSeverity ds, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
         {
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
+            if (targetHP == null) return;
+
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
@@ -297,29 +300,14 @@ namespace HollowPoint
             Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
 
             //if (recoil != null && PlayerData.instance.equippedCharm_15)
-
-            if (targetHP == null) return;
+            if (recoil != null && hpbb.fm == FireModes.Concuss)
+            {
+                recoil.RecoilByDirection(cardinalDirection, 1.5f);
+            }
 
             /*
              * Mostly code copied from the healthmanager class itself.
              */
-            SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
-            switch (ds)
-            {
-                case DamageSeverity.Critical:
-                    damageDealt = (int) (damageDealt*1.25f);
-                    if(f != null) f.FlashGrimmflame();                  
-                    break;
-                case DamageSeverity.Major:
-                    damageDealt = (int)(damageDealt * 0.75f);
-                    if (f != null) f.flashInfected();
-                    break;
-                case DamageSeverity.Minor:
-                    damageDealt = (int)(damageDealt * .5f);
-                    if (f != null) f.flashWhiteQuick();
-                    break;
-            }
-            Log("SEVERITY: " + ds + " DAMAGE: " + damageDealt);
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
@@ -331,7 +319,7 @@ namespace HollowPoint
             GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
             GameObject ImpactPrefab = targetHP.GetAttr<GameObject>("slashImpactPrefab");
             Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-            if (HitPrefab != null && effectOrigin != null)
+            if (HitPrefab != null && effectOrigin != null && !ds.Equals(DamageSeverity.Minor))
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
@@ -339,6 +327,25 @@ namespace HollowPoint
             {
                 ImpactPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
+
+            SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
+
+            switch (ds)
+            {
+                case DamageSeverity.Critical:
+                    damageDealt = (int)(damageDealt * 1.5f);
+                    if (f != null) f.FlashGrimmHit();
+                    break;
+                case DamageSeverity.Major:
+                    damageDealt = (int)(damageDealt * 1f);
+                    if (f != null) f.flashWhiteQuick();
+                    break;
+                case DamageSeverity.Minor:
+                    damageDealt = (int)(damageDealt * .5f);
+                    if (f != null) f.flashWhiteQuick();
+                    break;
+            }
+            Log("SEVERITY: " + ds + " DAMAGE: " + damageDealt);
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
@@ -348,7 +355,7 @@ namespace HollowPoint
 
             // Actually do damage to target.
 
-            LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 7) + ".wav", out AudioClip hurtSound);
+            LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 4) + ".wav", out AudioClip hurtSound);
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(hurtSound);
 
             if (targetHP.damageOverride)
