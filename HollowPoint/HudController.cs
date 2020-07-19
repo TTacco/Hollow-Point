@@ -2,6 +2,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using System.Collections.Generic;
 
 namespace HollowPoint
 {
@@ -14,35 +15,53 @@ namespace HollowPoint
          * i cant believe Sid would do this i am literally shaking and crying right now
         */
 
-        private GameObject _hudshard;
+        private GameObject directionalFireMode;
+        private Dictionary<string, Sprite> hudSpriteDictionary = new Dictionary<string, Sprite>();
+        private readonly string[] texturenames = { "hudicon_omni.png", "hudicon_cardinal.png"};
 
         void Start()
         {
             var prefab = GameManager.instance.inventoryFSM.gameObject.FindGameObjectInChildren("Geo");
             var hudCanvas = GameObject.Find("_GameCameras").FindGameObjectInChildren("HudCamera").FindGameObjectInChildren("Hud Canvas");
 
-            var shardTex = LoadAssets.spriteDictionary["shard.png"];
-            var shardSprite = Sprite.Create(shardTex, new Rect(0, 0, shardTex.width, shardTex.height), new Vector2(0.5f, 0.5f));
+            foreach (var texture in texturenames)
+            {
+                var shardTex = LoadAssets.spriteDictionary[texture];
+                var shardSprite = Sprite.Create(shardTex, new Rect(0, 0, shardTex.width, shardTex.height), new Vector2(0.5f, 0.5f));
+                hudSpriteDictionary.Add(texture, shardSprite);
+            }
 
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            _hudshard = CreateStatObject("Shard", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, shardSprite, new Vector3(2.2f, 11.4f));
+            directionalFireMode = CreateStatObject("Shard", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
 
-            Stats.ShardAmountChanged += ShardChanged;
+            Stats.ShardAmountChanged += ShardChangedText;
         }
 
         private void ShardChanged(int amt)
         {
-            var shardText = _hudshard.GetComponent<DisplayItemAmount>().textObject;
-            
+            var shardText = directionalFireMode.GetComponent<DisplayItemAmount>().textObject;
+
             Color color = new Color(0.55f, 0.55f, 0.55f);
             if (amt <= 0)
             {
                 amt *= -1;
                 color = new Color(0.55f, 0.55f, 0.55f);
             }
-            StartCoroutine(BadAnimation(shardText, amt.ToString(), color));
+            StartCoroutine(BadAnimation(shardText, "", color));
+        }
+
+        private void ShardChangedText(string firemode)
+        {
+            var shardText = directionalFireMode.GetComponent<DisplayItemAmount>().textObject;
+
+
+            directionalFireMode.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
+
+            Color color = new Color(0.55f, 0.55f, 0.55f);
+
+            StartCoroutine(BadAnimation(shardText, "", color));
         }
 
         IEnumerator BadAnimation(TextMeshPro shardText, string amount, Color color)
@@ -68,6 +87,6 @@ namespace HollowPoint
         }
 
         void Destroy()
-            => Stats.ShardAmountChanged -= ShardChanged;
+            => Stats.ShardAmountChanged -= ShardChangedText;
     }
 }

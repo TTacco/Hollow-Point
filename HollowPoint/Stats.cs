@@ -15,7 +15,7 @@ namespace HollowPoint
 {
     class Stats : MonoBehaviour
     {
-        public static event Action<int> ShardAmountChanged;
+        public static event Action<string> ShardAmountChanged;
 
         public static int fireSoulCost = 1;
         public static int burstSoulCost = 15;
@@ -42,7 +42,7 @@ namespace HollowPoint
 
         public static bool canFire = false;
         public static bool usingGunMelee = false;
-        public static bool cardinal = false;
+        public static bool cardinalFiringMode = false;
         static float recentlyFiredTimer = 60f;
 
         public static int soulGained = 0;
@@ -77,7 +77,6 @@ namespace HollowPoint
             pd_instance = PlayerData.instance;
             hc_instance = HeroController.instance;
             am_instance = GameManager.instance.AudioManager;
-
 
             Log("Default Dash Cooldown " + hc_instance.DASH_COOLDOWN);
             Log("Default Dash Cooldown Charm " + hc_instance.DASH_COOLDOWN_CH);
@@ -274,7 +273,7 @@ namespace HollowPoint
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
-            ShardAmountChanged?.Invoke(currentPrimaryAmmo);
+            ShardAmountChanged?.Invoke("Orthogonal");
         }
 
 
@@ -356,26 +355,17 @@ namespace HollowPoint
 
         public static int CalculateSoulGain()
         {
-            int soul = 1;//soulGained;
+            int soul = 3;//soulGained;
             return soul;
         }
 
-        public static void ReloadGun(int reloadAmount)
+        public static void ToggleFireMode()
         {
-            currentPrimaryAmmo = reloadAmount;
-            ShardAmountChanged?.Invoke(1 * currentPrimaryAmmo);
-        }
+            cardinalFiringMode = !cardinalFiringMode;
 
-        public static void IncreaseArtifactPower(int increaseAmount)
-        {
-            currentPrimaryAmmo += increaseAmount;
-            ShardAmountChanged?.Invoke(1 * currentPrimaryAmmo);
-        }
 
-        public static void ReduceAmmunition()
-        {
-            currentPrimaryAmmo -= 1;
-            ShardAmountChanged?.Invoke(-1 * currentPrimaryAmmo);
+            string firemodetext = (cardinalFiringMode) ? "hudicon_cardinal.png" : "hudicon_omni.png";
+            ShardAmountChanged?.Invoke(firemodetext);
         }
 
         public static void DisplayAmmoCount()

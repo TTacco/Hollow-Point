@@ -84,8 +84,8 @@ namespace HollowPoint
                     //Log("Concussion Blast");
                     //Stats.StartBothCooldown();
                     //FireGun(FireModes.Concuss);
-                    Log("[AttackHandler] Changing Firemode from : " + Stats.cardinal + " to : " + !Stats.cardinal );
-                    Stats.cardinal = !Stats.cardinal;
+                    Log("[AttackHandler] Changing Firemode from : " + Stats.cardinalFiringMode + " to : " + !Stats.cardinalFiringMode );
+                    Stats.ToggleFireMode();
                 }
                 else if (fireSpread && Stats.canFire)
                 {

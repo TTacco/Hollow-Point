@@ -353,7 +353,7 @@ namespace HollowPoint
         //basically it just rotates the gun based on shooting direction
         static float SpriteRotation()
         {
-            if(!((ha.right.IsPressed || ha.left.IsPressed)) || Stats.cardinal)
+            if(!((ha.right.IsPressed || ha.left.IsPressed)) || Stats.cardinalFiringMode)
             {
                 return (ha.up.IsPressed) ? 90 : (ha.down.IsPressed)? -90 : 0;
             }

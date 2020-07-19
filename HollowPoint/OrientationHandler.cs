@@ -40,53 +40,14 @@ namespace HollowPoint
             int sign = (up ? 1 : -1) * (left ? 1 : -1);
             finalDegreeDirection += 45 * sign;
 
-            if (Stats.cardinal)
+            if (Stats.cardinalFiringMode)
             {
+                //If the player has activated cardinal only firing, disables diagonal degree direction
                 directionOrientation = DirectionalOrientation.Vertical;
-                if (finalDegreeDirection >= 0 && finalDegreeDirection < 180)
-                {
-                    finalDegreeDirection = 90;
-                }
-                else
-                {
-                    finalDegreeDirection = 270;
-                }
+                finalDegreeDirection = (finalDegreeDirection >= 0 && finalDegreeDirection < 180) ? 90 : 270 ;
             }
 
             return;
-
-            if (facingRight)
-            {
-                finalDegreeDirection = 0;
-                directionOrientation = DirectionalOrientation.Horizontal;
-            }
-            else
-            {
-                finalDegreeDirection = 180;
-                directionOrientation = DirectionalOrientation.Horizontal;
-            }
-            if(up && !(right || left))
-            {
-                finalDegreeDirection = 90;
-                directionOrientation = DirectionalOrientation.Vertical;
-            }
-            else if (down && !(right || left))
-            {
-                finalDegreeDirection = 270;
-                directionOrientation = DirectionalOrientation.Vertical;
-            }
-            else if (up)
-            {
-                if (right) finalDegreeDirection = 45;
-                else if (left) finalDegreeDirection = 135;
-                directionOrientation = DirectionalOrientation.Diagonal;
-            }
-            else if (down)
-            {
-                if (right) finalDegreeDirection = 315;
-                else if (left) finalDegreeDirection = 225;
-                directionOrientation = DirectionalOrientation.Diagonal;
-            }
         }
 
         void OnDestroy()

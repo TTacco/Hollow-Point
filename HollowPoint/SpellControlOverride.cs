@@ -606,8 +606,6 @@ namespace HollowPoint
             */
             buffActive = true;
 
-            Stats.ReduceAmmunition();
-            
             if (PlayerData.instance.equippedCharm_34)
             {
                 buff_duration = -40f;
