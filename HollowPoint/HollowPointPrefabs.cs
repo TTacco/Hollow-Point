@@ -190,7 +190,7 @@ namespace HollowPoint
             bulletTR.numCornerVertices = 50;
             bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
-            bulletTR.time = 0.025f;
+            bulletTR.time = 0.04f;
 
             //bulletTR.startColor = new Color(240, 234, 196);
             //bulletTR.endColor = new Color(237, 206, 154);

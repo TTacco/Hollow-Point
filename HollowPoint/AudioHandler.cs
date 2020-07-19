@@ -16,6 +16,8 @@ namespace HollowPoint
         static GameObject enemyHitSFX;
         static GameObject terrainHitSFX;
 
+        
+
         public void Awake()
         {
             StartCoroutine(AudioHandlerInit());
@@ -41,13 +43,14 @@ namespace HollowPoint
 
         public static void PlayGunSounds(string gunName)
         {
+
             try
             {
                 LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
                 AudioSource audios = shootSFX.GetComponent<AudioSource>();
                 audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
-                audios.PlayOneShot(audios.clip);
+                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);    
+                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
 
                 //Play subsonic WOOOP whenever you fire
                 //LoadAssets.sfxDictionary.TryGetValue("subsonicsfx.wav", out ac);
@@ -70,7 +73,7 @@ namespace HollowPoint
 
                 audios.clip = ac;
                 audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-                audios.PlayOneShot(audios.clip);
+                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
             catch (Exception e)
             {

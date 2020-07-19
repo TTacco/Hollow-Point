@@ -200,14 +200,18 @@ namespace HollowPoint
 
             //Firing below will push the player up
             float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 1;
-            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1.75f * mult, 270));
+
+            if (hc_instance.cState.wallSliding)
+            StartCoroutine(KnockbackRecoil(2.5f * mult, 270));
+
+            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(2f * mult, 270));
             else if (finalDegreeDirectionLocal < 350 && finalDegreeDirectionLocal > 190) StartCoroutine(KnockbackRecoil(0.07f*mult, 270));
         }
 
         public IEnumerator SingleShot()
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            HeatHandler.IncreaseHeat(1.1f);
+            HeatHandler.IncreaseHeat(15f);
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
@@ -225,7 +229,7 @@ namespace HollowPoint
             //set the origin position of where the bullet was spawned
             hpbb.bulletOriginPosition = bullet.transform.position;
 
-            Destroy(bullet, 0.55f);
+            Destroy(bullet, 0.35f);
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();

@@ -277,7 +277,6 @@ namespace HollowPoint
             //Log(HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name); //ENTER = when the player enters
             string animName = tk2d.CurrentClip.name;
 
-
             if (!facingNorthFirstTime && animName.Contains("Enter"))
             {
                 facingNorthFirstTime = true;
@@ -342,7 +341,6 @@ namespace HollowPoint
             yield return new WaitForSeconds(0.15f);
 
             // float faceX = (HeroController.instance.cState.facingRight) ? 0.1f : -0.1f;
-
             //float faceX = (degreeDirection >= 45 && degreeDirection <= 135)? 0.2f : 0f;
             gunSpriteGO.transform.localPosition = new Vector3(0, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
         }
@@ -407,7 +405,12 @@ namespace HollowPoint
             float wallSlideOffset = (HeroController.instance.cState.wallSliding) ? -1 : 1;
             float flashOffsetX = (float)(wallSlideOffset * 1.6f * Math.Cos(radian));
             float flashOffsetY = (float)(1.6f * Math.Sin(radian));
-            float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !OrientationHandler.facingRight) ? 180 : 0;
+            //float muzzleFlashWallSlide = (HeroController.instance.cState.wallSliding && !OrientationHandler.facingRight) ? 180 : 0;
+
+            if (HeroController.instance.cState.wallSliding)
+            {
+                degree = (HeroController.instance.cState.facingRight) ? ((degree <= 90 ? 180 : -180) - degree) : (180 - degree);
+            }
 
             //If the player is aiming upwards or downwards, nudge the muzzle flash a bit because facing the right or left, the muzzle is a bit "forward"
             flashOffsetX += (bulletDegreeDirection == 90) ? (OrientationHandler.facingRight) ? -0.2f : 0.2f : 0;
@@ -417,7 +420,7 @@ namespace HollowPoint
 
             Vector3 muzzleFlashSpawnPos = gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f);
             GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, muzzleFlashSpawnPos, new Quaternion(0, 0, 0, 0));
-            muzzleFlashClone.transform.Rotate(0, 0, bulletDegreeDirection + muzzleFlashWallSlide, 0);
+            muzzleFlashClone.transform.Rotate(0, 0, degree, 0);
             muzzleFlashClone.transform.localScale = new Vector3(size, size, 0.1f);
 
             //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
@@ -438,8 +441,8 @@ namespace HollowPoint
 
             v.enabled = true;
             float rad = Mathf.Deg2Rad * (muzzleFlashSpawnPos.transform.eulerAngles.z);
-            v.xMultiplier = 5.5f * Mathf.Cos(rad);
-            v.yMultiplier = 5.5f * Mathf.Sin(rad);
+            v.xMultiplier = 7.5f * Mathf.Cos(rad);
+            v.yMultiplier = 7.5f * Mathf.Sin(rad);
 
             yield return new WaitForSeconds(0.3f);
             v.enabled = false;
@@ -505,11 +508,11 @@ namespace HollowPoint
         {
             try
             {
-                if (MakeGunInvisibleCheck())
+                if (MakeGunInvisibleCheck() && gunRenderer.enabled)
                 {
                     gunRenderer.enabled = false;
                 }
-                else
+                else if (!gunRenderer.enabled)
                 {
                     gunRenderer.enabled = true;
                 }

@@ -55,7 +55,7 @@ namespace HollowPoint
 
             if (currentHeat > 0)
             {
-                currentHeat -= Time.deltaTime * 200f;
+                currentHeat -= Time.deltaTime * 70f; //Speed heat dissipates
                 if (currentHeat < 0)
                 {
                     currentHeat = 0;
@@ -66,20 +66,26 @@ namespace HollowPoint
 
         }
 
-        public static void IncreaseHeat(float mult)
+        public static void IncreaseHeat(float increaseAmount)
         {
-            
-            if(fastCooldownTimer> 20f)
+
+            currentHeat += increaseAmount;
+            Modding.Logger.Log("current heat is " + currentHeat);
+            if (currentHeat > 100) currentHeat = 100;
+            fastCooldownTimer = 10f;
+            return;
+
+            if (fastCooldownTimer> 20f)
             {
-                currentHeat += 40 * mult;
+                currentHeat += 40 * increaseAmount;
             }
             else if(fastCooldownTimer > 10f)
             {
-                currentHeat += 20 * mult;
+                currentHeat += 20 * increaseAmount;
             }
             else
             {
-                currentHeat += 5 * mult;
+                currentHeat += 5 * increaseAmount;
             }
 
             fastCooldownTimer = 30f;

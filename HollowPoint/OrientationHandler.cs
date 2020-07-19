@@ -27,6 +27,23 @@ namespace HollowPoint
             heldAttack = InputHandler.Instance.inputActions.attack.IsPressed;
             facingRight = HeroController.instance.cState.facingRight;
 
+            finalDegreeDirection = facingRight ? 0 : 180;
+            directionOrientation = DirectionalOrientation.Horizontal;
+
+            if (!up && !down) return;
+
+            finalDegreeDirection = up ? 90 : 270;
+            directionOrientation = DirectionalOrientation.Vertical;
+
+            if (!right && !left) return;
+
+            int sign = (up ? 1 : -1) * (left ? 1 : -1);
+            finalDegreeDirection += 45 * sign;
+
+
+
+            return;
+
             if (facingRight)
             {
                 finalDegreeDirection = 0;
@@ -37,7 +54,6 @@ namespace HollowPoint
                 finalDegreeDirection = 180;
                 directionOrientation = DirectionalOrientation.Horizontal;
             }
-
             if(up && !(right || left))
             {
                 finalDegreeDirection = 90;
@@ -50,32 +66,16 @@ namespace HollowPoint
             }
             else if (up)
             {
-                if (right)
-                {
-                    finalDegreeDirection = 45;
-                    directionOrientation = DirectionalOrientation.Diagonal;
-                }
-                else if (left)
-                {
-                    finalDegreeDirection = 135;
-                    directionOrientation = DirectionalOrientation.Diagonal;
-                }
+                if (right) finalDegreeDirection = 45;
+                else if (left) finalDegreeDirection = 135;
+                directionOrientation = DirectionalOrientation.Diagonal;
             }
             else if (down)
             {
-                if (right)
-                {
-                    finalDegreeDirection = 315;
-                    directionOrientation = DirectionalOrientation.Diagonal;
-                }
-                else if (left)
-                {
-                    finalDegreeDirection = 225;
-                    directionOrientation = DirectionalOrientation.Diagonal;
-                }
+                if (right) finalDegreeDirection = 315;
+                else if (left) finalDegreeDirection = 225;
+                directionOrientation = DirectionalOrientation.Diagonal;
             }
-
-
         }
 
         void OnDestroy()

@@ -23,6 +23,7 @@ namespace HollowPoint
         public int bulletDamage;
         public float bulletSpeedMult = 1;
         public float bulletDegreeDirection = 0;
+        public float bulletSizeOverride = 0.9f;
 
         public bool ignoreCollisions = false;
         public bool hasSporeCloud = true;
@@ -35,6 +36,7 @@ namespace HollowPoint
         public bool noHeat = false;
         public bool perfectAccuracy = false;
         public float heatOnHit = 0;
+        static float bulletPivot = 0;
 
         public Vector3 bulletOriginPosition;
         public Vector3 targetDestination;
@@ -118,7 +120,7 @@ namespace HollowPoint
 
             float heatMult = 0.01f + (heatCount * 0.06f);
             //float deviationFromHeat = (noHeat) ? 0 : (HeatHandler.currentHeat * heatMult); //old formula
-            float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 0.61f); //exponential
+            float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 2f)/500; //exponential
             deviationFromHeat *= (PlayerData.instance.equippedCharm_37) ? 1.25f : 1.15f; //Increase movement penalty when equipping sprint master
             deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
 
@@ -128,7 +130,7 @@ namespace HollowPoint
             bulletSpeed = Stats.bulletVelocity;
 
             //Bullet Sprite Size
-            float size = 0.90f;
+            float size = bulletSizeOverride;
 
             //===================================FIRE SUPPORT=========================================
             if (flareRound)
@@ -145,9 +147,20 @@ namespace HollowPoint
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
 
             //Handles weapon spread
-            //HP_DirectionHandler.finalDegreeDirection
+            //a moving pivot for where the bullet can spread, with its maximum and minimum deviation, this allows the bullet to
+            //smoothly spread instead of being just random
 
-            float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
+            //bulletPivot = (bulletPivot > deviation) ? deviation : (bulletPivot < deviation * -1)? deviation * -1 : bulletPivot; //Clamps the value
+            
+            bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the value
+            float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
+            bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
+            bulletPivot += bulletPivotDelta * 4; //1 can be changed by the amount of distance each bullet deviation should have
+
+          
+            float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
+
+            //float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
             float radian = (float)(degree * Math.PI / 180);
 
             xDeg = bulletSpeed * Math.Cos(radian);
