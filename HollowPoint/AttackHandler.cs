@@ -82,8 +82,10 @@ namespace HollowPoint
                 if (InputHandler.Instance.inputActions.dreamNail.WasPressed)
                 {
                     //Log("Concussion Blast");
-                    Stats.StartBothCooldown();
-                    FireGun(FireModes.Concuss);
+                    //Stats.StartBothCooldown();
+                    //FireGun(FireModes.Concuss);
+                    Log("[AttackHandler] Changing Firemode from : " + Stats.cardinal + " to : " + !Stats.cardinal );
+                    Stats.cardinal = !Stats.cardinal;
                 }
                 else if (fireSpread && Stats.canFire)
                 {
@@ -211,7 +213,7 @@ namespace HollowPoint
         public IEnumerator SingleShot()
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            HeatHandler.IncreaseHeat(15f);
+            HeatHandler.IncreaseHeat(20f);
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
@@ -251,7 +253,7 @@ namespace HollowPoint
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
             for (int i = 0; i < burst; i++)
             {
-                HeatHandler.IncreaseHeat(0.5f);
+                HeatHandler.IncreaseHeat(1.5f);
 
                 float direction = OrientationHandler.finalDegreeDirection;
                 DirectionalOrientation orientation = OrientationHandler.directionOrientation;

@@ -300,9 +300,9 @@ namespace HollowPoint
             Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
 
             //if (recoil != null && PlayerData.instance.equippedCharm_15)
-            if (recoil != null && hpbb.fm == FireModes.Concuss)
+            if (recoil != null)
             {
-                recoil.RecoilByDirection(cardinalDirection, 1.5f);
+                recoil.RecoilByDirection(cardinalDirection, 0.25f);
             }
 
             /*

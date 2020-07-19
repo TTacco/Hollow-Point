@@ -36,6 +36,8 @@ namespace HollowPoint
         public static bool isWallClimbing = false;
         public static bool facingNorthFirstTime = false;
 
+        public static HeroActions ha;
+
         public static GameObject transformSlave;
         public static Transform ts;
 
@@ -62,6 +64,8 @@ namespace HollowPoint
             while (HeroController.instance == null || GameManager.instance == null);
 
             instance = this;
+
+            ha = InputHandler.Instance.inputActions;
 
             try
             {
@@ -204,7 +208,6 @@ namespace HollowPoint
                 gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
                 float gunHeightWhenPointingUpwards = (SpriteRotation() == 90 || SpriteRotation() == 45) ? 0.3f: 0f;
-
                 //gunSpriteGO.transform.localPosition.x 
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f + gunHeightWhenPointingUpwards, -0.0001f); //0.10f * yMult
 
@@ -346,36 +349,18 @@ namespace HollowPoint
         }
 
         //==================================Utilities==================================================
-
         //returns the degree of the gun's sprite depending on what the player inputs while shooting
         //basically it just rotates the gun based on shooting direction
         static float SpriteRotation()
         {
-            if (InputHandler.Instance.inputActions.up.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            if(!((ha.right.IsPressed || ha.left.IsPressed)) || Stats.cardinal)
             {
-                return 90;
+                return (ha.up.IsPressed) ? 90 : (ha.down.IsPressed)? -90 : 0;
             }
-
-            if (InputHandler.Instance.inputActions.down.IsPressed && !(InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed))
+            else if(ha.right.IsPressed || ha.left.IsPressed)
             {
-                return -90;
+                return (ha.up.IsPressed) ? 45 : (ha.down.IsPressed) ? -45 : 0;
             }
-
-            if (InputHandler.Instance.inputActions.up.IsPressed)
-            {
-                if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
-                {
-                    return 45;
-                }
-            }
-            else if (InputHandler.Instance.inputActions.down.IsPressed)
-            {
-                if (InputHandler.Instance.inputActions.right.IsPressed || InputHandler.Instance.inputActions.left.IsPressed)
-                {
-                    return -45;
-                }
-            }
-
             return 0;
         }
 

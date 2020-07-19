@@ -40,7 +40,18 @@ namespace HollowPoint
             int sign = (up ? 1 : -1) * (left ? 1 : -1);
             finalDegreeDirection += 45 * sign;
 
-
+            if (Stats.cardinal)
+            {
+                directionOrientation = DirectionalOrientation.Vertical;
+                if (finalDegreeDirection >= 0 && finalDegreeDirection < 180)
+                {
+                    finalDegreeDirection = 90;
+                }
+                else
+                {
+                    finalDegreeDirection = 270;
+                }
+            }
 
             return;
 

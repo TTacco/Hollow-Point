@@ -401,14 +401,14 @@ namespace HollowPoint
         {
             HeroController.instance.spellControl.SetState("Inactive");
 
-            int soulCost = (PlayerData.instance.equippedCharm_33) ? 33 : 50;
+            int soulCost = (PlayerData.instance.equippedCharm_33) ? 22 : 33;
             if (WeaponSwapHandler.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
             }
             HeroController.instance.TakeMP(soulCost);
-            StartCoroutine(BurstShot(6));
+            StartCoroutine(BurstShot(10));
             HeroController.instance.spellControl.SetState("Spell End");
 
             /*
@@ -442,22 +442,22 @@ namespace HollowPoint
         public IEnumerator BurstShot(int burst)
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+
             for (int i = 0; i < burst; i++)
             {
                 //HeatHandler.IncreaseHeat(0.5f);
-
+                AudioHandler.PlayGunSounds("rifle");
                 float direction = OrientationHandler.finalDegreeDirection;
                 DirectionalOrientation orientation = OrientationHandler.directionOrientation;
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
                 bullet.GetComponent<BulletBehaviour>().bulletSizeOverride = 1.5f;
 
-                AudioHandler.PlayGunSounds("rifle");
                 Destroy(bullet, .4f);
 
                 HollowPointSprites.StartGunAnims();
                 HollowPointSprites.StartFlash();
                 HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-                yield return new WaitForSeconds(0.04f); //0.12f This yield will determine the time inbetween shots   
+                yield return new WaitForSeconds(0.07f); //0.12f This yield will determine the time inbetween shots   
 
                 if (HeroController.instance.cState.dashing) break;
             }

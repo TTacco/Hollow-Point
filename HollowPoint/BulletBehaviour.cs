@@ -23,7 +23,7 @@ namespace HollowPoint
         public int bulletDamage;
         public float bulletSpeedMult = 1;
         public float bulletDegreeDirection = 0;
-        public float bulletSizeOverride = 0.9f;
+        public float bulletSizeOverride = 1.1f;
 
         public bool ignoreCollisions = false;
         public bool hasSporeCloud = true;
@@ -125,7 +125,8 @@ namespace HollowPoint
             deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
 
             float deviation = (perfectAccuracy) ? 0 : (deviationFromHeat + deviationFromMovement);
-            deviation = (deviation < 0) ? 0 : deviation; //just set up the minimum value, bullets starts acting weird when deviation is negative
+            deviation = Mathf.Clamp(deviation, 0, 8); //just set up the minimum value, bullets starts acting weird when deviation is negative
+            //deviation = (deviation < 0) ? 0 : deviation; 
 
             bulletSpeed = Stats.bulletVelocity;
 
@@ -154,10 +155,8 @@ namespace HollowPoint
             
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the value
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
-            bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * 4; //1 can be changed by the amount of distance each bullet deviation should have
-
-          
+            bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta; 
+            bulletPivot += bulletPivotDelta * 6; //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
 
             //float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
