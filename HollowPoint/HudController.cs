@@ -34,7 +34,7 @@ namespace HollowPoint
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            directionalFireMode = CreateStatObject("Shard", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
+            directionalFireMode = CreateStatObject("FireModeSetting", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
 
             Stats.ShardAmountChanged += ShardChangedText;
         }
@@ -55,8 +55,6 @@ namespace HollowPoint
         private void ShardChangedText(string firemode)
         {
             var shardText = directionalFireMode.GetComponent<DisplayItemAmount>().textObject;
-
-
             directionalFireMode.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
 
             Color color = new Color(0.55f, 0.55f, 0.55f);

@@ -23,7 +23,7 @@ namespace HollowPoint
         public int bulletDamage;
         public float bulletSpeedMult = 1;
         public float bulletDegreeDirection = 0;
-        public float bulletSizeOverride = 1.1f;
+        public float bulletSizeOverride = 1.2f;
 
         public bool ignoreCollisions = false;
         public bool hasSporeCloud = true;
@@ -77,21 +77,6 @@ namespace HollowPoint
             //Increase the bullet size
             bc2d.size = new Vector2(1f, 0.65f);
 
-            //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
-            if (isFireSupportBullet)
-            {
-                bulletSprite.transform.Rotate(0, 0, 270);
-                bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
-                HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
-
-                gameObject.transform.localScale = new Vector3(1.2f, 1.2f, 0.90f);
-                bulletSprite.sprite = fireSupportBulletSprite;
-
-                rb2d.velocity = new Vector2(0, -120);
-
-                return;
-            }
-
             //===================================REGULAR BULLET ATTRIBUTES=========================================
 
             //Bullet sprite changer
@@ -125,7 +110,7 @@ namespace HollowPoint
             deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
 
             float deviation = (perfectAccuracy) ? 0 : (deviationFromHeat + deviationFromMovement);
-            deviation = Mathf.Clamp(deviation, 0, 8); //just set up the minimum value, bullets starts acting weird when deviation is negative
+            deviation = Mathf.Clamp(deviation, 0, 14); //just set up the minimum value, bullets starts acting weird when deviation is negative
             //deviation = (deviation < 0) ? 0 : deviation; 
 
             bulletSpeed = Stats.bulletVelocity;
@@ -134,6 +119,21 @@ namespace HollowPoint
             float size = bulletSizeOverride;
 
             //===================================FIRE SUPPORT=========================================
+            //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
+            if (isFireSupportBullet)
+            {
+                //bulletSprite.transform.Rotate(0, 0, 270);
+                //bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
+                HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
+
+                //gameObject.transform.localScale = new Vector3(1.2f, 1.2f, 0.90f);
+                bulletSprite.sprite = fireSupportBulletSprite;
+                bulletSpeed = 120;
+                //rb2d.velocity = new Vector2(0, -120);
+
+                //return;
+            }
+
             if (flareRound)
             {
                 //OFFENSIVE FIRE SUPPORT
@@ -176,13 +176,14 @@ namespace HollowPoint
             bulletSprite.transform.Rotate(0, 0, degree, 0); //Bullet rotation
         }
 
-        //For tracking fire support target
+        //Destroy the artillery shell when it hits the destination
         void FixedUpdate()
         {
             if (isFireSupportBullet)
             {
                 if (gameObject.transform.position.y < targetDestination.y)
                 {
+                    Log("[BulletBehaviour] Reached destroy point for artillery shell");
                     Destroy(gameObject);
                 }
             }
@@ -194,18 +195,46 @@ namespace HollowPoint
             hm = col.GetComponentInChildren<HealthManager>();
             bulletDummyHitInstance.Source = gameObject;
 
-            //Log(col.name);
+           // Log("[BulletBehaviour] Col Name" + col.name);
+            if(col.gameObject.name.Contains("Idle") || hm != null)
+            {
+                HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
+                Destroy(gameObject);
+                return;
+            }
 
-            //PURE VESSEL CHECK
+            else if (hm == null && col.gameObject.layer.Equals(8))
+            {
+                StartCoroutine(WallHitDust());
+                if (col.gameObject.GetComponent<Breakable>() != null)
+                {
+                    Breakable br = col.gameObject.GetComponent<Breakable>();
+                    bulletDummyHitInstance.Direction = 270f;
+                    br.Hit(bulletDummyHitInstance);
+                }
+                //TODO: change this audio source location
+                LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
+                //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
+                HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
+                //Mark target for fire support
+                Destroy(gameObject);
+            }
+
+            return;
+
             if (col.gameObject.name.Contains("Idle"))
             {
                 //Modding.Logger.Log("PV IS HIT");
+                HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
+
+
                 if (pureVesselHM != null)
                 {
                     hm = pureVesselHM;
                 }
 
                 Component[] pvc = col.gameObject.GetComponents<Component>();
+                Log("Components" + pvc);
 
                 foreach (Component c in pvc)
                 {
@@ -235,7 +264,6 @@ namespace HollowPoint
             if (hm == null && col.gameObject.layer.Equals(8))
             {
                 StartCoroutine(WallHitDust());
-
                 if (col.gameObject.GetComponent<Breakable>() != null)
                 {
                     Breakable br = col.gameObject.GetComponent<Breakable>();
@@ -246,31 +274,27 @@ namespace HollowPoint
                 LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
                 //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
                 HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
-
                 //Mark target for fire support
                 if (flareRound)
                 {
                     OffensiveFireSupport_Target(gameObject, null, false);
                     return;
                 }
-
-
                 Destroy(gameObject);
             }
             //Damages the enemy and destroys the bullet
             else if (hm != null)
             {
+                HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
                 HeroController.instance.ResetAirMoves();
-
                 if (flareRound)
                 {
                     OffensiveFireSupport_Target(gameObject, col.gameObject, true);
                     hm.Hit(bulletDummyHitInstance);
                     return;
                 }
-
                 if (!pierce) Destroy(gameObject);
-                hm.Hit(bulletDummyHitInstance);
+                //hm.Hit(bulletDummyHitInstance);
             }
         }
 
@@ -367,7 +391,7 @@ namespace HollowPoint
                 {
                     for (int shrap = 0; shrap < 5; shrap++)
                     {
-                        GameObject bul = HollowPointPrefabs.SpawnBulletAtCoordinate(rand.Next(0, 360), gameObject.transform.position);
+                        GameObject bul = HollowPointPrefabs.SpawnBulletAtCoordinate(rand.Next(0, 360), gameObject.transform.position, 4);
                         bul.GetComponent<BulletBehaviour>().specialAttrib = "DungExplosion";
                     }
                 }

@@ -185,7 +185,7 @@ namespace HollowPoint
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 37f;
             burstSoulCost = 1;
-            fireRateCooldown = 4.65f; 
+            fireRateCooldown = 4f; 
             fireSoulCost = 5;
             heatPerShot = 0.7f;
             max_soul_regen = 25;
@@ -273,7 +273,7 @@ namespace HollowPoint
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
-            ShardAmountChanged?.Invoke("Orthogonal");
+            ShardAmountChanged?.Invoke("hudicon_omni.png");
         }
 
 
@@ -335,7 +335,7 @@ namespace HollowPoint
 
         public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
-            int dam = 3;
+            int dam = 2;  //(PlayerData.instance.nailSmithUpgrades * 3);
             DamageSeverity ds = DamageSeverity.Minor;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
             //DamageSeverity ds = (distance >= 9) ? DamageSeverity.Minor : (distance >= 6) ? DamageSeverity.Major : DamageSeverity.Critical;
@@ -355,15 +355,13 @@ namespace HollowPoint
 
         public static int CalculateSoulGain()
         {
-            int soul = 3;//soulGained;
+            int soul = 4;//soulGained;
             return soul;
         }
 
         public static void ToggleFireMode()
         {
             cardinalFiringMode = !cardinalFiringMode;
-
-
             string firemodetext = (cardinalFiringMode) ? "hudicon_cardinal.png" : "hudicon_omni.png";
             ShardAmountChanged?.Invoke(firemodetext);
         }

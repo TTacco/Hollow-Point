@@ -174,6 +174,7 @@ namespace HollowPoint
 
             if(fm == FireModes.Single)
             {
+                hc_instance.TakeMPQuick(2);
                 //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
                 //HeroController.instance.WALK_SPEED = Stats.walkSpeed;
                 StartCoroutine(SingleShot());
@@ -231,7 +232,7 @@ namespace HollowPoint
             //set the origin position of where the bullet was spawned
             hpbb.bulletOriginPosition = bullet.transform.position;
 
-            Destroy(bullet, 0.35f);
+            Destroy(bullet, 0.3f);
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();

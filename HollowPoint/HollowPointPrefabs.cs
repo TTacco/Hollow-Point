@@ -190,7 +190,7 @@ namespace HollowPoint
             bulletTR.numCornerVertices = 50;
             bulletTR.numCapVertices = 30;
             bulletTR.enabled = true;
-            bulletTR.time = 0.1f;
+            bulletTR.time = 0.01f;
 
             //bulletTR.startColor = new Color(240, 234, 196);
             //bulletTR.endColor = new Color(237, 206, 154);
@@ -251,15 +251,14 @@ namespace HollowPoint
             return bullet;
         }
 
-        public static GameObject SpawnBulletAtCoordinate(float bulletDegreeDirection, Vector3 spawnPoint)
+        public static GameObject SpawnBulletAtCoordinate(float bulletDegreeDirection, Vector3 spawnPoint, float offset)
         {
             bulletDegreeDirection = bulletDegreeDirection % 360;
 
-            float xOffSet = (float)(Math.Cos(bulletDegreeDirection) * 4);
-            float yOffSet = (float)(Math.Sin(bulletDegreeDirection) * 4);
+            float xOffSet = (float)(Math.Cos(bulletDegreeDirection) * offset);
+            float yOffSet = (float)(Math.Sin(bulletDegreeDirection) * offset);
 
             GameObject bullet = Instantiate(bulletPrefab, spawnPoint + new Vector3(xOffSet, yOffSet), new Quaternion(0, 0, 0, 0));
-
             bullet.GetComponent<BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
             bullet.SetActive(true);
 

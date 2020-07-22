@@ -408,7 +408,7 @@ namespace HollowPoint
                 return;
             }
             HeroController.instance.TakeMP(soulCost);
-            StartCoroutine(BurstShot(10));
+            StartCoroutine(BurstShot(5));
             HeroController.instance.spellControl.SetState("Spell End");
 
             /*
@@ -445,12 +445,12 @@ namespace HollowPoint
 
             for (int i = 0; i < burst; i++)
             {
-                //HeatHandler.IncreaseHeat(0.5f);
+                //HeatHandler.IncreaseHeat(20f);
                 AudioHandler.PlayGunSounds("rifle");
                 float direction = OrientationHandler.finalDegreeDirection;
                 DirectionalOrientation orientation = OrientationHandler.directionOrientation;
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
-                bullet.GetComponent<BulletBehaviour>().bulletSizeOverride = 1.5f;
+                bullet.GetComponent<BulletBehaviour>().bulletSizeOverride = 1.6f;
 
                 Destroy(bullet, .4f);
 
@@ -498,7 +498,7 @@ namespace HollowPoint
                 Destroy(bullet, 0.7f);
             }
 
-            yield return new WaitForSeconds(0.05f);
+            yield return new WaitForSeconds(0.3f);
             AttackHandler.isFiring = false;
         }
 
@@ -530,9 +530,11 @@ namespace HollowPoint
         {
             //Prepare the airstrike by taking 99 MP
             HeroController.instance.TakeMP(99);
-            artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
-            artifactActivatedEffect.SetActive(true);
-            AttackHandler.airStrikeActive = true;
+            StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
+
+            //artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
+            //artifactActivatedEffect.SetActive(true);
+            //AttackHandler.airStrikeActive = true;
             //infuseTimer = 500f;
         }
 
@@ -541,17 +543,20 @@ namespace HollowPoint
         //Regular steel rain (non tracking)
         public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates, int totalShells)
         {
+            int artyDirection = (HeroController.instance.cState.facingRight) ? 1 : -1;
             Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
+            float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             for (int shells = 0; shells < totalShells; shells++)
             {
-                yield return new WaitForSeconds(0.45f);
-                GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 30, -0.1f), 0);
+                shellAimPosition += 3 * artyDirection;
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.isFireSupportBullet = true;
                 hpbb.ignoreCollisions = true;
-                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(2, 8), -0.1f);
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(5, 7), -0.1f);
                 shell.SetActive(true);
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(0.8f);
             }
         }
 

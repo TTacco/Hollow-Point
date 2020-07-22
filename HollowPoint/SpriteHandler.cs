@@ -493,11 +493,11 @@ namespace HollowPoint
         {
             try
             {
-                if (MakeGunInvisibleCheck() && gunRenderer.enabled)
+                if (MakeGunInvisibleCheck())
                 {
                     gunRenderer.enabled = false;
                 }
-                else if (!gunRenderer.enabled)
+                else
                 {
                     gunRenderer.enabled = true;
                 }
