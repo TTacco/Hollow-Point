@@ -1,4 +1,5 @@
 ﻿using ModCommon;
+using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -15,12 +16,13 @@ namespace HollowPoint
          * i cant believe Sid would do this i am literally shaking and crying right now
         */
 
-        private GameObject directionalFireMode;
+        private GameObject directionalFireModeHudIcon;
         private Dictionary<string, Sprite> hudSpriteDictionary = new Dictionary<string, Sprite>();
         private readonly string[] texturenames = { "hudicon_omni.png", "hudicon_cardinal.png"};
 
         void Start()
         {
+            Modding.Logger.Log("INTIALIZING HUDCONTROLLER");
             var prefab = GameManager.instance.inventoryFSM.gameObject.FindGameObjectInChildren("Geo");
             var hudCanvas = GameObject.Find("_GameCameras").FindGameObjectInChildren("HudCamera").FindGameObjectInChildren("Hud Canvas");
 
@@ -34,32 +36,25 @@ namespace HollowPoint
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            directionalFireMode = CreateStatObject("FireModeSetting", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
+            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
 
             Stats.ShardAmountChanged += ShardChangedText;
         }
 
-        private void ShardChanged(int amt)
-        {
-            var shardText = directionalFireMode.GetComponent<DisplayItemAmount>().textObject;
-
-            Color color = new Color(0.55f, 0.55f, 0.55f);
-            if (amt <= 0)
-            {
-                amt *= -1;
-                color = new Color(0.55f, 0.55f, 0.55f);
-            }
-            StartCoroutine(BadAnimation(shardText, "", color));
-        }
-
         private void ShardChangedText(string firemode)
         {
-            var shardText = directionalFireMode.GetComponent<DisplayItemAmount>().textObject;
-            directionalFireMode.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
+            try
+            {
+                var shardText = directionalFireModeHudIcon.GetComponent<DisplayItemAmount>().textObject;
+                directionalFireModeHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
+                Color color = new Color(0.55f, 0.55f, 0.55f);
+                StartCoroutine(BadAnimation(shardText, "", color));
+            }
+            catch(Exception e)
+            {
+                Modding.Logger.Log("[HudController] Exception in ShardChangedText() Method");
+            }
 
-            Color color = new Color(0.55f, 0.55f, 0.55f);
-
-            StartCoroutine(BadAnimation(shardText, "", color));
         }
 
         IEnumerator BadAnimation(TextMeshPro shardText, string amount, Color color)

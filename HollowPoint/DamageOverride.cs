@@ -189,7 +189,7 @@ namespace HollowPoint
             //Alternative hit damages from other sources like weaver or explosions 
 
             string srcName = hitInstance.Source.name;
-            Log("Source Name is " + srcName);
+            Log("[DamageOverride] Source Name is " + srcName);
             if (srcName.Contains("Gas"))
             {
                 //Explosion damage

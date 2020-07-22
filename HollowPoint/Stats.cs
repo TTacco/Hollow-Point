@@ -73,7 +73,6 @@ namespace HollowPoint
                 yield return null;
             }
 
-
             pd_instance = PlayerData.instance;
             hc_instance = HeroController.instance;
             am_instance = GameManager.instance.AudioManager;
@@ -335,7 +334,7 @@ namespace HollowPoint
 
         public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
-            int dam = 2;  //(PlayerData.instance.nailSmithUpgrades * 3);
+            int dam = 2 + (PlayerData.instance.nailSmithUpgrades * 3);
             DamageSeverity ds = DamageSeverity.Minor;
             float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
             //DamageSeverity ds = (distance >= 9) ? DamageSeverity.Minor : (distance >= 6) ? DamageSeverity.Major : DamageSeverity.Critical;

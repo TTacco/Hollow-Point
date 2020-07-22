@@ -50,7 +50,7 @@ namespace HollowPoint
             {
                 typhoonTimer = -1;
 
-                int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 12 : 8; 
+                int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 8 : 6; 
                 StartCoroutine(SpawnTyphoon(HeroController.instance.transform.position, pelletAmnt));
             }
         }
@@ -274,17 +274,19 @@ namespace HollowPoint
 
         public void StartQuake()
         {
-            LoadAssets.sfxDictionary.TryGetValue("divetrigger.wav", out AudioClip ac);
-            AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
-            audios.PlayOneShot(ac);
+            //LoadAssets.sfxDictionary.TryGetValue("divetrigger.wav", out AudioClip ac);
+            //AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
+            //audios.PlayOneShot(ac);
         }
 
         public void StartTyphoon()
         {
             //Dung Crest cloud on slam
-            if (PlayerData.instance.equippedCharm_10)
+            if (true)//PlayerData.instance.equippedCharm_10)
             {
-                HollowPointPrefabs.SpawnObjectFromDictionary("Knight Dung Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                //GameObject dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                //dungCloud.name = "KnightSporeGas";
+                //dungCloud.transform.localScale = new Vector3(1.75f, 1.75f, 0);
             }
             typhoonTimer = 25f;
         }
@@ -294,6 +296,15 @@ namespace HollowPoint
             Modding.Logger.Log("Spawning Typhoon");
             float degreeTotal = 0;
             float addedDegree = 180 / (explosionAmount + 1);
+
+            GameObject dungCloud;
+            for (int pulse = 0; pulse < 1; pulse++)
+            {
+                dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                dungCloud.transform.localScale = new Vector3(1.75f, 1.75f, 0);
+                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.2f); //DEFAULT: 0.15
+            }
+            yield break;
             for(; explosionAmount > 0; explosionAmount--)
             {
                 yield return new WaitForEndOfFrame();
@@ -313,8 +324,8 @@ namespace HollowPoint
 
         public void SwapWeapon()
         {
-            //Maybe transfer all of this to weapon control???
 
+     
             string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
             if (animName.Contains("Sit") || animName.Contains("Get Off") || !HeroController.instance.CanCast()) return;
 
@@ -357,12 +368,15 @@ namespace HollowPoint
 
         public void CanCastQC_SkipSpellReq()
         {
-            HeroController.instance.spellControl.SetState("QC");
+            //HeroController.instance.spellControl.SetState("QC");
+            //this stuff allows using spells on times youre NOT supposed to use it which is pretty busted
+            //forgot why i wrote this, i think it was for preventing soul consumption but i already manually removed that
         }
 
         public void CanCastQC()
         {
             //Modding.Logger.Log("Forcing Fireball");
+            //Modding.Logger.Log("[SpellControlOverride] Can Cast?  " + HeroController.instance.CanCast());
             if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0))
             {
                 spellControl.SetState("Inactive");
@@ -391,9 +405,13 @@ namespace HollowPoint
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
 
-            if(PlayerData.instance.MPCharge < soulCost || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
-            {
+            if(PlayerData.instance.MPCharge < 33 || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            {       
                 HeroController.instance.spellControl.SetState("Inactive");
+            }
+            else
+            {
+                HeroController.instance.TakeMP(soulCost);
             }
         }
 
@@ -410,33 +428,6 @@ namespace HollowPoint
             HeroController.instance.TakeMP(soulCost);
             StartCoroutine(BurstShot(5));
             HeroController.instance.spellControl.SetState("Spell End");
-
-            /*
-            float directionMultiplier = (HeroController.instance.cState.facingRight) ? 1f : -1f;
-            float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
-            directionMultiplier *= wallClimbMultiplier;
-
-            float direction = OrientationHandler.finalDegreeDirection;
-            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-            GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
-            bullet.SetActive(true);
-            BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
-            hpbb.perfectAccuracy = true;
-            bullet.GetComponent<BoxCollider2D>().size *= 1.5f;
-            hpbb.bulletDegreeDirection = OrientationHandler.finalDegreeDirection;
-            hpbb.specialAttrib = "Explosion";
-            hpbb.bulletSpeedMult = 2;
-
-            HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite specialBulletTexture);
-            bullet.GetComponent<SpriteRenderer>().sprite = specialBulletTexture;
-
-            //HP_Sprites.StartMuzzleFlash(HP_DirectionHandler.finalDegreeDirection);
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-
-            PlayAudio("firerocket", true);
-            HollowPointSprites.StartGunAnims();
-            */
-
         }
 
         public IEnumerator BurstShot(int burst)
@@ -554,9 +545,9 @@ namespace HollowPoint
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.isFireSupportBullet = true;
                 hpbb.ignoreCollisions = true;
-                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(5, 7), -0.1f);
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(3f,6f), -0.1f);
                 shell.SetActive(true);
-                yield return new WaitForSeconds(0.8f);
+                yield return new WaitForSeconds(0.5f);
             }
         }
 

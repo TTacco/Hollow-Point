@@ -76,9 +76,10 @@ namespace HollowPoint
         {
             //Melee attack with the gun out
 
+
+           
             if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged && !isFiring && hc_instance.CanCast())
             {
-
                 if (InputHandler.Instance.inputActions.dreamNail.WasPressed)
                 {
                     //Log("Concussion Blast");
@@ -115,6 +116,16 @@ namespace HollowPoint
                         AudioHandler.PlaySoundsMisc("cantfire");
                     }
                 }
+            }
+            else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            {
+                if (Stats.canFire && OrientationHandler.heldAttack)
+                {
+                    Stats.StartBothCooldown();
+                    StartCoroutine(FireGAU());
+                    return;
+                }
+
             }
             else if (!isFiring)
             {
@@ -166,12 +177,6 @@ namespace HollowPoint
 
             float finalDegreeDirectionLocal = OrientationHandler.finalDegreeDirection;
 
-            if (airStrikeActive)
-            {
-                StartCoroutine(FireFlare());
-                return;
-            }
-
             if(fm == FireModes.Single)
             {
                 hc_instance.TakeMPQuick(2);
@@ -202,12 +207,12 @@ namespace HollowPoint
             }
 
             //Firing below will push the player up
-            float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 1;
+            float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 2;
 
             if (hc_instance.cState.wallSliding)
             StartCoroutine(KnockbackRecoil(2.5f * mult, 270));
 
-            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(2f * mult, 270));
+            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1.25f * mult, 270));
             else if (finalDegreeDirectionLocal < 350 && finalDegreeDirectionLocal > 190) StartCoroutine(KnockbackRecoil(0.07f*mult, 270));
         }
 
@@ -314,6 +319,7 @@ namespace HollowPoint
             isFiring = false;
         }
 
+        //Delete soon, this is pretty much unused
         public IEnumerator ConcussShot()
         {
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
@@ -435,6 +441,35 @@ namespace HollowPoint
             }
 
             yield return null;
+        }
+
+        public IEnumerator FireGAU()
+        {
+            isFiring = true;
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            float direction = (hc_instance.cState.facingRight)? 315 : 225;
+            DirectionalOrientation orientation = DirectionalOrientation.Diagonal;
+
+            for (int b = 0; b < 5; b++)
+            {
+                GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
+                HeatHandler.IncreaseHeat(1.5f);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.bulletOriginPosition = bullet.transform.position; //set the origin position of where the bullet was spawned
+                hpbb.specialAttrib = "DungExplosionSmall";
+                hpbb.bulletSpeedMult += 2.5f;
+
+                AudioHandler.PlayGunSounds("rifle");    
+                HollowPointSprites.StartGunAnims();
+                HollowPointSprites.StartFlash();
+                HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
+
+                Destroy(bullet, 1f);
+                yield return new WaitForSeconds(0.04f); //0.12f This yield will determine the time inbetween shots   
+            }
+
+            yield return new WaitForSeconds(0.02f);
+            isFiring = false;
         }
 
         public void OnDestroy()

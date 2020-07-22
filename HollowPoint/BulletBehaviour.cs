@@ -198,6 +198,7 @@ namespace HollowPoint
            // Log("[BulletBehaviour] Col Name" + col.name);
             if(col.gameObject.name.Contains("Idle") || hm != null)
             {
+                HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
                 Destroy(gameObject);
                 return;
@@ -363,9 +364,9 @@ namespace HollowPoint
 
             if (specialAttrib.Contains("Explosion") && PlayerData.instance.equippedCharm_17)
             {
-                HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
-                GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
-                sporeCloudGO.SetActive(true);
+                //HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
+                //GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                //sporeCloudGO.SetActive(true);
             }
 
             if (specialAttrib.Contains("DungExplosion"))
@@ -377,7 +378,7 @@ namespace HollowPoint
 
                 if (specialAttrib.Contains("Small"))
                 {
-                    dungExplosionGO.transform.localScale = new Vector3(0.75f, 0.75f, 0);
+                    dungExplosionGO.transform.localScale = new Vector3(0.25f, 0.25f, 0);
                 }
             }
 
@@ -387,11 +388,11 @@ namespace HollowPoint
                 GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.name += " KnightMadeExplosion";
 
-                if (true)
+                if (false)
                 {
-                    for (int shrap = 0; shrap < 5; shrap++)
+                    for (int shrap = 0; shrap <= 5; shrap++)
                     {
-                        GameObject bul = HollowPointPrefabs.SpawnBulletAtCoordinate(rand.Next(0, 360), gameObject.transform.position, 4);
+                        GameObject bul = HollowPointPrefabs.SpawnBulletAtCoordinate(rand.Next(0, 360), gameObject.transform.position, 6);
                         bul.GetComponent<BulletBehaviour>().specialAttrib = "DungExplosion";
                     }
                 }
