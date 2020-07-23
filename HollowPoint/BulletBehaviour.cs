@@ -162,8 +162,10 @@ namespace HollowPoint
             //float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
             float radian = (float)(degree * Math.PI / 180);
 
-            xDeg = bulletSpeed * Math.Cos(radian);
-            yDeg = bulletSpeed * Math.Sin(radian);
+            xDeg = bulletSpeed * Math.Cos(radian) * bulletSpeedMult;
+            yDeg = bulletSpeed * Math.Sin(radian) * bulletSpeedMult;
+
+
 
             //Changes the degree of bullet sprite rotation and the bullet direction when wall sliding
             if (HeroController.instance.cState.wallSliding)
@@ -378,7 +380,7 @@ namespace HollowPoint
 
                 if (specialAttrib.Contains("Small"))
                 {
-                    dungExplosionGO.transform.localScale = new Vector3(0.25f, 0.25f, 0);
+                    dungExplosionGO.transform.localScale = new Vector3(0.6f, 0.6f, 0);
                 }
             }
 

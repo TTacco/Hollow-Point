@@ -17,8 +17,9 @@ namespace HollowPoint
         */
 
         private GameObject directionalFireModeHudIcon;
+        private GameObject adrenalineHudIcon;
         private Dictionary<string, Sprite> hudSpriteDictionary = new Dictionary<string, Sprite>();
-        private readonly string[] texturenames = { "hudicon_omni.png", "hudicon_cardinal.png"};
+        private readonly string[] textureNames = { "hudicon_omni.png", "hudicon_cardinal.png", "hudicon_adrenaline5.png" };
 
         void Start()
         {
@@ -26,33 +27,51 @@ namespace HollowPoint
             var prefab = GameManager.instance.inventoryFSM.gameObject.FindGameObjectInChildren("Geo");
             var hudCanvas = GameObject.Find("_GameCameras").FindGameObjectInChildren("HudCamera").FindGameObjectInChildren("Hud Canvas");
 
-            foreach (var texture in texturenames)
+            foreach (var textureName in textureNames)
             {
-                var shardTex = LoadAssets.spriteDictionary[texture];
+                var shardTex = LoadAssets.spriteDictionary[textureName];
                 var shardSprite = Sprite.Create(shardTex, new Rect(0, 0, shardTex.width, shardTex.height), new Vector2(0.5f, 0.5f));
-                hudSpriteDictionary.Add(texture, shardSprite);
+                hudSpriteDictionary.Add(textureName, shardSprite);
             }
 
             Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", Stats.currentPrimaryAmmo.ToString(), prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
+            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
+            adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline5.png"], new Vector3(3.6f, 11.4f));
 
-            Stats.ShardAmountChanged += ShardChangedText;
+            Stats.FireModeIcon += UpdateFireModeIcon;
+            Stats.AdrenalineIcon += UpdateAdrenalineIcon;
         }
 
-        private void ShardChangedText(string firemode)
+        private void UpdateFireModeIcon(string firemode)
         {
             try
             {
-                var shardText = directionalFireModeHudIcon.GetComponent<DisplayItemAmount>().textObject;
+                var fireModeText = directionalFireModeHudIcon.GetComponent<DisplayItemAmount>().textObject;
                 directionalFireModeHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
                 Color color = new Color(0.55f, 0.55f, 0.55f);
-                StartCoroutine(BadAnimation(shardText, "", color));
+                StartCoroutine(BadAnimation(fireModeText, "", color));
             }
             catch(Exception e)
             {
-                Modding.Logger.Log("[HudController] Exception in ShardChangedText() Method");
+                Modding.Logger.Log("[HudController] Exception in UpdateFireModeIcon() Method");
+            }
+
+        }
+
+        private void UpdateAdrenalineIcon(string adrenalineLevel)
+        {
+            try
+            {
+                var AdrenalineText = adrenalineHudIcon.GetComponent<DisplayItemAmount>().textObject;
+                adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[adrenalineLevel];
+                Color color = Color.red;
+                StartCoroutine(BadAnimation(AdrenalineText, "V", color));
+            }
+            catch (Exception e)
+            {
+                Modding.Logger.Log("[HudController] Exception in UpdateAdrenalineIcon() Method");
             }
 
         }
@@ -62,7 +81,7 @@ namespace HollowPoint
             shardText.text = amount;
             shardText.color = color;         
             yield return new WaitForSeconds(0.8f);
-            shardText.color = Color.white;
+            //shardText.color = Color.white;
 
         }
 
@@ -80,6 +99,6 @@ namespace HollowPoint
         }
 
         void Destroy()
-            => Stats.ShardAmountChanged -= ShardChangedText;
+            => Stats.FireModeIcon -= UpdateFireModeIcon;
     }
 }

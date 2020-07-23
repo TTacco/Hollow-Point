@@ -121,7 +121,7 @@ namespace HollowPoint
             {
                 if (Stats.canFire && OrientationHandler.heldAttack)
                 {
-                    Stats.StartBothCooldown();
+                    Stats.StartBothCooldown(30f);
                     StartCoroutine(FireGAU());
                     return;
                 }
@@ -175,8 +175,6 @@ namespace HollowPoint
             if (isFiring) return;
             isFiring = true;
 
-            float finalDegreeDirectionLocal = OrientationHandler.finalDegreeDirection;
-
             if(fm == FireModes.Single)
             {
                 hc_instance.TakeMPQuick(2);
@@ -207,13 +205,22 @@ namespace HollowPoint
             }
 
             //Firing below will push the player up
-            float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 2;
+            float mult = (PlayerData.instance.equippedCharm_31) ? 2 : 1;
 
+            float fireDegree = OrientationHandler.finalDegreeDirection;
             if (hc_instance.cState.wallSliding)
-            StartCoroutine(KnockbackRecoil(2.5f * mult, 270));
-
-            if (finalDegreeDirectionLocal == 270) StartCoroutine(KnockbackRecoil(1.25f * mult, 270));
-            else if (finalDegreeDirectionLocal < 350 && finalDegreeDirectionLocal > 190) StartCoroutine(KnockbackRecoil(0.07f*mult, 270));
+            {
+                StartCoroutine(KnockbackRecoil(3 * mult, 270));
+                return;
+            }
+            else if (fireDegree == 270)
+            {
+                StartCoroutine(KnockbackRecoil(3 * mult, 270));
+            }
+            else if (fireDegree < 350 && fireDegree > 190)
+            {
+                StartCoroutine(KnockbackRecoil(0.07f * mult, 270));
+            }
         }
 
         public IEnumerator SingleShot()
@@ -252,7 +259,6 @@ namespace HollowPoint
             yield return new WaitForSeconds(0.02f);
             isFiring = false;
         }
-        
 
         public IEnumerator BurstShot(int burst)
         {
@@ -271,7 +277,7 @@ namespace HollowPoint
                 HollowPointSprites.StartGunAnims();
                 HollowPointSprites.StartFlash();
                 HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-                yield return new WaitForSeconds(0.1f); //0.12f This yield will determine the time inbetween shots   
+                yield return new WaitForSeconds(0.08f); //0.12f This yield will determine the time inbetween shots   
 
                 if (h_state.dashing) break;
             }
@@ -372,30 +378,6 @@ namespace HollowPoint
             isFiring = false;
         }
 
-        public IEnumerator FireFlare()
-        {
-            airStrikeActive = false;
-            Stats.currentPrimaryAmmo -= 1;
-            SpellControlOverride.artifactActivatedEffect.SetActive(false);
-
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-
-            float direction = OrientationHandler.finalDegreeDirection;
-            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-            GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
-            AudioHandler.PlayGunSounds("flare");
-
-            BulletBehaviour bullet_behaviour = bullet.GetComponent<BulletBehaviour>();
-            bullet_behaviour.flareRound = true;
-
-            HollowPointSprites.StartGunAnims();
-            HollowPointSprites.StartFlash();
-            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-
-            yield return new WaitForSeconds(0.04f);
-            isFiring = false;
-        }
-
         public IEnumerator KnockbackRecoil(float recoilStrength, float applyForceFromDegree)
         {
             //TODO: Develop the direction launch soon 
@@ -410,7 +392,7 @@ namespace HollowPoint
             xDeg = (xDeg == 0) ? 0 : xDeg;
             yDeg = (yDeg == 0) ? 0 : yDeg;
 
-            //HeroController.instance.cState.shroomBouncing = true;
+            HeroController.instance.cState.shroomBouncing = true;
             HeroController.instance.cState.recoiling = true;
 
             if (deg == 90 || deg == 270)
@@ -450,14 +432,14 @@ namespace HollowPoint
             float direction = (hc_instance.cState.facingRight)? 315 : 225;
             DirectionalOrientation orientation = DirectionalOrientation.Diagonal;
 
-            for (int b = 0; b < 5; b++)
+            for (int b = 0; b < 14; b++)
             {
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
                 HeatHandler.IncreaseHeat(1.5f);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 hpbb.bulletOriginPosition = bullet.transform.position; //set the origin position of where the bullet was spawned
                 hpbb.specialAttrib = "DungExplosionSmall";
-                hpbb.bulletSpeedMult += 2.5f;
+                hpbb.bulletSpeedMult += 1.5f;
 
                 AudioHandler.PlayGunSounds("rifle");    
                 HollowPointSprites.StartGunAnims();
@@ -465,7 +447,7 @@ namespace HollowPoint
                 HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
                 Destroy(bullet, 1f);
-                yield return new WaitForSeconds(0.04f); //0.12f This yield will determine the time inbetween shots   
+                yield return new WaitForSeconds(0.03f); //0.12f This yield will determine the time inbetween shots   
             }
 
             yield return new WaitForSeconds(0.02f);

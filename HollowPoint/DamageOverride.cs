@@ -221,16 +221,13 @@ namespace HollowPoint
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<BulletBehaviour>().bulletOriginPosition;   
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
 
-            var (damage, severity) = Stats.CalculateDamage(bulletOriginPosition, self.transform.position, hpbb);
+            int damage = Stats.CalculateDamage(bulletOriginPosition, self.transform.position, hpbb);
             int soulGainAmt = Stats.CalculateSoulGain();
 
             //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
-            if (!self.IsInvincible && (severity == DamageSeverity.Major || severity == DamageSeverity.Critical))
-            {
-                StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
-            }
+            StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
 
-            HealthManagerOverride.HitEnemy(self, damage, severity, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
+            HealthManagerOverride.HitEnemy(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
           
         }
 
@@ -259,7 +256,7 @@ namespace HollowPoint
         static System.Random soundRandom = new System.Random();
 
         // This function does damage to the enemy using the damage numbers given by the weapon type
-        public static void HitEnemy(HealthManager targetHP, int damageDealt, DamageSeverity ds, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
+        public static void HitEnemy(HealthManager targetHP, int damageDealt, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
         {
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
             if (targetHP == null) return;
@@ -319,7 +316,7 @@ namespace HollowPoint
             GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
             GameObject ImpactPrefab = targetHP.GetAttr<GameObject>("slashImpactPrefab");
             Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
-            if (HitPrefab != null && effectOrigin != null && !ds.Equals(DamageSeverity.Minor))
+            if (HitPrefab != null && effectOrigin != null)
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
@@ -329,23 +326,9 @@ namespace HollowPoint
             }
 
             SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
+            if (f != null) f.flashWhiteQuick();
 
-            switch (ds)
-            {
-                case DamageSeverity.Critical:
-                    damageDealt = (int)(damageDealt * 1.5f);
-                    if (f != null) f.FlashGrimmHit();
-                    break;
-                case DamageSeverity.Major:
-                    damageDealt = (int)(damageDealt * 1f);
-                    if (f != null) f.flashWhiteQuick();
-                    break;
-                case DamageSeverity.Minor:
-                    damageDealt = (int)(damageDealt * .5f);
-                    if (f != null) f.flashWhiteQuick();
-                    break;
-            }
-            Log("SEVERITY: " + ds + " DAMAGE: " + damageDealt);
+            //Log("SEVERITY: " + ds + " DAMAGE: " + damageDealt);
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
@@ -366,8 +349,9 @@ namespace HollowPoint
             {
                 targetHP.hp -= damageDealt; // the actual damage          
 
-                int sg = (ds.Equals(DamageSeverity.Minor)) ? 0 : soulGain;
-                HeroController.instance.AddMPCharge(sg);
+                //int sg = (ds.Equals(DamageSeverity.Minor)) ? 0 : soulGain;
+                HeroController.instance.AddMPCharge(6);
+                Stats.IncreaseAdrenalinePoints(damageDealt);
             }
 
             // Trigger Kill animation
@@ -376,7 +360,8 @@ namespace HollowPoint
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip deadSound);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
                 targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
-                //HeroController.instance.AddMPCharge(3);
+                HeroController.instance.AddMPCharge(4);
+                GameManager.instance.FreezeMoment(1);
                 return;
             }
 
@@ -398,7 +383,6 @@ namespace HollowPoint
             /*
              * Uncomment below for a sick looking enter the gungeon style freeze frame or for camera shake.
              */
-            //GameManager.instance.FreezeMoment(1);
         }
 
         private static HealthManager getHealthManagerRecursive(GameObject target)

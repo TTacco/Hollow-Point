@@ -15,7 +15,10 @@ namespace HollowPoint
 {
     class Stats : MonoBehaviour
     {
-        public static event Action<string> ShardAmountChanged;
+        public static Stats instance = null;
+
+        public static event Action<string> FireModeIcon;
+        public static event Action<string> AdrenalineIcon;
 
         public static int fireSoulCost = 1;
         public static int burstSoulCost = 15;
@@ -48,6 +51,11 @@ namespace HollowPoint
         public static int soulGained = 0;
 
         public static bool hasActivatedAdrenaline = false;
+
+        //Adrenaline Rush Vars
+        private static int adrenalineRushLevel;
+        private static int adrenalineRushPoints;
+        private static float adrenalineRushTimer;
 
         int totalGeo = 0;
 
@@ -85,7 +93,11 @@ namespace HollowPoint
             Log("Default Dash Gravity " + hc_instance.DEFAULT_GRAVITY);
             //Log(am_instance.GetAttr<float>("Volume"));
 
-            //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
+            adrenalineRushLevel = 1;
+            adrenalineRushPoints = 0;
+            adrenalineRushTimer = 0;
+
+        //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
             ModHooks.Instance.FocusCostHook += FocusCost;
@@ -171,20 +183,12 @@ namespace HollowPoint
             AttackHandler.airStrikeActive = false;
             bulletSprite = "";
 
-            //Default Dash speeds
-            //default_dash_cooldown = 0.6f;
-            //default_dash_cooldown_charm = 0.4f;
-            //default_dash_speed = 20f;
-            //default_dash_speed_sharp = 28f;
-            //default_dash_time = 0.25f;
-            //default_gravity = 0.79f;
-
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 37f;
             burstSoulCost = 1;
-            fireRateCooldown = 4f; 
+            fireRateCooldown = 5f; 
             fireSoulCost = 5;
             heatPerShot = 0.7f;
             max_soul_regen = 25;
@@ -272,7 +276,12 @@ namespace HollowPoint
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
-            ShardAmountChanged?.Invoke("hudicon_omni.png");
+            FireModeIcon?.Invoke("hudicon_omni.png");
+            AdrenalineIcon?.Invoke("hudicon_adrenaline5.png");
+            //Adrenaline
+            //adrenalineRushLevel = 0;
+            //adrenalineRushPoints = 0;
+            //adrenalineRushTimer = 0;
         }
 
 
@@ -289,6 +298,19 @@ namespace HollowPoint
                 if(!canFire) canFire = true;
 
                 if (usingGunMelee) usingGunMelee = false;
+            }
+
+
+            if(adrenalineRushTimer < 0 && adrenalineRushLevel != 1)
+            {
+                Log("[Stats] Adrenaline DECREASED to " + (adrenalineRushLevel-1)); 
+                ChangeAdrenalineLevel(--adrenalineRushLevel);
+                adrenalineRushPoints = (int)(adrenalineRushPoints / 4f);
+                //Level down adrenaline
+            }
+            else if(adrenalineRushTimer > 0)
+            {
+                adrenalineRushTimer -= Time.deltaTime * 1f;
             }
 
             //actually put this on the weapon handler so its not called 24/7
@@ -324,32 +346,57 @@ namespace HollowPoint
             {
                 passiveSoulTimer -= Time.deltaTime * 30f;
             }
-            else if(currentPrimaryAmmo < 15) //pd_instance.MPCharge < max_soul_regen
+        }
+
+        public static void IncreaseAdrenalinePoints(int points)
+        {
+            int[] adrenalineLevelRequirement = { 0, 30, 45, 60, 75 };
+            adrenalineRushPoints += points;
+
+            if (adrenalineRushPoints > adrenalineLevelRequirement[adrenalineRushLevel])
             {
-                passiveSoulTimer = soulRegenTimer;
-                //IncreaseArtifactPower();
-                //HeroController.instance.AddMPCharge(1);
+                Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel + 1));
+                ChangeAdrenalineLevel(++adrenalineRushLevel);
+            }
+
+        }
+
+        private static void ChangeAdrenalineLevel(int adrenalineLevel)
+        {
+            switch (adrenalineLevel)
+            {
+                case 1:
+                    UpdateAdrenalineStats(2.5f, 0.6f, 0, -1);
+                    break;
+                case 2:
+                    UpdateAdrenalineStats(2.8f, 0.5f, 0, 10);
+                    break;
+                case 3:
+                    UpdateAdrenalineStats(3f, 0.42f, 0, 8);
+                    break;
+                case 4:
+                    UpdateAdrenalineStats(3.1f, 0.36f, 0, 6);
+                    break;
+                case 5:
+                    UpdateAdrenalineStats(3.2f, 0.32f, 0, 4);
+                    break;
             }
         }
 
-        public static (int, DamageSeverity) CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
+        static void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
         {
-            int dam = 2 + (PlayerData.instance.nailSmithUpgrades * 3);
-            DamageSeverity ds = DamageSeverity.Minor;
-            float distance = Vector3.Distance(bulletOriginPosition, enemyPosition);
-            //DamageSeverity ds = (distance >= 9) ? DamageSeverity.Minor : (distance >= 6) ? DamageSeverity.Major : DamageSeverity.Critical;
+            //Default Dash speeds default_dash_cooldown = 0.6f; default_dash_cooldown_charm = 0.4f; default_dash_speed = 20f; default_dash_speed_sharp = 28f; default_dash_time = 0.25f; default_gravity = 0.79f;
+            HeroController.instance.WALK_SPEED = runspeed;
+            HeroController.instance.DASH_COOLDOWN = dashcooldown;
 
-            if (distance <= 15)
-            {
-                ds = DamageSeverity.Major;
-            }
-            else
-            {
-                ds = DamageSeverity.Minor;
-            }
+            adrenalineRushTimer = timer;
+        }
 
 
-            return (dam, ds);
+        public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
+        {
+            int dam = 3 + (PlayerData.instance.nailSmithUpgrades * 3);
+            return dam;
         }
 
         public static int CalculateSoulGain()
@@ -362,7 +409,7 @@ namespace HollowPoint
         {
             cardinalFiringMode = !cardinalFiringMode;
             string firemodetext = (cardinalFiringMode) ? "hudicon_cardinal.png" : "hudicon_omni.png";
-            ShardAmountChanged?.Invoke(firemodetext);
+            FireModeIcon?.Invoke(firemodetext);
         }
 
         public static void DisplayAmmoCount()
@@ -370,13 +417,19 @@ namespace HollowPoint
 
         }
 
-        //Utility Methods
+        //Gun cooldown methods inbetween shots
         public static void StartBothCooldown()
         {
-            //Log("Starting cooldown");
             fireRateCooldownTimer = -1;
-            fireRateCooldownTimer = fireRateCooldown; // + WeaponSwapHandler.ExtraCooldown();
-            //fireRateCooldownTimer = 0.1f;
+            fireRateCooldownTimer = fireRateCooldown;
+            canFire = false;
+            recentlyFiredTimer = 60;
+        }
+
+        public static void StartBothCooldown(float overrideCooldown)
+        {
+            fireRateCooldownTimer = -1;
+            fireRateCooldownTimer = overrideCooldown; 
             canFire = false;
             recentlyFiredTimer = 60;
         }
