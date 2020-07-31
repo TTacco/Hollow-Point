@@ -253,6 +253,13 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\hudicon_adrenaline5.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\hudicon_adrenaline0.png" />
+    <EmbeddedResource Include="assets\hudicon_adrenaline1.png" />
+    <EmbeddedResource Include="assets\hudicon_adrenaline2.png" />
+    <EmbeddedResource Include="assets\hudicon_adrenaline3.png" />
+    <EmbeddedResource Include="assets\hudicon_adrenaline4.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "C:\Users\Personal\source\repos\HollowPoint\HollowPoint\bin\Debug\HollowPoint.dll" "C:\Games\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\Mods" /Y</PostBuildEvent>

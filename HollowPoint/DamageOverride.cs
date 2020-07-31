@@ -354,13 +354,14 @@ namespace HollowPoint
                 Stats.IncreaseAdrenalinePoints(damageDealt);
             }
 
-            // Trigger Kill animation
+            // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
             {
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip deadSound);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
                 targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
-                HeroController.instance.AddMPCharge(4);
+                HeroController.instance.AddMPCharge(3);
+                Stats.ExtendAdrenalineTime(2);
                 GameManager.instance.FreezeMoment(1);
                 return;
             }

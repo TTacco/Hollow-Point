@@ -19,7 +19,7 @@ namespace HollowPoint
         private GameObject directionalFireModeHudIcon;
         private GameObject adrenalineHudIcon;
         private Dictionary<string, Sprite> hudSpriteDictionary = new Dictionary<string, Sprite>();
-        private readonly string[] textureNames = { "hudicon_omni.png", "hudicon_cardinal.png", "hudicon_adrenaline5.png" };
+        private readonly string[] textureNames = { "hudicon_omni.png", "hudicon_cardinal.png", "hudicon_adrenaline0.png", "hudicon_adrenaline1.png", "hudicon_adrenaline2.png", "hudicon_adrenaline3.png", "hudicon_adrenaline4.png", "hudicon_adrenaline5.png" };
 
         void Start()
         {
@@ -38,7 +38,7 @@ namespace HollowPoint
 
             //you may change the name -----|                     
             directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
-            adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline5.png"], new Vector3(3.6f, 11.4f));
+            adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3.8f, 11.4f));
 
             Stats.FireModeIcon += UpdateFireModeIcon;
             Stats.AdrenalineIcon += UpdateAdrenalineIcon;
@@ -62,12 +62,37 @@ namespace HollowPoint
 
         private void UpdateAdrenalineIcon(string adrenalineLevel)
         {
+            string[] romanNumeral = { "...", "I", "II", "III", "IV", "V" };
             try
             {
                 var AdrenalineText = adrenalineHudIcon.GetComponent<DisplayItemAmount>().textObject;
-                adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[adrenalineLevel];
-                Color color = Color.red;
-                StartCoroutine(BadAnimation(AdrenalineText, "V", color));
+                //adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_adrenaline"+adrenalineLevel+".png"];
+                adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_adrenaline" + int.Parse(adrenalineLevel) + ".png"];
+                Color color = Color.grey;
+
+                switch (int.Parse(adrenalineLevel))
+                {
+                    case 1:
+                        color = new Color(0, 1f, 0); //186, 227, 39
+                        break;
+                    case 2:
+                        color = new Color(0.76f, 0.9f, 0.07f);
+                        break;
+                    case 3:
+                        color = Color.yellow;
+                        break;
+                    case 4:
+                        color = new Color(1f, 0.5f, 0);
+                        break;
+                    case 5:
+                        color = new Color(1f, 0, 0);
+                        break;
+                    default:
+                        color = Color.grey;
+                        break;
+                }
+
+                StartCoroutine(BadAnimation(AdrenalineText, " ", color));
             }
             catch (Exception e)
             {

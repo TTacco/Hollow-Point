@@ -93,7 +93,7 @@ namespace HollowPoint
             Log("Default Dash Gravity " + hc_instance.DEFAULT_GRAVITY);
             //Log(am_instance.GetAttr<float>("Volume"));
 
-            adrenalineRushLevel = 1;
+            adrenalineRushLevel = 0;
             adrenalineRushPoints = 0;
             adrenalineRushTimer = 0;
 
@@ -277,7 +277,8 @@ namespace HollowPoint
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
             FireModeIcon?.Invoke("hudicon_omni.png");
-            AdrenalineIcon?.Invoke("hudicon_adrenaline5.png");
+            //AdrenalineIcon?.Invoke("0");
+            ChangeAdrenalineLevel(0, false);
             //Adrenaline
             //adrenalineRushLevel = 0;
             //adrenalineRushPoints = 0;
@@ -301,11 +302,11 @@ namespace HollowPoint
             }
 
 
-            if(adrenalineRushTimer < 0 && adrenalineRushLevel != 1)
+            if(adrenalineRushTimer < 0 && adrenalineRushLevel != 0)
             {
                 Log("[Stats] Adrenaline DECREASED to " + (adrenalineRushLevel-1)); 
-                ChangeAdrenalineLevel(--adrenalineRushLevel);
-                adrenalineRushPoints = (int)(adrenalineRushPoints / 4f);
+                ChangeAdrenalineLevel(--adrenalineRushLevel, true);
+                adrenalineRushPoints = (int)(adrenalineRushPoints / 2f);
                 //Level down adrenaline
             }
             else if(adrenalineRushTimer > 0)
@@ -350,37 +351,75 @@ namespace HollowPoint
 
         public static void IncreaseAdrenalinePoints(int points)
         {
-            int[] adrenalineLevelRequirement = { 0, 30, 45, 60, 75 };
+            int[] adrenalineLevelRequirement = {0, 15, 25, 35, 50, 75 };
             adrenalineRushPoints += points;
 
             if (adrenalineRushPoints > adrenalineLevelRequirement[adrenalineRushLevel])
             {
+                adrenalineRushPoints = 0;
                 Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel + 1));
-                ChangeAdrenalineLevel(++adrenalineRushLevel);
+                ChangeAdrenalineLevel(++adrenalineRushLevel, false);
             }
 
         }
 
-        private static void ChangeAdrenalineLevel(int adrenalineLevel)
+        private static void ChangeAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer)
         {
+            AdrenalineIcon?.Invoke(adrenalineLevel.ToString());
+
+            float runspeed = 2.5f;
+            float dashcooldown = 0.6f;
+            int soulcost = 0;
+            float timer = -1;
+
             switch (adrenalineLevel)
             {
                 case 1:
-                    UpdateAdrenalineStats(2.5f, 0.6f, 0, -1);
+                    runspeed = 2.5f;
+                    dashcooldown = 0.55f;
+                    soulcost = 0;
+                    timer = 12;
                     break;
                 case 2:
-                    UpdateAdrenalineStats(2.8f, 0.5f, 0, 10);
+                    runspeed = 3f;
+                    dashcooldown = 0.45f;
+                    soulcost = 0;
+                    timer = 10;
                     break;
                 case 3:
-                    UpdateAdrenalineStats(3f, 0.42f, 0, 8);
+                    runspeed = 4f;
+                    dashcooldown = 0.32f;
+                    soulcost = 0;
+                    timer = 8;
                     break;
                 case 4:
-                    UpdateAdrenalineStats(3.1f, 0.36f, 0, 6);
+                    runspeed = 5f;
+                    dashcooldown = 0.27f;
+                    soulcost = 0;
+                    timer = 6;
                     break;
                 case 5:
-                    UpdateAdrenalineStats(3.2f, 0.32f, 0, 4);
+                    runspeed = 6f;
+                    dashcooldown = 0.22f;
+                    soulcost = 0;
+                    timer = 4;
                     break;
             }
+            timer = lowerAdrenalineTimer ? (timer/3): timer;
+
+            UpdateAdrenalineStats(runspeed, dashcooldown, soulcost, timer);
+        }
+
+        public static void ExtendAdrenalineTime(float time)
+        {
+            float[] extensionLimitByLevel = {-1, 10, 8, 6, 5, 4};
+
+            if(adrenalineRushLevel >= 1)
+            {
+                adrenalineRushTimer += time;
+                adrenalineRushTimer = Mathf.Clamp(adrenalineRushTimer, 0, extensionLimitByLevel[adrenalineRushLevel]);
+            }
+
         }
 
         static void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -395,7 +434,7 @@ namespace HollowPoint
 
         public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
-            int dam = 3 + (PlayerData.instance.nailSmithUpgrades * 3);
+            int dam = 3 + (PlayerData.instance.nailSmithUpgrades * 2);
             return dam;
         }
 
