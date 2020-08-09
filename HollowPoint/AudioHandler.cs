@@ -63,6 +63,28 @@ namespace HollowPoint
             }
         }
 
+        public static void PlayGunSounds(string gunName, float pitch)
+        {
+
+            try
+            {
+                LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
+                AudioSource audios = shootSFX.GetComponent<AudioSource>();
+                audios.clip = ac;
+                audios.pitch = pitch;
+                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
+
+                //Play subsonic WOOOP whenever you fire
+                //LoadAssets.sfxDictionary.TryGetValue("subsonicsfx.wav", out ac);
+                //audios.PlayOneShot(ac);
+
+            }
+            catch (Exception e)
+            {
+                Log("HP_AudioHandler.cs, cannot find the SFX " + gunName + " " + e);
+            }
+        }
+
         public static void PlaySoundsMisc(string soundName)
         {
             try
@@ -73,6 +95,24 @@ namespace HollowPoint
 
                 audios.clip = ac;
                 audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
+                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
+            }
+            catch (Exception e)
+            {
+                Log("HP_AudioHandler.cs, cannot find the SFX " + soundName + " " + e);
+            }
+        }
+
+        public static void PlaySoundsMisc(string soundName, float pitch)
+        {
+            try
+            {
+                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
+                AudioSource audios = emptyGunSFX.GetComponent<AudioSource>();
+
+                audios.clip = ac;
+                audios.pitch = pitch;
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
             catch (Exception e)

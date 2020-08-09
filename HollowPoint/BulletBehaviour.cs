@@ -156,7 +156,7 @@ namespace HollowPoint
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the value
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta; 
-            bulletPivot += bulletPivotDelta * rand.Next(3,7); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(5,9); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
 
             //float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();

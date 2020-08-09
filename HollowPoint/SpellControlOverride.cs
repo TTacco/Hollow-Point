@@ -296,7 +296,7 @@ namespace HollowPoint
             Modding.Logger.Log("Spawning Typhoon");
             float degreeTotal = 0;
             float addedDegree = 180 / (explosionAmount + 1);
-
+            AudioHandler.PlaySoundsMisc("divedetonate");
             GameObject dungCloud;
             for (int pulse = 0; pulse < 1; pulse++)
             {
@@ -429,6 +429,9 @@ namespace HollowPoint
             StartCoroutine(BurstShot(5));
             HeroController.instance.spellControl.SetState("Spell End");
         }
+
+        //========================================SECONDARY FIRE METHODS====================================
+
 
         public IEnumerator BurstShot(int burst)
         {

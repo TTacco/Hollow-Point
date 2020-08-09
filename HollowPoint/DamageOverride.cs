@@ -45,20 +45,12 @@ namespace HollowPoint
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
             Log("it fucking hurts oh god oh fuck");
+
+            Stats.Stats_TakeDamageEvent();
             if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
             {
                 Log("negating bomb damage weary");
                 //TODO: remove this because it sometimes causes the player to still receive damage when rocket jumping
-                if (!heroDamageCoroutineActive)
-                {
-                    heroDamageCoroutineActive = true;
-                    StartCoroutine(RocketJump(go));
-                    //HeroController.instance.GetAttr<HeroAudioController>("audioCtrl").PlaySound(GlobalEnums.HeroSounds.TAKE_HIT);
-                    //GameObject takeDam = HeroController.instance.GetAttr<GameObject>("takeHitDoublePrefab");
-                    //Instantiate(takeDam, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);  
-                    orig(self, go, damageSide, 0, hazardType);
-                    return;
-                }
             }
             //Adrenaline from fragile heart
 
@@ -190,6 +182,7 @@ namespace HollowPoint
 
             string srcName = hitInstance.Source.name;
             Log("[DamageOverride] Source Name is " + srcName);
+
             if (srcName.Contains("Gas"))
             {
                 //Explosion damage
@@ -201,6 +194,18 @@ namespace HollowPoint
             {
                 //Glowing Womblings
                 HeroController.instance.AddMPCharge(15);
+                orig(self, hitInstance);
+                return;
+            }
+            else if (srcName.Contains("Great Slash") || srcName.Contains("Dash Slash"))
+            {
+                Log("Player is nail art... ing?");
+                hitInstance.DamageDealt = 5;
+
+                float dir = (HeroController.instance.cState.facingRight) ? 180 : 0;
+                Stats.IncreaseAdrenalinePoints(35);
+                StartCoroutine(SplatterBlood(self.gameObject.transform.position, 10, dir));
+
                 orig(self, hitInstance);
                 return;
             }
@@ -225,21 +230,54 @@ namespace HollowPoint
             int soulGainAmt = Stats.CalculateSoulGain();
 
             //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
-            StartCoroutine(SplatterBlood(self.gameObject, 1, cardinalDirection * 90));
+            StartCoroutine(DamageOverTime(gameObject)); //damage enemy overtime
+            StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
 
             HealthManagerOverride.HitEnemy(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
           
         }
 
-        public static IEnumerator SplatterBlood(GameObject target, int repeat, float directionOfBlood)
+        public static IEnumerator SplatterBlood(Vector3 spawnPos, int repeat, float directionOfBlood)
         {
             for (int i = 0; i < repeat; i++)
             {
-                GameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, target.transform.position, Quaternion.identity);
+        
+                GameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, spawnPos, Quaternion.identity);
                 bloodSplat.transform.localScale = new Vector3(0.25f,0.25f, 0.1f);
                 bloodSplat.transform.Rotate(new Vector3(0, 0, directionOfBlood));
                 bloodSplat.SetActive(true);
             }
+            yield return new WaitForEndOfFrame();
+        }
+
+        public static HitInstance shrapnel = new HitInstance
+        {
+            DamageDealt = 3,
+            Multiplier = 1,
+            IgnoreInvulnerable = true,
+            CircleDirection = true,
+            IsExtraDamage = false,
+            Direction = 0,
+            MoveAngle = 180,
+            MoveDirection = false,
+            MagnitudeMultiplier = 1,
+            SpecialType = SpecialTypes.None,
+            AttackType = AttackTypes.Generic,
+        };
+
+        public static IEnumerator DamageOverTime(GameObject go)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                if (go == null)
+                {
+                    Log("[DamageOverride] Game Object/HealthManager null, cannot apply shrapnel");
+                    yield break;
+                }
+                HitTaker.Hit(go, shrapnel);
+                yield return new WaitForSeconds(1f);
+            }
+
             yield return new WaitForEndOfFrame();
         }
 
@@ -350,8 +388,12 @@ namespace HollowPoint
                 targetHP.hp -= damageDealt; // the actual damage          
 
                 //int sg = (ds.Equals(DamageSeverity.Minor)) ? 0 : soulGain;
-                HeroController.instance.AddMPCharge(6);
-                Stats.IncreaseAdrenalinePoints(damageDealt);
+                HeroController.instance.AddMPCharge(3);
+
+                if (Stats.canGainAdrenaline)
+                {
+                    Stats.IncreaseAdrenalinePoints(3);
+                }
             }
 
             // Trigger Enemy Kill
@@ -360,7 +402,7 @@ namespace HollowPoint
                 LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip deadSound);
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
                 targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
-                HeroController.instance.AddMPCharge(3);
+                HeroController.instance.AddMPCharge(Stats.MPChargeOnKill());
                 Stats.ExtendAdrenalineTime(2);
                 GameManager.instance.FreezeMoment(1);
                 return;

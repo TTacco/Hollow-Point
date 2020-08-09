@@ -20,7 +20,7 @@ namespace HollowPoint
         public static event Action<string> FireModeIcon;
         public static event Action<string> AdrenalineIcon;
 
-        public static int fireSoulCost = 1;
+        public static int soulCostPerShot = 1;
         public static int burstSoulCost = 15;
 
         const int DEFAULT_SINGLE_COST = 3;
@@ -56,6 +56,10 @@ namespace HollowPoint
         private static int adrenalineRushLevel;
         private static int adrenalineRushPoints;
         private static float adrenalineRushTimer;
+        private static float adrenalineFreezeTimer;
+        public static bool canGainAdrenaline;
+
+        private static float recentlyKilledTimer;
 
         int totalGeo = 0;
 
@@ -186,10 +190,10 @@ namespace HollowPoint
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 37f;
+            bulletVelocity = 35f;
             burstSoulCost = 1;
             fireRateCooldown = 5f; 
-            fireSoulCost = 5;
+            soulCostPerShot = 3;
             heatPerShot = 0.7f;
             max_soul_regen = 25;
             soulGained = 2;
@@ -214,7 +218,7 @@ namespace HollowPoint
             if (PlayerData.instance.equippedCharm_11)
             {
                 heatPerShot += 3f;
-                fireSoulCost += 7;
+                soulCostPerShot += 7;
                 fireRateCooldown += 6.5f;
                 bulletRange += -0.025f;
             }
@@ -225,7 +229,7 @@ namespace HollowPoint
                 bulletRange += 0.5f;
                 bulletVelocity += 15f;
                 heatPerShot -= 0.55f;
-                fireSoulCost += 5;
+                soulCostPerShot += 5;
                 fireRateCooldown += 3.75f;
                 walkSpeed += -1f;
             }
@@ -246,7 +250,7 @@ namespace HollowPoint
             //Charm 21 Soul Eater
             if (PlayerData.instance.equippedCharm_21)
             {
-                fireSoulCost -= 2;
+                soulCostPerShot -= 2;
                 max_soul_regen += 10;
                 soulGained += 2;
             }
@@ -261,7 +265,7 @@ namespace HollowPoint
             if (PlayerData.instance.equippedCharm_32)
             {
                 heatPerShot += 0.3f;
-                fireSoulCost += 1;
+                soulCostPerShot += 1;
                 fireRateCooldown -= 2.5f;
                 walkSpeed += -2.25f;
             }
@@ -272,17 +276,21 @@ namespace HollowPoint
             //Charm 37 Sprintmaster 
 
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
-            fireSoulCost = (fireSoulCost < 2) ? 2 : fireSoulCost;
+            soulCostPerShot = (soulCostPerShot < 2) ? 2 : soulCostPerShot;
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
             fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
 
             FireModeIcon?.Invoke("hudicon_omni.png");
             //AdrenalineIcon?.Invoke("0");
-            ChangeAdrenalineLevel(0, false);
+            SetAdrenalineLevel(0, false);
+            adrenalineFreezeTimer = 0;
+            canGainAdrenaline = true;
+            recentlyKilledTimer = 0;
             //Adrenaline
             //adrenalineRushLevel = 0;
             //adrenalineRushPoints = 0;
             //adrenalineRushTimer = 0;
+            HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 3f;
         }
 
 
@@ -301,11 +309,24 @@ namespace HollowPoint
                 if (usingGunMelee) usingGunMelee = false;
             }
 
+            if(recentlyKilledTimer >= 0)
+            {
+                recentlyKilledTimer -= Time.deltaTime * 1f;
+            }
+
+            if(adrenalineFreezeTimer > 0 && !canGainAdrenaline)
+            {
+                adrenalineFreezeTimer -= Time.deltaTime * 1f;
+                if(adrenalineFreezeTimer <= 0)
+                {
+                    canGainAdrenaline = true;
+                }
+            }
 
             if(adrenalineRushTimer < 0 && adrenalineRushLevel != 0)
             {
                 Log("[Stats] Adrenaline DECREASED to " + (adrenalineRushLevel-1)); 
-                ChangeAdrenalineLevel(--adrenalineRushLevel, true);
+                SetAdrenalineLevel(--adrenalineRushLevel, true);
                 adrenalineRushPoints = (int)(adrenalineRushPoints / 2f);
                 //Level down adrenaline
             }
@@ -358,12 +379,12 @@ namespace HollowPoint
             {
                 adrenalineRushPoints = 0;
                 Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel + 1));
-                ChangeAdrenalineLevel(++adrenalineRushLevel, false);
+                SetAdrenalineLevel(++adrenalineRushLevel, false);
             }
 
         }
 
-        private static void ChangeAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer)
+        private static void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer)
         {
             AdrenalineIcon?.Invoke(adrenalineLevel.ToString());
 
@@ -404,6 +425,12 @@ namespace HollowPoint
                     soulcost = 0;
                     timer = 4;
                     break;
+                default:
+                    runspeed = 2.5f;
+                    dashcooldown = 0.6f;
+                    soulcost = 0;
+                    timer = -1;
+                    break;
             }
             timer = lowerAdrenalineTimer ? (timer/3): timer;
 
@@ -422,6 +449,13 @@ namespace HollowPoint
 
         }
 
+        public static void Stats_TakeDamageEvent()
+        {
+            SetAdrenalineLevel(0, false);
+            adrenalineFreezeTimer = 5f;
+            canGainAdrenaline = false;
+        }
+
         static void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
         {
             //Default Dash speeds default_dash_cooldown = 0.6f; default_dash_cooldown_charm = 0.4f; default_dash_speed = 20f; default_dash_speed_sharp = 28f; default_dash_time = 0.25f; default_gravity = 0.79f;
@@ -431,6 +465,29 @@ namespace HollowPoint
             adrenalineRushTimer = timer;
         }
 
+        public static int MPChargeOnKill()
+        {
+            //prevent soul drain per shot
+            recentlyKilledTimer = 3f;
+            HeatHandler.currentHeat -= adrenalineRushLevel * 5;
+
+            int mpGainOnKill = 2;
+            //mpGainOnKill += (adrenalineRushLevel-2 > 0)? 1 : adrenalineRushLevel - 2;
+            mpGainOnKill += adrenalineRushLevel;
+
+            return mpGainOnKill;
+        }
+
+        public static int MPCostOnShot()
+        {
+            int mpCost = 2;
+            mpCost += (int)(HeatHandler.currentHeat / 33f);
+
+            //If the player has recently killed someone, prevent soul draining
+            mpCost *= (recentlyKilledTimer > 0) ? 0 : 1;
+
+            return mpCost;
+        }
 
         public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
