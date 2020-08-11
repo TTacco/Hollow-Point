@@ -48,6 +48,12 @@ namespace HollowPoint
                 Destroy(go);
             }
 
+            if (go.name.Contains("Weaverling") && !prefabDictionary.ContainsKey("Weaverling"))
+            {
+                prefabDictionary.Add("Weaverling", go);
+            }
+
+
             return go;
         }
 

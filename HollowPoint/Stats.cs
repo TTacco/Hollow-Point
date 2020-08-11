@@ -20,6 +20,9 @@ namespace HollowPoint
         public static event Action<string> FireModeIcon;
         public static event Action<string> AdrenalineIcon;
 
+        static Stack<int> extraWeavers = new Stack<int>();
+
+
         public static int soulCostPerShot = 1;
         public static int burstSoulCost = 15;
 
@@ -192,7 +195,7 @@ namespace HollowPoint
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 35f;
             burstSoulCost = 1;
-            fireRateCooldown = 5f; 
+            fireRateCooldown = 5.5f; 
             soulCostPerShot = 3;
             heatPerShot = 0.7f;
             max_soul_regen = 25;
@@ -326,7 +329,7 @@ namespace HollowPoint
             if(adrenalineRushTimer < 0 && adrenalineRushLevel != 0)
             {
                 Log("[Stats] Adrenaline DECREASED to " + (adrenalineRushLevel-1)); 
-                SetAdrenalineLevel(--adrenalineRushLevel, true);
+                SetAdrenalineLevel(--adrenalineRushLevel, true, increased: false);
                 adrenalineRushPoints = (int)(adrenalineRushPoints / 2f);
                 //Level down adrenaline
             }
@@ -378,16 +381,21 @@ namespace HollowPoint
             if (adrenalineRushPoints > adrenalineLevelRequirement[adrenalineRushLevel])
             {
                 adrenalineRushPoints = 0;
-                Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel + 1));
+
                 SetAdrenalineLevel(++adrenalineRushLevel, false);
+                Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel));
             }
 
         }
 
-        private static void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer)
+        private static void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer, bool increased = true)
         {
-            AdrenalineIcon?.Invoke(adrenalineLevel.ToString());
+            if (increased)
+            {
 
+            }
+
+            AdrenalineIcon?.Invoke(adrenalineLevel.ToString());
             float runspeed = 2.5f;
             float dashcooldown = 0.6f;
             int soulcost = 0;
@@ -449,9 +457,10 @@ namespace HollowPoint
 
         }
 
+        //TODO: can actually just merge this with ChangeAdrenaline
         public static void Stats_TakeDamageEvent()
         {
-            SetAdrenalineLevel(0, false);
+            SetAdrenalineLevel(0, false, increased: false);
             adrenalineFreezeTimer = 5f;
             canGainAdrenaline = false;
         }
@@ -467,6 +476,7 @@ namespace HollowPoint
 
         public static int MPChargeOnKill()
         {
+
             //prevent soul drain per shot
             recentlyKilledTimer = 3f;
             HeatHandler.currentHeat -= adrenalineRushLevel * 5;
@@ -485,7 +495,6 @@ namespace HollowPoint
 
             //If the player has recently killed someone, prevent soul draining
             mpCost *= (recentlyKilledTimer > 0) ? 0 : 1;
-
             return mpCost;
         }
 
@@ -506,11 +515,6 @@ namespace HollowPoint
             cardinalFiringMode = !cardinalFiringMode;
             string firemodetext = (cardinalFiringMode) ? "hudicon_cardinal.png" : "hudicon_omni.png";
             FireModeIcon?.Invoke(firemodetext);
-        }
-
-        public static void DisplayAmmoCount()
-        {
-
         }
 
         //Gun cooldown methods inbetween shots

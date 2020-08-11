@@ -172,7 +172,7 @@ namespace HollowPoint
             if (isFiring) return;
             isFiring = true;
 
-            if(fm == FireModes.Single)
+            if (fm == FireModes.Single)
             {
                 hc_instance.TakeMPQuick(Stats.MPCostOnShot());
                 //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
@@ -215,8 +215,9 @@ namespace HollowPoint
 
         public IEnumerator SingleShot()
         {
+
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            HeatHandler.IncreaseHeat(20f);
+            HeatHandler.IncreaseHeat(20f);      
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;

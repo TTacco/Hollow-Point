@@ -40,11 +40,20 @@ namespace HollowPoint
 
             On.HeroController.TakeDamage += PlayerDamaged;
             On.HealthManager.Hit += HealthManager_HitHook;
+            On.HealthManager.Die += HealthManager_Die;
         }
-   
+
+        private void HealthManager_Die(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion)
+        {
+            Log("ENEMY HAS DIED");
+
+
+            orig(self, attackDirection, attackType, ignoreEvasion);
+        }
+
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
-            Log("it fucking hurts oh god oh fuck");
+            Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
 
             Stats.Stats_TakeDamageEvent();
             if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
@@ -90,96 +99,13 @@ namespace HollowPoint
                 return;
             }
 
-
-
             orig(self, go, damageSide, damageAmount, hazardType);
-        }
-        
-        public IEnumerator RocketJump(GameObject damagerGO)
-        {
-            Log("Player has been damaged by " + damagerGO.name);
-            float explodeX = damagerGO.transform.position.x;
-            float explodeY = damagerGO.transform.position.y;
-
-            float knightX = HeroController.instance.transform.position.x;
-            float knightY = HeroController.instance.transform.position.y;
-
-            float slope = (explodeY - knightY) / (explodeX - knightX);
-
-            Log("The slope is " + slope);
-
-            float angle = (float) Math.Atan(slope);
-            angle  = (float) (angle * 180 / Math.PI);
-
-            Log("angle is " + angle);
-            StartCoroutine(LaunchTowardsAngle(10f, angle));
-
-            yield return new WaitForSeconds(1.2f);
-           Log("Coroutine has ended");
-            heroDamageCoroutineActive = false;
-        }
-
-        public IEnumerator LaunchTowardsAngle(float recoilStrength, float applyForceFromDegree)
-        {
-            //TODO: Develop the direction launch soon 
-
-            Rigidbody2D knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
-
-            float deg = applyForceFromDegree;
-            deg = Math.Abs(deg);
-            if (applyForceFromDegree < 100 && applyForceFromDegree > 80 )
-            {
-                deg = 90;
-
-            }
-
-            deg = deg % 360;
-
-            float radian = deg * Mathf.Deg2Rad;
-
-            float xDeg = (float)((4 * recoilStrength) * Math.Cos(radian));
-            float yDeg = (float)((4 * recoilStrength) * Math.Sin(radian));
-
-            xDeg = (xDeg == 0) ? 0 : xDeg;
-            yDeg = (yDeg == 0) ? 0 : yDeg;
-
-            HeroController.instance.cState.shroomBouncing = true;
-
-            if (deg == 90 || deg == 270)
-            {
-                knight.velocity = new Vector2(0, yDeg);
-                yield break;
-            }
-
-            if (HeroController.instance.cState.facingRight)
-            {
-                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
-                HeroController.instance.SetAttr<int>("recoilSteps", 0);
-                HeroController.instance.cState.recoilingLeft = true;
-                HeroController.instance.cState.recoilingRight = false;
-                HeroController.instance.SetAttr<bool>("recoilLarge", true);
-
-                knight.velocity = new Vector2(-xDeg, yDeg);
-            }
-            else
-            {
-                //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
-                HeroController.instance.SetAttr<int>("recoilSteps", 0);
-                HeroController.instance.cState.recoilingLeft = false;
-                HeroController.instance.cState.recoilingRight = true;
-                HeroController.instance.SetAttr<bool>("recoilLarge", true);
-
-                knight.velocity = new Vector2(xDeg, yDeg);
-            }
-
-            yield return null;
         }
 
         //Intercepts HealthManager's Hit method and allows me to override it with my own calculation
         public void HealthManager_HitHook(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
         {
             //Alternative hit damages from other sources like weaver or explosions 
-
             string srcName = hitInstance.Source.name;
             Log("[DamageOverride] Source Name is " + srcName);
 
@@ -229,12 +155,11 @@ namespace HollowPoint
             int damage = Stats.CalculateDamage(bulletOriginPosition, self.transform.position, hpbb);
             int soulGainAmt = Stats.CalculateSoulGain();
 
-            //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name);
-            StartCoroutine(DamageOverTime(gameObject)); //damage enemy overtime
+            //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name)
+            //StartCoroutine(DamageOverTime(self)); //damage enemy overtime
             StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
-
-            HealthManagerOverride.HitEnemy(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
-          
+            //HealthManagerOverride.DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);     
+            DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
         }
 
         public static IEnumerator SplatterBlood(Vector3 spawnPos, int repeat, float directionOfBlood)
@@ -250,51 +175,35 @@ namespace HollowPoint
             yield return new WaitForEndOfFrame();
         }
 
-        public static HitInstance shrapnel = new HitInstance
+        public static IEnumerator DamageOverTime(HealthManager hm)
         {
-            DamageDealt = 3,
-            Multiplier = 1,
-            IgnoreInvulnerable = true,
-            CircleDirection = true,
-            IsExtraDamage = false,
-            Direction = 0,
-            MoveAngle = 180,
-            MoveDirection = false,
-            MagnitudeMultiplier = 1,
-            SpecialType = SpecialTypes.None,
-            AttackType = AttackTypes.Generic,
-        };
+            //ParticleSystem fire = Instantiate(burnEffects, hm.transform.position, Quaternion.identity);      
 
-        public static IEnumerator DamageOverTime(GameObject go)
-        {
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 8; i++)
             {
-                if (go == null)
+                yield return new WaitForEndOfFrame();
+                if (hm == null)
                 {
-                    Log("[DamageOverride] Game Object/HealthManager null, cannot apply shrapnel");
+                    Log("[DamageOverride] Game Object/HealthManager null, cannot apply burning");
                     yield break;
                 }
-                HitTaker.Hit(go, shrapnel);
-                yield return new WaitForSeconds(1f);
+
+                hm.hp -= 2;
+                //ameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, hm.gameObject.transform.position, Quaternion.identity);
+                //bloodSplat.transform.localScale = new Vector3(0.25f, 0.25f, 0.1f);
+                //bloodSplat.SetActive(true);
+                SpriteFlash f = hm.gameObject.GetComponent<SpriteFlash>();
+                if (f != null) f.flashWhiteQuick();
+                if (hm.hp <= 0)
+                {
+                    EnemyDeathEvent(hm, 90, false);
+                    yield break;
+                }
+                yield return new WaitForSeconds(0.2f);
             }
-
-            yield return new WaitForEndOfFrame();
         }
 
-        public void OnDestroy()
-        {
-            On.HealthManager.Hit -= HealthManager_HitHook;
-            On.HeroController.TakeDamage -= PlayerDamaged;
-            Destroy(gameObject.GetComponent<DamageOverride>());
-        }
-    }
-
-    public static class HealthManagerOverride 
-    {
-        static System.Random soundRandom = new System.Random();
-
-        // This function does damage to the enemy using the damage numbers given by the weapon type
-        public static void HitEnemy(HealthManager targetHP, int damageDealt, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
+        public static void DamageEnemyOverride(HealthManager targetHP, int damageDealt, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
         {
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
             if (targetHP == null) return;
@@ -308,12 +217,7 @@ namespace HollowPoint
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
                 GameObject blockHit = blockHitPrefab.Spawn();
                 blockHit.transform.position = targetHP.transform.position;
-                blockHit.transform.Rotate(new Vector3(0,0,90 *cardinalDirection));
-                return;
-            }
-
-            if (damageDealt <= 0)
-            {
+                blockHit.transform.Rotate(new Vector3(0, 0, 90 * cardinalDirection));
                 return;
             }
             //bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
@@ -326,14 +230,12 @@ namespace HollowPoint
                return;
             }
             */
-
             if (targetHP.gameObject.name.Contains("Blocker")) //double damage baldurs
             {
                 damageDealt = damageDealt * 4;
             }
 
             Recoil recoil = targetHP.gameObject.GetComponent<Recoil>();
-
             //if (recoil != null && PlayerData.instance.equippedCharm_15)
             if (recoil != null)
             {
@@ -362,21 +264,16 @@ namespace HollowPoint
             {
                 ImpactPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
-
             SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
             if (f != null) f.flashWhiteQuick();
 
-            //Log("SEVERITY: " + ds + " DAMAGE: " + damageDealt);
-
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TOOK DAMAGE", false);
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "TAKE DAMAGE", false);
-
             FSMUtility.SendEventToGameObject(hitInstance.Source, "HIT LANDED", false);
             FSMUtility.SendEventToGameObject(hitInstance.Source, "DEALT DAMAGE", false);
 
             // Actually do damage to target.
-
-            LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + soundRandom.Next(1, 4) + ".wav", out AudioClip hurtSound);
+            LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + rand.Next(1, 4) + ".wav", out AudioClip hurtSound);
             HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(hurtSound);
 
             if (targetHP.damageOverride)
@@ -399,12 +296,7 @@ namespace HollowPoint
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
             {
-                LoadAssets.sfxDictionary.TryGetValue("enemydead" + soundRandom.Next(1, 4) + ".wav", out AudioClip deadSound);
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
-                targetHP.Die(cardinalDirection * 90, AttackTypes.Spell, true);
-                HeroController.instance.AddMPCharge(Stats.MPChargeOnKill());
-                Stats.ExtendAdrenalineTime(2);
-                GameManager.instance.FreezeMoment(1);
+                EnemyDeathEvent(targetHP, cardinalDirection, true);
                 return;
             }
 
@@ -415,35 +307,33 @@ namespace HollowPoint
                 targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
             }
 
-
-            PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component =>
-                component.FsmName == "Stun Control" || component.FsmName == "Stun");
-            if (stunControlFSM != null)
-            {
-                //stunControlFSM.SendEvent("STUN DAMAGE");
-            }
-
-            /*
-             * Uncomment below for a sick looking enter the gungeon style freeze frame or for camera shake.
-             */
+            PlayMakerFSM stunControlFSM = targetHP.gameObject.GetComponents<PlayMakerFSM>().FirstOrDefault(component => component.FsmName == "Stun Control" || component.FsmName == "Stun");
+            //if (stunControlFSM != null) stunControlFSM.SendEvent("STUN DAMAGE");
         }
 
-        private static HealthManager getHealthManagerRecursive(GameObject target)
+        public static void EnemyDeathEvent(HealthManager hm, float deathDirection, bool playCustomDeathSound)
         {
-            HealthManager targetHP = target.GetComponent<HealthManager>();
-            int i = 6;
-            while (targetHP == null && i > 0)
+            if (playCustomDeathSound)
             {
-                targetHP = target.GetComponent<HealthManager>();
-                if (target.transform.parent == null)
-                {
-                    return targetHP;
-                }
-                target = target.transform.parent.gameObject;
-                i--;
+                LoadAssets.sfxDictionary.TryGetValue("enemydead" + rand.Next(1, 4) + ".wav", out AudioClip deadSound);
+                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
             }
+            hm.Die(deathDirection * 90, AttackTypes.Spell, true);
+            HeroController.instance.AddMPCharge(Stats.MPChargeOnKill());
+            Stats.ExtendAdrenalineTime(2);
+            //GameManager.instance.FreezeMoment(1);
 
-            return targetHP;
+            //Log("Spawning Weavers");
+            //GameObject weaverPrefab = HollowPointPrefabs.prefabDictionary["Weaverling"];
+            //GameObject weaverClone = Instantiate(weaverPrefab, HeroController.instance.transform.position, Quaternion.identity);
+            //Destroy(weaverClone, 10f);
+        }
+
+        public void OnDestroy()
+        {
+            On.HealthManager.Hit -= HealthManager_HitHook;
+            On.HeroController.TakeDamage -= PlayerDamaged;
+            Destroy(gameObject.GetComponent<DamageOverride>());
         }
     }
 }
