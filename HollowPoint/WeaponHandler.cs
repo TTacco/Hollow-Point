@@ -15,11 +15,16 @@ namespace HollowPoint
     //===========================================================
     public class WeaponSwapHandler : MonoBehaviour
     {
-        public static WeaponType currentWeapon = WeaponType.Melee;
-        public static GunType currentGun = GunType.Primary;
+        public static WeaponSwapHandler instance = null;
 
-        public void Awake()
+        public WeaponType currentWeapon = WeaponType.Melee;
+        public GunType currentGun = GunType.Primary;
+
+        void Awake()
         {
+            if(instance == null) instance = this;
+            DontDestroyOnLoad(this);
+
             StartCoroutine(InitRoutine());
         }
 
@@ -41,7 +46,7 @@ namespace HollowPoint
         }
 
         //Swap inbetween primary and secondary guns
-        public static void SwapBetweenGun()
+        public void SwapBetweenGun()
         {
 
             GunType prevGun = currentGun;
@@ -51,7 +56,7 @@ namespace HollowPoint
         }
 
         //Swap between guns or nail
-        public static void SwapBetweenNail()
+        public void SwapBetweenNail()
         {
             WeaponType prevWep = currentWeapon;
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;

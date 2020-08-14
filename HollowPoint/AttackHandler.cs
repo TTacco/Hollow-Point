@@ -75,7 +75,7 @@ namespace HollowPoint
         public void Update()
         {
             //Melee attack with the gun out 
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged && !isFiring && hc_instance.CanCast())
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged && !isFiring && hc_instance.CanCast())
             {
                 if (InputHandler.Instance.inputActions.dreamNail.WasPressed)
                 {
@@ -114,7 +114,7 @@ namespace HollowPoint
                     }
                 }
             }
-            else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 if (Stats.canFire && OrientationHandler.heldAttack)
                 {
@@ -160,7 +160,7 @@ namespace HollowPoint
 
         public void OnSlash(On.NailSlash.orig_StartSlash orig, NailSlash self)
         {
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Melee)
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee)
             {
                 orig(self);
                 return;

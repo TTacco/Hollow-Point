@@ -134,8 +134,8 @@ namespace HollowPoint
             if (isWallClimbing) directionMultiplier *= -1;
 
             //fuck your standard naming conventions, if it works, it fucking works
-            float howFarTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
-            float howHighTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
+            float howFarTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
+            float howHighTheGunIsAwayFromTheKnightsBody = (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
 
             ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
             //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
@@ -256,7 +256,7 @@ namespace HollowPoint
                 gunSpriteGO.transform.SetPositionZ(0.01f);
             }
 
-            else if (WeaponSwapHandler.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
+            else if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
             {
                 gunSpriteGO.transform.SetRotationZ(-34); //-23 
                 gunSpriteGO.transform.SetPositionZ(0.01f);

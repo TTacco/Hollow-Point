@@ -155,7 +155,7 @@ namespace HollowPoint
 
         private bool HeroController_CanDreamNail(On.HeroController.orig_CanDreamNail orig, HeroController self)
         {
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged) return false;
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) return false;
 
             return orig(self); 
         }
@@ -186,7 +186,7 @@ namespace HollowPoint
 
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Melee)
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee)
                 return orig(self);
 
             return false;
@@ -376,7 +376,7 @@ namespace HollowPoint
             }
 
             //actually put this on the weapon handler so its not called 24/7
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
             {
                 hc_instance.ATTACK_DURATION = 0.0f;
                 hc_instance.ATTACK_DURATION_CH = 0f;

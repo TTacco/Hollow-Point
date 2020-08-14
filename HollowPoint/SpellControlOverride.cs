@@ -99,12 +99,6 @@ namespace HollowPoint
             {
                 typhoonTimer -= Time.deltaTime * 30f;
             }
-
-            if (infuseTimer > 0)
-            {
-                infuseTimer -= Time.deltaTime * 30f;
-            }
-
             //BUFFS TIMER HANDLERS
 
             if(buff_duration > 0)
@@ -323,8 +317,7 @@ namespace HollowPoint
 
         public void SwapWeapon()
         {
-
-     
+ 
             string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
             if (animName.Contains("Sit") || animName.Contains("Get Off") || !HeroController.instance.CanCast()) return;
 
@@ -340,7 +333,7 @@ namespace HollowPoint
             Modding.Logger.Log("Swaping weapons");
 
             AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 //Holster gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_holster.wav", out AudioClip ac);
@@ -351,14 +344,14 @@ namespace HollowPoint
                  * thus giving that weird head jerk anim playing on the knight
                 */
                 HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
-                WeaponSwapHandler.SwapBetweenNail();
+                WeaponSwapHandler.instance.SwapBetweenNail();
             }
             else
             {             
                 //Equip gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
                 audios.PlayOneShot(ac);
-                WeaponSwapHandler.SwapBetweenNail();
+                WeaponSwapHandler.instance.SwapBetweenNail();
             }
             isUsingGun = !isUsingGun;
 
@@ -382,7 +375,7 @@ namespace HollowPoint
                 return;
             }
 
-            if ((WeaponSwapHandler.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
+            if ((WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
                 grenadeCooldown = 30f;
 
@@ -392,7 +385,7 @@ namespace HollowPoint
 
                 //WeaponSwapHandler.SwapBetweenGun();
             }
-            else if (WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            else if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
@@ -404,7 +397,7 @@ namespace HollowPoint
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
 
-            if(PlayerData.instance.MPCharge < 33 || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            if(PlayerData.instance.MPCharge < 33 || WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {       
                 HeroController.instance.spellControl.SetState("Inactive");
             }
@@ -419,7 +412,7 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Inactive");
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 22 : 33;
-            if (WeaponSwapHandler.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
+            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
@@ -513,7 +506,7 @@ namespace HollowPoint
             }
 
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (PlayerData.instance.MPCharge < 99 || WeaponSwapHandler.currentWeapon == WeaponType.Ranged)
+            if (PlayerData.instance.MPCharge < 99 || WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 spellControl.SetState("Inactive");
             }
