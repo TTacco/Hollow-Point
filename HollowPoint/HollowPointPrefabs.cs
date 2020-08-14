@@ -36,12 +36,17 @@ namespace HollowPoint
         //On objects spawning on the world
         private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
         {
-            //Modding.Logger.Log(go.name);
+            Log(go.name);
             //if (go.name.Contains("Weaverling")) Destroy(go);
             //else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
             //{
             //    prefabDictionary.Add("Orbit Shield", go);
             //}
+
+            if (go.name.Contains("Hatchling") && !prefabDictionary.ContainsKey("Hatchling"))
+            {
+                prefabDictionary.Add("Hatchling", go);
+            }
 
             if (go.name.Contains("Grubberfly"))
             {
@@ -281,7 +286,7 @@ namespace HollowPoint
         {
             try
             {
-                HollowPointPrefabs.prefabDictionary.TryGetValue(key, out GameObject spawnedGO);
+                prefabDictionary.TryGetValue(key, out GameObject spawnedGO);
                 GameObject spawnedGO_Instance = Instantiate(spawnedGO, spawnPosition, rotation);
                 spawnedGO_Instance.SetActive(true);
                 return spawnedGO_Instance;

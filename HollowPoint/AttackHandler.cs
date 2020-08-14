@@ -205,7 +205,7 @@ namespace HollowPoint
             }
             else if (fireDegree == 270)
             {
-                StartCoroutine(KnockbackRecoil(3 * mult, 270));
+                StartCoroutine(KnockbackRecoil(4 * mult, 270));
             }
             else if (fireDegree < 350 && fireDegree > 190)
             {

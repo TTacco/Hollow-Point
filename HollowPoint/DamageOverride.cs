@@ -47,6 +47,7 @@ namespace HollowPoint
         {
             Log("ENEMY HAS DIED");
 
+            HollowPointPrefabs.SpawnObjectFromDictionary("Hatchling", self.transform.position, Quaternion.identity);
 
             orig(self, attackDirection, attackType, ignoreEvasion);
         }
@@ -158,7 +159,6 @@ namespace HollowPoint
             //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name)
             //StartCoroutine(DamageOverTime(self)); //damage enemy overtime
             StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
-            //HealthManagerOverride.DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);     
             DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
         }
 
@@ -283,16 +283,9 @@ namespace HollowPoint
             else
             {
                 targetHP.hp -= damageDealt; // the actual damage          
-
-                //int sg = (ds.Equals(DamageSeverity.Minor)) ? 0 : soulGain;
                 HeroController.instance.AddMPCharge(3);
-
-                if (Stats.canGainAdrenaline)
-                {
-                    Stats.IncreaseAdrenalinePoints(3);
-                }
+                if (Stats.canGainAdrenaline) Stats.IncreaseAdrenalinePoints(3);
             }
-
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
             {

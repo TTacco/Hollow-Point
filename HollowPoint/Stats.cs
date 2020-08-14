@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using static UnityEngine.Random;
 using static Modding.Logger;
@@ -13,6 +14,43 @@ using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
 {
+    //I have no idea why generic stacks wont even show up on my Generic classes so wtv. 
+    class ShitStack
+    {
+        List<GameObject> stack;
+        int position;
+
+        public ShitStack()
+        {
+            stack = new List<GameObject>();
+            position = -1;
+        }
+
+        public void Push(GameObject go)
+        {
+            stack.Add(go);
+            position++;
+        }
+
+        public GameObject Pop()
+        {
+            if (position == -1) return null;
+            GameObject poppedGO = stack[position];
+            stack.RemoveAt(position);
+            position--;
+            return poppedGO;
+        }
+
+        public GameObject[] PopAll()
+        {
+            GameObject[] allGO = stack.ToArray();
+            stack.Clear();
+            position = -1;
+            return allGO;
+        }
+
+    }
+
     class Stats : MonoBehaviour
     {
         public static Stats instance = null;
@@ -20,8 +58,7 @@ namespace HollowPoint
         public static event Action<string> FireModeIcon;
         public static event Action<string> AdrenalineIcon;
 
-        static Stack<int> extraWeavers = new Stack<int>();
-
+        //static ShitStack extraWeavers = new ShitStack();
 
         public static int soulCostPerShot = 1;
         public static int burstSoulCost = 15;

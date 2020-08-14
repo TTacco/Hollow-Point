@@ -280,7 +280,7 @@ namespace HollowPoint
                 //Mark target for fire support
                 if (flareRound)
                 {
-                    OffensiveFireSupport_Target(gameObject, null, false);
+
                     return;
                 }
                 Destroy(gameObject);
@@ -292,7 +292,7 @@ namespace HollowPoint
                 HeroController.instance.ResetAirMoves();
                 if (flareRound)
                 {
-                    OffensiveFireSupport_Target(gameObject, col.gameObject, true);
+
                     hm.Hit(bulletDummyHitInstance);
                     return;
                 }
@@ -310,30 +310,6 @@ namespace HollowPoint
             This method just ensures that theres a long enough lifespan on the bullet once it hits that it'll be able to
             deplete all the rounds
         */
-        public void OffensiveFireSupport_Target(GameObject fireSupportGO, GameObject enemyGO, bool trackTarget)
-        {
-
-            Vector3 pos = gameObject.transform.position;
-            Modding.Logger.Log("CALL AN AIR STRIKE AT THIS POSITION " + pos);
-
-            fireSupportGO.GetComponent<BoxCollider2D>().enabled = false; //If i dont disable the collider, itll keep colliding and keep calling fire support on wtv it collides on
-            fireSupportGO.GetComponent<SpriteRenderer>().enabled = false; //Just to make sure it stops showing up visually
-            fireSupportGO.GetComponent<Rigidbody2D>().velocity = new Vector2(0, 0); //Stop the bullet movement, so the line renderer wont show up
-            int totalShells = (PlayerData.instance.screamLevel > 1) ? 10 : 6;
-            //Modding.Logger.Log(enemyGO.transform == null);
-            if (trackTarget && enemyGO != null)
-            {
-                StartCoroutine(SpellControlOverride.StartSteelRain(enemyGO, totalShells));
-            }
-            else
-            {
-
-                StartCoroutine(SpellControlOverride.StartSteelRainNoTrack(pos, totalShells));
-            }
-
-            Destroy(fireSupportGO, 25f);
-        }
-
         public IEnumerator WallHitDust()
         {
             ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
