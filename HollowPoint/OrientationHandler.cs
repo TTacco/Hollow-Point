@@ -42,7 +42,7 @@ namespace HollowPoint
 
             if(finalDegreeDirection % 45 == 0) directionOrientation = DirectionalOrientation.Diagonal;
 
-            if (Stats.cardinalFiringMode)
+            if (Stats.instance.cardinalFiringMode)
             {
                 //If the player has activated cardinal only firing, disables diagonal degree direction
                 directionOrientation = DirectionalOrientation.Vertical;

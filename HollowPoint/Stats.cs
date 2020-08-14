@@ -60,8 +60,8 @@ namespace HollowPoint
 
         //static ShitStack extraWeavers = new ShitStack();
 
-        public static int soulCostPerShot = 1;
-        public static int burstSoulCost = 15;
+        public int soulCostPerShot = 1;
+        public int burstSoulCost = 15;
 
         const int DEFAULT_SINGLE_COST = 3;
         const int DEFAULT_BURST_COST = 1;
@@ -75,39 +75,36 @@ namespace HollowPoint
         float max_soul_regen = 33;
         float passiveSoulTimer = 3f;
 
-        public static float walkSpeed = 3f;
-        public static float fireRateCooldown = 5f;
-        public static float fireRateCooldownTimer = 5.75f;
+        public float walkSpeed = 3f;
+        public float fireRateCooldown = 5f;
+        public float fireRateCooldownTimer = 5.75f;
 
-        public static float bulletRange = 0;
-        public static float heatPerShot = 0;
-        public static float bulletVelocity = 0;
+        public float bulletRange = 0;
+        public float heatPerShot = 0;
+        public float bulletVelocity = 0;
 
-        public static bool canFire = false;
-        public static bool usingGunMelee = false;
-        public static bool cardinalFiringMode = false;
+        public bool canFire = false;
+        public bool usingGunMelee = false;
+        public bool cardinalFiringMode = false;
         static float recentlyFiredTimer = 60f;
 
-        public static int soulGained = 0;
+        public int soulGained = 0;
 
-        public static bool hasActivatedAdrenaline = false;
+        public bool hasActivatedAdrenaline = false;
 
         //Adrenaline Rush Vars
-        private static int adrenalineRushLevel;
-        private static int adrenalineRushPoints;
-        private static float adrenalineRushTimer;
-        private static float adrenalineFreezeTimer;
-        public static bool canGainAdrenaline;
+        private int adrenalineRushLevel;
+        private int adrenalineRushPoints;
+        private float adrenalineRushTimer;
+        private float adrenalineFreezeTimer;
+        public bool canGainAdrenaline;
 
-        private static float recentlyKilledTimer;
+        private float recentlyKilledTimer;
 
         int totalGeo = 0;
 
         //Dash float values
         public static int currentPrimaryAmmo;
-
-        public static string soundName = "";
-        public static string bulletSprite = "";
 
         public PlayerData pd_instance;
         public HeroController hc_instance;
@@ -115,6 +112,8 @@ namespace HollowPoint
 
         public void Awake()
         {
+            if (instance == null) instance = this;
+
             StartCoroutine(InitStats());
         }
 
@@ -225,7 +224,6 @@ namespace HollowPoint
         {
             Log("Charm Update Called");
             AttackHandler.airStrikeActive = false;
-            bulletSprite = "";
 
             //Initialise stats
             currentPrimaryAmmo = 10;
@@ -279,8 +277,8 @@ namespace HollowPoint
             //walkSpeed = (PlayerData.instance.equippedCharm_14) ? (walkSpeed) : walkSpeed;
 
             //Charm 16 Sharp Shadow and Fury of the fallen sprite changes
-            bulletSprite = (PlayerData.instance.equippedCharm_16) ? "shadebullet.png" : bulletSprite;
-            bulletSprite = (PlayerData.instance.equippedCharm_6) ? "furybullet.png" : bulletSprite;
+            //bulletSprite = (PlayerData.instance.equippedCharm_16) ? "shadebullet.png" : bulletSprite;
+            //bulletSprite = (PlayerData.instance.equippedCharm_6) ? "furybullet.png" : bulletSprite;
 
             //Charm 18 Long Nail
             bulletVelocity += (PlayerData.instance.equippedCharm_18) ? 20f : 0;
@@ -410,7 +408,7 @@ namespace HollowPoint
             }
         }
 
-        public static void IncreaseAdrenalinePoints(int points)
+        public void IncreaseAdrenalinePoints(int points)
         {
             int[] adrenalineLevelRequirement = {0, 15, 25, 35, 50, 75 };
             adrenalineRushPoints += points;
@@ -425,7 +423,7 @@ namespace HollowPoint
 
         }
 
-        private static void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer, bool increased = true)
+        private void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer, bool increased = true)
         {
             if (increased)
             {
@@ -482,7 +480,7 @@ namespace HollowPoint
             UpdateAdrenalineStats(runspeed, dashcooldown, soulcost, timer);
         }
 
-        public static void ExtendAdrenalineTime(float time)
+        public void ExtendAdrenalineTime(float time)
         {
             float[] extensionLimitByLevel = {-1, 10, 8, 6, 5, 4};
 
@@ -495,14 +493,14 @@ namespace HollowPoint
         }
 
         //TODO: can actually just merge this with ChangeAdrenaline
-        public static void Stats_TakeDamageEvent()
+        public void Stats_TakeDamageEvent()
         {
             SetAdrenalineLevel(0, false, increased: false);
             adrenalineFreezeTimer = 5f;
             canGainAdrenaline = false;
         }
 
-        static void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
+        void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
         {
             //Default Dash speeds default_dash_cooldown = 0.6f; default_dash_cooldown_charm = 0.4f; default_dash_speed = 20f; default_dash_speed_sharp = 28f; default_dash_time = 0.25f; default_gravity = 0.79f;
             HeroController.instance.WALK_SPEED = runspeed;
@@ -511,7 +509,7 @@ namespace HollowPoint
             adrenalineRushTimer = timer;
         }
 
-        public static int MPChargeOnKill()
+        public int MPChargeOnKill()
         {
 
             //prevent soul drain per shot
@@ -525,7 +523,7 @@ namespace HollowPoint
             return mpGainOnKill;
         }
 
-        public static int MPCostOnShot()
+        public int MPCostOnShot()
         {
             int mpCost = 2;
             mpCost += (int)(HeatHandler.currentHeat / 33f);
@@ -547,7 +545,7 @@ namespace HollowPoint
             return soul;
         }
 
-        public static void ToggleFireMode()
+        public void ToggleFireMode()
         {
             cardinalFiringMode = !cardinalFiringMode;
             string firemodetext = (cardinalFiringMode) ? "hudicon_cardinal.png" : "hudicon_omni.png";
@@ -555,7 +553,7 @@ namespace HollowPoint
         }
 
         //Gun cooldown methods inbetween shots
-        public static void StartBothCooldown()
+        public void StartBothCooldown()
         {
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = fireRateCooldown;
@@ -563,7 +561,7 @@ namespace HollowPoint
             recentlyFiredTimer = 60;
         }
 
-        public static void StartBothCooldown(float overrideCooldown)
+        public void StartBothCooldown(float overrideCooldown)
         {
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = overrideCooldown; 

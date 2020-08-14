@@ -82,28 +82,28 @@ namespace HollowPoint
                     //Log("Concussion Blast");
                     //Stats.StartBothCooldown();
                     //FireGun(FireModes.Concuss);
-                    Log("[AttackHandler] Changing Firemode from : " + Stats.cardinalFiringMode + " to : " + !Stats.cardinalFiringMode );
-                    Stats.ToggleFireMode();
+                    Log("[AttackHandler] Changing Firemode from : " + Stats.instance.cardinalFiringMode + " to : " + !Stats.instance.cardinalFiringMode );
+                    Stats.instance.ToggleFireMode();
                 }
-                else if (fireSpread && Stats.canFire)
+                else if (fireSpread && Stats.instance.canFire)
                 {
-                    Stats.StartBothCooldown();
+                    Stats.instance.StartBothCooldown();
                     FireGun(FireModes.Spread);
                     //FireGun(FireModes.Burst);
                     fireSpread = false;
                 }
-                else if(OrientationHandler.heldAttack && Stats.canFire)
+                else if(OrientationHandler.heldAttack && Stats.instance.canFire)
                 {
-                    Stats.StartBothCooldown();
+                    Stats.instance.StartBothCooldown();
                     FireGun(FireModes.Single);
                     //FireGun(FireModes.Burst);
                 }
-                else if (OrientationHandler.pressingAttack && Stats.canFire && false)
+                else if (OrientationHandler.pressingAttack && Stats.instance.canFire && false)
                 {
                     if (Stats.currentPrimaryAmmo > 0)
                     {
                         //HP_Stats.ReduceAmmunition();
-                        Stats.StartBothCooldown();
+                        Stats.instance.StartBothCooldown();
                         FireGun(FireModes.Spread);
                         //FireGun((PlayerData.instance.equippedCharm_11) ? FireModes.Spread : FireModes.Single);
                     }
@@ -116,9 +116,9 @@ namespace HollowPoint
             }
             else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
-                if (Stats.canFire && OrientationHandler.heldAttack)
+                if (Stats.instance.canFire && OrientationHandler.heldAttack)
                 {
-                    Stats.StartBothCooldown(30f);
+                    Stats.instance.StartBothCooldown(30f);
                     StartCoroutine(FireGAU());
                     return;
                 }
@@ -174,7 +174,7 @@ namespace HollowPoint
 
             if (fm == FireModes.Single)
             {
-                hc_instance.TakeMPQuick(Stats.MPCostOnShot());
+                hc_instance.TakeMPQuick(Stats.instance.MPCostOnShot());
                 //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
                 //HeroController.instance.WALK_SPEED = Stats.walkSpeed;
                 StartCoroutine(SingleShot());
@@ -182,13 +182,13 @@ namespace HollowPoint
             if (fm == FireModes.Burst)
             {
                 slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-                HeroController.instance.WALK_SPEED = Stats.walkSpeed;
+                HeroController.instance.WALK_SPEED = Stats.instance.walkSpeed;
                 StartCoroutine(BurstShot(3));
             }
             if (fm == FireModes.Spread)
             {
                 //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-                HeroController.instance.WALK_SPEED = Stats.walkSpeed;
+                HeroController.instance.WALK_SPEED = Stats.instance.walkSpeed;
                 StartCoroutine(SpreadShot(5));
                 //StartCoroutine(KnockbackRecoil(1f, finalDegreeDirectionLocal));
                 return;

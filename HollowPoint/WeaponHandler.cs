@@ -23,12 +23,12 @@ namespace HollowPoint
         void Awake()
         {
             if(instance == null) instance = this;
-            DontDestroyOnLoad(this);
+            //DontDestroyOnLoad(this);
 
-            StartCoroutine(InitRoutine());
+            StartCoroutine(InitWeaponSwapHandler());
         }
 
-        public IEnumerator InitRoutine()
+        public IEnumerator InitWeaponSwapHandler()
         {
             //Initialize all the ammunitions for each gun
             while (HeroController.instance == null)

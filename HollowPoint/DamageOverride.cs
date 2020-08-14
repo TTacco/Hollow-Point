@@ -56,7 +56,7 @@ namespace HollowPoint
         {
             Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
 
-            Stats.Stats_TakeDamageEvent();
+            Stats.instance.Stats_TakeDamageEvent();
             if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
             {
                 Log("negating bomb damage weary");
@@ -64,14 +64,14 @@ namespace HollowPoint
             }
             //Adrenaline from fragile heart
 
-            if (!Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1) && PlayerData.instance.equippedCharm_27)
+            if (!Stats.instance.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1) && PlayerData.instance.equippedCharm_27)
             {
-                Stats.hasActivatedAdrenaline = true;
+                Stats.instance.hasActivatedAdrenaline = true;
                 HeroController.instance.AddMPCharge(99);
                 orig(self, go, damageSide, 0, hazardType);
                 return;
             }
-            else if (!Stats.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1)) 
+            else if (!Stats.instance.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1)) 
             {
 
                 LoadAssets.sfxDictionary.TryGetValue("focussound.wav", out AudioClip ac);
@@ -88,7 +88,7 @@ namespace HollowPoint
                 dJumpFlash.transform.SetParent(HeroController.instance.transform);
                 Destroy(dJumpFlash, 0.5f);
 
-                Stats.hasActivatedAdrenaline = true;
+                Stats.instance.hasActivatedAdrenaline = true;
 
                 HeroController.instance.AddHealth(3);
                 orig(self, go, damageSide, 0, hazardType);
@@ -130,7 +130,7 @@ namespace HollowPoint
                 hitInstance.DamageDealt = 5;
 
                 float dir = (HeroController.instance.cState.facingRight) ? 180 : 0;
-                Stats.IncreaseAdrenalinePoints(35);
+                Stats.instance.IncreaseAdrenalinePoints(35);
                 StartCoroutine(SplatterBlood(self.gameObject.transform.position, 10, dir));
 
                 orig(self, hitInstance);
@@ -284,7 +284,7 @@ namespace HollowPoint
             {
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(3);
-                if (Stats.canGainAdrenaline) Stats.IncreaseAdrenalinePoints(3);
+                if (Stats.instance.canGainAdrenaline) Stats.instance.IncreaseAdrenalinePoints(3);
             }
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
@@ -312,8 +312,8 @@ namespace HollowPoint
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
             }
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
-            HeroController.instance.AddMPCharge(Stats.MPChargeOnKill());
-            Stats.ExtendAdrenalineTime(2);
+            HeroController.instance.AddMPCharge(Stats.instance.MPChargeOnKill());
+            Stats.instance.ExtendAdrenalineTime(2);
             //GameManager.instance.FreezeMoment(1);
 
             //Log("Spawning Weavers");

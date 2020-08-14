@@ -77,34 +77,28 @@ namespace HollowPoint
             //Increase the bullet size
             bc2d.size = new Vector2(1f, 0.65f);
 
-            //===================================REGULAR BULLET ATTRIBUTES=========================================
+            // +---| Bullet Sprite Swapper |---+
 
             //Bullet sprite changer
+            /*
             string sn = Stats.bulletSprite;
             if (sn != "" && false)
             {
                 HollowPointPrefabs.projectileSprites.TryGetValue(Stats.bulletSprite, out Sprite regularBulletSprite);
                 bulletSprite.sprite = regularBulletSprite;
             }
+            */
 
-            //Bullet Origin for Distance Calculation
+            // +---| Bullet Origin for Distance Calculation |---+
             bulletOriginPosition = gameObject.transform.position;
 
-            //Bullet Direction
+            // +---| Bullet Degree And Recoil |---+
             float heat = HeatHandler.currentHeat;
-            // heat -= (fm == HP_Enums.FireModes.Single && PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? -40 : 0 ;
-            // heat = (heat < 0)? 0 :  heat;
-
             noDeviation = (PlayerData.instance.equippedCharm_14);
             float deviationFromMovement = (noDeviation) ? 0 : SpreadDeviationControl.ExtraDeviation();
             float currentHeat = HeatHandler.currentHeat;
-
-            //Heat add basically dictates how high the multiplier will be depending on your heat level
-            //0-32 = 0.05 | 34-65 = 0.15 | 66 - 100 = 0.25  
             int heatCount = (int)(currentHeat / 33);
-
             float heatMult = 0.01f + (heatCount * 0.06f);
-            //float deviationFromHeat = (noHeat) ? 0 : (HeatHandler.currentHeat * heatMult); //old formula
             float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 2f)/500; //exponential
             deviationFromHeat *= (PlayerData.instance.equippedCharm_37) ? 1.25f : 1.15f; //Increase movement penalty when equipping sprint master
             deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
@@ -113,46 +107,26 @@ namespace HollowPoint
             deviation = Mathf.Clamp(deviation, 0, 14); //just set up the minimum value, bullets starts acting weird when deviation is negative
             //deviation = (deviation < 0) ? 0 : deviation; 
 
-            bulletSpeed = Stats.bulletVelocity;
-
-            //Bullet Sprite Size
+            // +---| Bullet Properties |---+
+            bulletSpeed = Stats.instance.bulletVelocity;
             float size = bulletSizeOverride;
 
-            //===================================FIRE SUPPORT=========================================
+            // +---| Air Strike Bullet Modifier |---+
             //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
             if (isFireSupportBullet)
             {
-                //bulletSprite.transform.Rotate(0, 0, 270);
                 //bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
                 HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
-
-                //gameObject.transform.localScale = new Vector3(1.2f, 1.2f, 0.90f);
                 bulletSprite.sprite = fireSupportBulletSprite;
                 bulletSpeed = 120;
-                //rb2d.velocity = new Vector2(0, -120);
-
-                //return;
-            }
-
-            if (flareRound)
-            {
-                //OFFENSIVE FIRE SUPPORT
-                HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite flareBulletTexture);
-                size *= 1.5f;
-
-                bulletSprite.sprite = flareBulletTexture;
-
             }
 
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
             gameObject.transform.localScale = new Vector3(size, size, 0.90f);
 
-            //Handles weapon spread
+            // +---| Bullet Spread and Recoil |---+
             //a moving pivot for where the bullet can spread, with its maximum and minimum deviation, this allows the bullet to
             //smoothly spread instead of being just random
-
-            //bulletPivot = (bulletPivot > deviation) ? deviation : (bulletPivot < deviation * -1)? deviation * -1 : bulletPivot; //Clamps the value
-            
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the value
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta; 
@@ -222,94 +196,8 @@ namespace HollowPoint
                 //Mark target for fire support
                 Destroy(gameObject);
             }
-
-            return;
-
-            if (col.gameObject.name.Contains("Idle"))
-            {
-                //Modding.Logger.Log("PV IS HIT");
-                HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-
-
-                if (pureVesselHM != null)
-                {
-                    hm = pureVesselHM;
-                }
-
-                Component[] pvc = col.gameObject.GetComponents<Component>();
-                Log("Components" + pvc);
-
-                foreach (Component c in pvc)
-                {
-                    Type type = c.GetType();
-
-                    //Transform BoxCollider2D DamageHero
-                    if (type.Name.Contains("Transform"))
-                    {
-                        Transform pvt = (Transform)c;
-                        Component[] parent_pvt = pvt.GetComponentsInParent(typeof(Component));
-
-                        foreach (Component cp in parent_pvt)
-                        {
-                            Type type_2 = cp.GetType();
-                            if (type_2.Name.Contains("HealthManager"))
-                            {
-                                hm = (HealthManager)cp;
-                                pureVesselHM = hm;
-                                break;
-                            }
-                        }
-                    }
-                    break;
-                }
-            }
-
-            if (hm == null && col.gameObject.layer.Equals(8))
-            {
-                StartCoroutine(WallHitDust());
-                if (col.gameObject.GetComponent<Breakable>() != null)
-                {
-                    Breakable br = col.gameObject.GetComponent<Breakable>();
-                    bulletDummyHitInstance.Direction = 270f;
-                    br.Hit(bulletDummyHitInstance);
-                }
-                //TODO: change this audio source location
-                LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
-                //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
-                HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
-                //Mark target for fire support
-                if (flareRound)
-                {
-
-                    return;
-                }
-                Destroy(gameObject);
-            }
-            //Damages the enemy and destroys the bullet
-            else if (hm != null)
-            {
-                HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-                HeroController.instance.ResetAirMoves();
-                if (flareRound)
-                {
-
-                    hm.Hit(bulletDummyHitInstance);
-                    return;
-                }
-                if (!pierce) Destroy(gameObject);
-                //hm.Hit(bulletDummyHitInstance);
-            }
         }
 
-        /* ======================================================FIRE SUPPORT OFFENSIVE TARGET===========================
-         * NOTE:
-            Heres the thing with this method
-                
-            Turns out if the game object that gets deleted, whatever coroutine they do also gets deleted
-            Which is why the coroutine only fires 1 round before destroying itself
-            This method just ensures that theres a long enough lifespan on the bullet once it hits that it'll be able to
-            deplete all the rounds
-        */
         public IEnumerator WallHitDust()
         {
             ParticleSystem wallDust = Instantiate(HeroController.instance.wallslideDustPrefab);
@@ -328,13 +216,10 @@ namespace HollowPoint
             v.enabled = false;
         }
 
-        public float DamageFalloffCalculation()
-        {
-            return 0f;
-        }
-
+        //TODO: Create an "explosion component" to spawn on destroy instead of creating the object at the Destroy of the bullet
         public void OnDestroy()
         {
+            
             bulletTrailClone.transform.parent = null;
             Destroy(bulletTrailClone, 1f); //just to make sure theres no lingering game objects in the background
 
@@ -365,15 +250,6 @@ namespace HollowPoint
             {
                 GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.name += " KnightMadeExplosion";
-
-                if (false)
-                {
-                    for (int shrap = 0; shrap <= 5; shrap++)
-                    {
-                        GameObject bul = HollowPointPrefabs.SpawnBulletAtCoordinate(rand.Next(0, 360), gameObject.transform.position, 6);
-                        bul.GetComponent<BulletBehaviour>().specialAttrib = "DungExplosion";
-                    }
-                }
 
                 //Shrinks the explosion when its not a fire support bullet or its not an upgraded vengeful, as a nerf/downgrade
                 if (isFireSupportBullet) SpellControlOverride.PlayAudio("mortarexplosion", true);
