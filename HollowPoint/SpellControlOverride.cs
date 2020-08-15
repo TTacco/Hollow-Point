@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+
 using UnityEngine;
 using System.Collections;
 using ModCommon.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using UnityEngine.SceneManagement;
 using static UnityEngine.Random ;
-using USceneManager = UnityEngine.SceneManagement.SceneManager;
+using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
 
 using MonoMod.Cil;
@@ -44,22 +42,51 @@ namespace HollowPoint
         public static GameObject artifactActivatedEffect;
         static GameObject infusionSoundGO;
 
-        private ILHook removeFocusCost;
+        private ILHook removeFocusCost = null;
 
-        public void Awake()
+        void Awake()
         {
             StartCoroutine(InitSpellControl());
 
-            //removeFocusCost = new ILHook(typeof(HeroController).GetNestedType("<DisableFocusCost>c__Iterator1F", BindingFlags.NonPublic | BindingFlags.Instance).GetMethod("TakeMP"), RemoveFocusSoulCost);
+            try
+            {
+                var method = typeof(HeroController).GetMethod("orig_Update", BindingFlags.NonPublic | BindingFlags.Instance);
+                removeFocusCost = new ILHook(method, RemoveFocusSoulCost);
+            }
+            catch (Exception e)
+            {
+                Log("SPELLCONTROLOVERRIDE EXCEPTION " + e);
+            }
         }
 
-        private static void RemoveFocusSoulCost(ILContext il)
+        static void RemoveFocusSoulCost(ILContext il)
         {
-            //var cursor = new ILCursor(il).Goto(0);
-            //cursor.TryGotoNext(out ILCursor[] cursors, x => x.MatchCallvirt(typeof(HeroController), "TakeMP"), x => x.MatchLdcI4(1));
+            Log("Removing Focus Cost");
 
-           // for (int i = cursors.Length - 1; i >= 0; i--)
+            try
+            {
+                var cursor = new ILCursor(il).Goto(0);
+                MethodInfo mi = typeof(HeroController).GetMethod("TakeMP");
+
+                cursor.GotoNext(moveType: MoveType.Before, x => x.MatchLdarg(0), x => x.MatchLdcI4(1), x => x.MatchCallvirt(mi));
+
+                for(int i = 0; i<3; i++) cursor.Remove();
+
+                //for (int i = cursor.Length - 1; i >= 0; i--)
+                //{
+                //    cursor[i].Remove();
+                //}
+            }
+            catch (Exception e)
+            {
+                Log("Remove Exception " + e);
+            }
+
+
+
+            //for (int i = cursors.Length - 1; i >= 0; i--)
                 //cursors[i].Remove();
+
         }
 
         void Update()
@@ -129,7 +156,7 @@ namespace HollowPoint
             {
                 yield return null;
             }
-      
+
             try
             {
                 //Makes hatchlings free

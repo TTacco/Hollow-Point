@@ -114,6 +114,8 @@ namespace HollowPoint
         {
             if (instance == null) instance = this;
 
+
+            Log("Intializing Stats ");
             StartCoroutine(InitStats());
         }
 
