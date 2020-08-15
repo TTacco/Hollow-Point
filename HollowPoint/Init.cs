@@ -34,7 +34,6 @@ namespace HollowPoint
             GameManager.instance.gameObject.AddComponent<HollowPointPrefabs>();
             GameManager.instance.gameObject.AddComponent<AttackHandler>();
             GameManager.instance.gameObject.AddComponent<OrientationHandler>();
-            GameManager.instance.gameObject.AddComponent<WeaponHandler>();
             GameManager.instance.gameObject.AddComponent<WeaponSwapHandler>();
             GameManager.instance.gameObject.AddComponent<UIHandler>();
             GameManager.instance.gameObject.AddComponent<DamageOverride>();

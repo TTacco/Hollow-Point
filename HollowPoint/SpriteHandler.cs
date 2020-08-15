@@ -548,7 +548,7 @@ namespace HollowPoint
             }
             catch(Exception e)
             {
-                Log("No sprite with the name " + weaponName + " was found");
+                Log("[SpriteHP_GunSpriteRenderer]No sprite with the name " + weaponName + " was found");
             }
         }
 

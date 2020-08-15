@@ -91,41 +91,7 @@ namespace HollowPoint
     }
 
 
-    //===========================================================
-    //Weapon Initializer
-    //===========================================================
-    class WeaponHandler : MonoBehaviour
-    {
-        //public static HP_Gun currentGun;
-        public static HP_Gun[] allGuns; 
 
-        public void Awake()
-        {
-            StartCoroutine(InitRoutine());
-        }
-
-        public IEnumerator InitRoutine()
-        {
-            //Initialize all the ammunitions for each gun
-            while (HeroController.instance == null)
-            {
-                yield return null;
-            }
-
-            allGuns = new HP_Gun[2];
-
-            allGuns[0] = new HP_Gun("Nail", 4, 9999, 9999, 0, "Nail", 2, 10, 1, 0.40f, 0, false, "Old Nail");
-            allGuns[1] = new HP_Gun("Rifle", 5, 9999, 9999, 20, "Weapon_RifleSprite.png", 4, 40, 60, 0.90f, 0.42f, false, "Primary Fire");
-            //Add an LMG and a flamethrower later
-
-            //currentGun = allGuns[0];
-        }
-
-        void OnDestroy()
-        {
-            Destroy(gameObject.GetComponent<WeaponHandler>());
-        }
-    }
 
     //===========================================================
     //Gun Struct

@@ -31,7 +31,7 @@ namespace HollowPoint
         float typhoonTimer = 20f;
         float infuseTimer = 20f;
 
-        PlayMakerFSM spellControl;
+        PlayMakerFSM spellControlFSM;
         static GameObject sharpFlash;
         public static GameObject focusBurstAnim;
 
@@ -63,29 +63,12 @@ namespace HollowPoint
         {
             Log("Removing Focus Cost");
 
-            try
-            {
-                var cursor = new ILCursor(il).Goto(0);
-                MethodInfo mi = typeof(HeroController).GetMethod("TakeMP");
+            var cursor = new ILCursor(il).Goto(0);
+            MethodInfo mi = typeof(HeroController).GetMethod("TakeMP");
 
-                cursor.GotoNext(moveType: MoveType.Before, x => x.MatchLdarg(0), x => x.MatchLdcI4(1), x => x.MatchCallvirt(mi));
+            cursor.GotoNext(moveType: MoveType.Before, x => x.MatchLdarg(0), x => x.MatchLdcI4(1), x => x.MatchCallvirt(mi));
 
-                for(int i = 0; i<3; i++) cursor.Remove();
-
-                //for (int i = cursor.Length - 1; i >= 0; i--)
-                //{
-                //    cursor[i].Remove();
-                //}
-            }
-            catch (Exception e)
-            {
-                Log("Remove Exception " + e);
-            }
-
-
-
-            //for (int i = cursors.Length - 1; i >= 0; i--)
-                //cursors[i].Remove();
+            for (int x = 0; x < 3; x++) cursor.Remove();
 
         }
 
@@ -159,48 +142,56 @@ namespace HollowPoint
 
             try
             {
+                spellControlFSM = HeroController.instance.spellControl;
+                nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
+
+
                 //Makes hatchlings free
                 glowingWombFSM = GameObject.Find("Charm Effects").LocateMyFSM("Hatchling Spawn");
                 glowingWombFSM.GetAction<IntCompare>("Can Hatch?", 2).integer2.Value = 0;
-                glowingWombFSM.GetAction<Wait>("Equipped", 0).time.Value = 2f;
+                glowingWombFSM.GetAction<Wait>("Equipped", 0).time.Value = 2.5f;
                 glowingWombFSM.RemoveAction("Hatch", 0); //Removes the soul consume on spawn
 
+                //Modifies Heal Amount, Heal Cost and Heal Speed
+                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 0).intValue = 3; //Heal Amt
+                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 2).intValue = 3; //Heal Amt w/ Shape of Unn
+                spellControlFSM.GetAction<GetPlayerDataInt>("Can Focus?", 1).storeValue = 0; //Heal Soul Cost Requirement
+                spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain UnCH").Value = 0.018f; //default: 0.0325
+                //spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain CH").Value = 0.01f;
+
+                //TODO: Get rid of the infusion stuff
                 infusionSoundGO = new GameObject("infusionSoundGO", typeof(AudioSource));
                 DontDestroyOnLoad(infusionSoundGO);
 
                 //Get focus burst and shade dash flash game objects to spawn later
                 focusBurstAnim = HeroController.instance.spellControl.FsmVariables.GetFsmGameObject("Focus Burst Anim").Value;
                 sharpFlash = HeroController.instance.spellControl.FsmVariables.GetFsmGameObject("SD Sharp Flash").Value;
-
                 //Instantiate(qTrail.Value, HeroController.instance.transform).SetActive(true);
 
-                spellControl = HeroController.instance.spellControl;
-                //spellControl.GetAction<GetPlayerDataInt>("Can Focus?", 1).storeValue = 0;
-                nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
-                FsmGameObject fsmgo = spellControl.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
+                FsmGameObject fsmgo = spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
                 fsmgo.Value.gameObject.transform.position = new Vector3(0, 0, 0);
                 fsmgo.Value.gameObject.transform.localPosition = new Vector3(0, -3, 0);
-                spellControl.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = fsmgo;
+                spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = fsmgo;
 
                 //Note some of these repeats because after removing an action, their index is pushed backwards to fill in the missing parts
-                spellControl.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
-                spellControl.RemoveAction("Scream Burst 1", 6);  // same
+                spellControlFSM.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
+                spellControlFSM.RemoveAction("Scream Burst 1", 6);  // ditto
 
-                spellControl.RemoveAction("Scream Burst 2", 7); //Same but for Scream 2
-                spellControl.RemoveAction("Scream Burst 2", 7); //Same
+                spellControlFSM.RemoveAction("Scream Burst 2", 7); //ditto but for Scream 2 (Abyss Shriek)
+                spellControlFSM.RemoveAction("Scream Burst 2", 7); //ditto
 
-                spellControl.RemoveAction("Level Check 2", 0); //removes the action that takes your soul when you slam
+                spellControlFSM.RemoveAction("Level Check 2", 0); //removes the action that takes your soul when you slam
 
-                spellControl.RemoveAction("Quake1 Land", 9); // Removes slam effect
-                spellControl.RemoveAction("Quake1 Land", 11); // removes pillars
+                spellControlFSM.RemoveAction("Quake1 Land", 9); // Removes slam effect
+                spellControlFSM.RemoveAction("Quake1 Land", 11); // removes pillars
 
-                spellControl.RemoveAction("Q2 Land", 11); //slam effects
+                spellControlFSM.RemoveAction("Q2 Land", 11); //slam effects
 
-                spellControl.RemoveAction("Q2 Pillar", 2); //pillars 
-                spellControl.RemoveAction("Q2 Pillar", 2); // "Q mega" no idea but removing it otherwise
+                spellControlFSM.RemoveAction("Q2 Pillar", 2); //pillars 
+                spellControlFSM.RemoveAction("Q2 Pillar", 2); // "Q mega" no idea but removing it otherwise
 
-                spellControl.InsertAction("Can Cast?", new CallMethod
+                spellControlFSM.InsertAction("Can Cast?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "SwapWeapon",
@@ -209,7 +200,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Can Cast? QC", new CallMethod
+                spellControlFSM.InsertAction("Can Cast? QC", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "CanCastQC",
@@ -218,7 +209,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Can Cast? QC", new CallMethod
+                spellControlFSM.InsertAction("Can Cast? QC", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "CanCastQC_SkipSpellReq",
@@ -231,7 +222,7 @@ namespace HollowPoint
                 //HeroController.instance.spellControl.RemoveAction("Can Cast? QC", 2);
 
 
-                spellControl.AddAction("Quake Antic", new CallMethod
+                spellControlFSM.AddAction("Quake Antic", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartQuake",
@@ -240,7 +231,7 @@ namespace HollowPoint
                 }
                 );
 
-                spellControl.AddAction("Quake1 Land", new CallMethod
+                spellControlFSM.AddAction("Quake1 Land", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartTyphoon",
@@ -249,7 +240,7 @@ namespace HollowPoint
                 }
                 );
 
-                spellControl.AddAction("Q2 Land", new CallMethod
+                spellControlFSM.AddAction("Q2 Land", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "StartTyphoon",
@@ -258,7 +249,7 @@ namespace HollowPoint
                 }
                 );
 
-                spellControl.InsertAction("Has Fireball?", new CallMethod
+                spellControlFSM.InsertAction("Has Fireball?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "SpawnFireball",
@@ -267,7 +258,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Has Scream?", new CallMethod
+                spellControlFSM.InsertAction("Has Scream?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "HasScream_HasFireSupportAmmo",
@@ -276,7 +267,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Has Quake?", new CallMethod
+                spellControlFSM.InsertAction("Has Quake?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "HasQuake_CanCastQuake",
@@ -285,7 +276,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Scream End", new CallMethod
+                spellControlFSM.InsertAction("Scream End", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "ScreamEnd",
@@ -294,7 +285,7 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.InsertAction("Scream End 2", new CallMethod
+                spellControlFSM.InsertAction("Scream End 2", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "ScreamEnd",
@@ -303,8 +294,8 @@ namespace HollowPoint
                 }
                 , 0);
 
-                spellControl.RemoveAction("Scream Burst 1", 3);
-                spellControl.RemoveAction("Scream Burst 2", 4);
+                spellControlFSM.RemoveAction("Scream Burst 1", 3);
+                spellControlFSM.RemoveAction("Scream Burst 2", 4);
 
                 DontDestroyOnLoad(artifactActivatedEffect);
 
@@ -398,7 +389,7 @@ namespace HollowPoint
             //Modding.Logger.Log("[SpellControlOverride] Can Cast?  " + HeroController.instance.CanCast());
             if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0))
             {
-                spellControl.SetState("Inactive");
+                spellControlFSM.SetState("Inactive");
                 return;
             }
 
@@ -407,14 +398,14 @@ namespace HollowPoint
                 grenadeCooldown = 30f;
 
                 //StartCoroutine(SpreadShot(1));
-                spellControl.SetState("Has Fireball?"); 
-                spellControl.SetState("Inactive");
+                spellControlFSM.SetState("Has Fireball?"); 
+                spellControlFSM.SetState("Inactive");
 
                 //WeaponSwapHandler.SwapBetweenGun();
             }
             else if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
-                spellControl.SetState("Inactive");
+                spellControlFSM.SetState("Inactive");
             }
         }
 
@@ -524,18 +515,10 @@ namespace HollowPoint
         public void HasScream_HasFireSupportAmmo()
         {
 
-            if (AttackHandler.airStrikeActive)
-            {
-                if(artifactActivatedEffect != null) spellControl.SetState("Inactive");
-                artifactActivatedEffect.SetActive(false);
-                AttackHandler.airStrikeActive = false;
-                return;
-            }
-
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
             if (PlayerData.instance.MPCharge < 99 || WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
-                spellControl.SetState("Inactive");
+                spellControlFSM.SetState("Inactive");
             }
         }
 

@@ -48,7 +48,6 @@ namespace HollowPoint
             position = -1;
             return allGO;
         }
-
     }
 
     class Stats : MonoBehaviour
@@ -58,54 +57,43 @@ namespace HollowPoint
         public static event Action<string> FireModeIcon;
         public static event Action<string> AdrenalineIcon;
 
-        //static ShitStack extraWeavers = new ShitStack();
-
-        public int soulCostPerShot = 1;
-        public int burstSoulCost = 15;
 
         const int DEFAULT_SINGLE_COST = 3;
         const int DEFAULT_BURST_COST = 1;
-
         const float DEFAULT_ATTACK_SPEED = 0.41f;
         const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
-
         const float DEFAULT_ANIMATION_SPEED = 0.35f;
         const float DEFAULT_ANIMATION_SPEED_CH = 0.28f;
-        float soulRegenTimer = 3f;
-        float max_soul_regen = 33;
-        float passiveSoulTimer = 3f;
 
+        //static ShitStack extraWeavers = new ShitStack();
+        public int soulCostPerShot = 1;
+        public int burstSoulCost = 15;
+        public float soulRegenTimer = 3f;
+        public float max_soul_regen = 33;
+        public float passiveSoulTimer = 3f;
         public float walkSpeed = 3f;
         public float fireRateCooldown = 5f;
         public float fireRateCooldownTimer = 5.75f;
-
         public float bulletRange = 0;
         public float heatPerShot = 0;
         public float bulletVelocity = 0;
-
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
+        public bool slowWalk = false;
         static float recentlyFiredTimer = 60f;
-
         public int soulGained = 0;
-
         public bool hasActivatedAdrenaline = false;
-
         //Adrenaline Rush Vars
         private int adrenalineRushLevel;
         private int adrenalineRushPoints;
         private float adrenalineRushTimer;
         private float adrenalineFreezeTimer;
         public bool canGainAdrenaline;
-
         private float recentlyKilledTimer;
-
         int totalGeo = 0;
-
         //Dash float values
         public static int currentPrimaryAmmo;
-
         public PlayerData pd_instance;
         public HeroController hc_instance;
         public AudioManager am_instance;
@@ -113,7 +101,6 @@ namespace HollowPoint
         public void Awake()
         {
             if (instance == null) instance = this;
-
 
             Log("Intializing Stats ");
             StartCoroutine(InitStats());
@@ -225,8 +212,6 @@ namespace HollowPoint
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
             Log("Charm Update Called");
-            AttackHandler.airStrikeActive = false;
-
             //Initialise stats
             currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
@@ -337,6 +322,15 @@ namespace HollowPoint
 
         void Update()
         {
+            if (slowWalk)
+            {
+                //h_state.inWalkZone = true;
+            }
+            else
+            {
+                //h_state.inWalkZone = false;
+            }
+
             if (fireRateCooldownTimer >= 0)
             {
                 fireRateCooldownTimer -= Time.deltaTime * 30f;
@@ -444,13 +438,13 @@ namespace HollowPoint
                     runspeed = 2.5f;
                     dashcooldown = 0.55f;
                     soulcost = 0;
-                    timer = 12;
+                    timer = -1;
                     break;
                 case 2:
                     runspeed = 3f;
                     dashcooldown = 0.45f;
                     soulcost = 0;
-                    timer = 10;
+                    timer = -1;
                     break;
                 case 3:
                     runspeed = 4f;
@@ -462,13 +456,13 @@ namespace HollowPoint
                     runspeed = 5f;
                     dashcooldown = 0.27f;
                     soulcost = 0;
-                    timer = 6;
+                    timer = 8;
                     break;
                 case 5:
                     runspeed = 6f;
                     dashcooldown = 0.22f;
                     soulcost = 0;
-                    timer = 4;
+                    timer = 8;
                     break;
                 default:
                     runspeed = 2.5f;
@@ -477,16 +471,16 @@ namespace HollowPoint
                     timer = -1;
                     break;
             }
-            timer = lowerAdrenalineTimer ? (timer/3): timer;
+            timer = lowerAdrenalineTimer ? (timer/2): timer;
 
             UpdateAdrenalineStats(runspeed, dashcooldown, soulcost, timer);
         }
 
         public void ExtendAdrenalineTime(float time)
         {
-            float[] extensionLimitByLevel = {-1, 10, 8, 6, 5, 4};
+            float[] extensionLimitByLevel = {-1, 10, 8, 8, 8, 8};
 
-            if(adrenalineRushLevel >= 1)
+            if(adrenalineRushLevel >= 2)
             {
                 adrenalineRushTimer += time;
                 adrenalineRushTimer = Mathf.Clamp(adrenalineRushTimer, 0, extensionLimitByLevel[adrenalineRushLevel]);
@@ -579,7 +573,11 @@ namespace HollowPoint
             ModHooks.Instance.SoulGainHook -= Instance_SoulGainHook;
             ModHooks.Instance.BlueHealthHook -= Instance_BlueHealthHook;
             On.HeroController.CanNailCharge -= HeroController_CanNailCharge;
+            On.HeroController.CanDreamNail -= HeroController_CanDreamNail;
             Destroy(gameObject.GetComponent<Stats>());
+            Destroy(this);
+            Destroy(instance);
+            //you just gotta be sure amirite
         }
         
     }

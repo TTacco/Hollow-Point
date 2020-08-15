@@ -20,11 +20,7 @@ namespace HollowPoint
         public static GameObject damageNumberTestGO;
 
         public static bool isFiring = false;
-        public static bool isBursting = false;
         public static bool slowWalk = false;
-        public static bool airStrikeActive = false; //Dictates this round will send determine if the bullet is an airstrike marker
-        public static bool fireSpread = false;
-
 
         static float slowWalkDisableTimer = 0;
         float clickTimer = 0;
@@ -45,7 +41,6 @@ namespace HollowPoint
 
             Destroy(go.GetComponent<HollowPointPrefabs>());
             Destroy(go.GetComponent<OrientationHandler>());
-            Destroy(go.GetComponent<WeaponHandler>());
             Destroy(go.GetComponent<WeaponSwapHandler>());
             Destroy(go.GetComponent<UIHandler>());
             Destroy(go.GetComponent<DamageOverride>());
@@ -84,13 +79,6 @@ namespace HollowPoint
                     //FireGun(FireModes.Concuss);
                     Log("[AttackHandler] Changing Firemode from : " + Stats.instance.cardinalFiringMode + " to : " + !Stats.instance.cardinalFiringMode );
                     Stats.instance.ToggleFireMode();
-                }
-                else if (fireSpread && Stats.instance.canFire)
-                {
-                    Stats.instance.StartBothCooldown();
-                    FireGun(FireModes.Spread);
-                    //FireGun(FireModes.Burst);
-                    fireSpread = false;
                 }
                 else if(OrientationHandler.heldAttack && Stats.instance.canFire)
                 {
