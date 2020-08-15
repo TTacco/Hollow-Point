@@ -57,7 +57,6 @@ namespace HollowPoint
         public static event Action<string> FireModeIcon;
         public static event Action<string> AdrenalineIcon;
 
-
         const int DEFAULT_SINGLE_COST = 3;
         const int DEFAULT_BURST_COST = 1;
         const float DEFAULT_ATTACK_SPEED = 0.41f;
@@ -98,6 +97,13 @@ namespace HollowPoint
         public HeroController hc_instance;
         public AudioManager am_instance;
 
+        //New Soul Cartridge System
+        int soulC_Charges;
+        int soulC_Energy;
+        float soulC_CooldownTimer;
+        float soulC_DecayTimer;
+        bool soulC_OnCooldown;
+
         public void Awake()
         {
             if (instance == null) instance = this;
@@ -132,7 +138,6 @@ namespace HollowPoint
         //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
-            ModHooks.Instance.FocusCostHook += FocusCost;
             ModHooks.Instance.LanguageGetHook += LanguageHook;
             ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
             ModHooks.Instance.BlueHealthHook += Instance_BlueHealthHook;
@@ -150,7 +155,7 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 2;
+            return 5;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -188,25 +193,14 @@ namespace HollowPoint
             string nodePath = "/TextChanges/Text[@name=\'" + key + "\']";
             XmlNode newText = LoadAssets.textChanges.SelectSingleNode(nodePath);
 
-
             if (newText == null)
             {
                 return txt;
             }
             //Modding.Logger.Log("NEW TEXT IS " + newText.InnerText);
-
             string replace = newText.InnerText.Replace("$", "<br><br>");
             replace = replace.Replace("#", "<page>");
             return replace;
-        }
-
-        private float FocusCost()
-        {
-            //return (float)PlayerData.instance.GetInt("MPCharge") / 35.0f;
-            recentlyFiredTimer = 60;
-            if (hasActivatedAdrenaline && PlayerData.instance.equippedCharm_23) return 3f;
-
-            return 1f;
         }
 
         public void CharmUpdate(PlayerData data, HeroController controller)
@@ -217,7 +211,7 @@ namespace HollowPoint
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
             bulletVelocity = 35f;
             burstSoulCost = 1;
-            fireRateCooldown = 5.5f; 
+            fireRateCooldown = 3.5f; 
             soulCostPerShot = 3;
             heatPerShot = 0.7f;
             max_soul_regen = 25;
@@ -307,7 +301,6 @@ namespace HollowPoint
 
             FireModeIcon?.Invoke("hudicon_omni.png");
             //AdrenalineIcon?.Invoke("0");
-            SetAdrenalineLevel(0, false);
             adrenalineFreezeTimer = 0;
             canGainAdrenaline = true;
             recentlyKilledTimer = 0;
@@ -316,6 +309,14 @@ namespace HollowPoint
             //adrenalineRushPoints = 0;
             //adrenalineRushTimer = 0;
             HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 3f;
+
+
+            //Cartridge
+            soulC_Charges = 0;
+            soulC_Energy = 0 ;
+            soulC_DecayTimer = 0;
+            soulC_CooldownTimer = 0;
+            soulC_OnCooldown = false;
         }
 
 
@@ -343,32 +344,7 @@ namespace HollowPoint
                 if (usingGunMelee) usingGunMelee = false;
             }
 
-            if(recentlyKilledTimer >= 0)
-            {
-                recentlyKilledTimer -= Time.deltaTime * 1f;
-            }
-
-            if(adrenalineFreezeTimer > 0 && !canGainAdrenaline)
-            {
-                adrenalineFreezeTimer -= Time.deltaTime * 1f;
-                if(adrenalineFreezeTimer <= 0)
-                {
-                    canGainAdrenaline = true;
-                }
-            }
-
-            if(adrenalineRushTimer < 0 && adrenalineRushLevel != 0)
-            {
-                Log("[Stats] Adrenaline DECREASED to " + (adrenalineRushLevel-1)); 
-                SetAdrenalineLevel(--adrenalineRushLevel, true, increased: false);
-                adrenalineRushPoints = (int)(adrenalineRushPoints / 2f);
-                //Level down adrenaline
-            }
-            else if(adrenalineRushTimer > 0)
-            {
-                adrenalineRushTimer -= Time.deltaTime * 1f;
-            }
-
+            return;
             //actually put this on the weapon handler so its not called 24/7
             if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
             {
@@ -388,112 +364,87 @@ namespace HollowPoint
             }       
         }
 
-
         void FixedUpdate()
         {
             if (hc_instance.cState.isPaused) return;
 
+            //Soul Cartridge Disable Cooldown Time
+            if(soulC_CooldownTimer > 0) soulC_CooldownTimer -= Time.deltaTime * 1f;
+            else if (soulC_OnCooldown)
+            {
+                ChangeCartridgeCharges(increase: true);
+                soulC_OnCooldown = false;          
+                Log("[Stats] Player is now off cooldown");
+            }  
+
+            //Soul Cartridge Decay
+            if (soulC_DecayTimer > 0) soulC_DecayTimer -= Time.deltaTime * 1f;
+            else if(soulC_Charges > 0) ChangeCartridgeCharges(increase: false);
+
             //Soul Gain Timer
-            if (recentlyFiredTimer >= 0)
-            {
-                recentlyFiredTimer -= Time.deltaTime * 30f;
-            }
-            else if (passiveSoulTimer > 0)
-            {
-                passiveSoulTimer -= Time.deltaTime * 30f;
-            }
-        }
-
-        public void IncreaseAdrenalinePoints(int points)
-        {
-            int[] adrenalineLevelRequirement = {0, 15, 25, 35, 50, 75 };
-            adrenalineRushPoints += points;
-
-            if (adrenalineRushPoints > adrenalineLevelRequirement[adrenalineRushLevel])
-            {
-                adrenalineRushPoints = 0;
-
-                SetAdrenalineLevel(++adrenalineRushLevel, false);
-                Log("[Stats] Adrenaline INCREASED to " + (adrenalineRushLevel));
-            }
+            if (recentlyFiredTimer >= 0) recentlyFiredTimer -= Time.deltaTime * 30f;
+            else if (passiveSoulTimer > 0) passiveSoulTimer -= Time.deltaTime * 30f;
 
         }
 
-        private void SetAdrenalineLevel(int adrenalineLevel, bool lowerAdrenalineTimer, bool increased = true)
+        public void IncreaseCartridgeEnergy()
         {
-            if (increased)
+            //If the player is on cooldown, disable soul gain
+            if (soulC_OnCooldown) return;
+            if (soulC_Charges == 0) 
             {
+                ChangeCartridgeCharges(increase: true);
+                soulC_Energy = 0;
+            } 
 
-            }
 
-            AdrenalineIcon?.Invoke(adrenalineLevel.ToString());
-            float runspeed = 2.5f;
-            float dashcooldown = 0.6f;
-            int soulcost = 0;
-            float timer = -1;
-
-            switch (adrenalineLevel)
+            int energyIncrease = 33; //Alter this value later
+            soulC_Energy += energyIncrease;
+            if (soulC_Energy > 100)
             {
-                case 1:
-                    runspeed = 2.5f;
-                    dashcooldown = 0.55f;
-                    soulcost = 0;
-                    timer = -1;
-                    break;
-                case 2:
-                    runspeed = 3f;
-                    dashcooldown = 0.45f;
-                    soulcost = 0;
-                    timer = -1;
-                    break;
-                case 3:
-                    runspeed = 4f;
-                    dashcooldown = 0.32f;
-                    soulcost = 0;
-                    timer = 8;
-                    break;
-                case 4:
-                    runspeed = 5f;
-                    dashcooldown = 0.27f;
-                    soulcost = 0;
-                    timer = 8;
-                    break;
-                case 5:
-                    runspeed = 6f;
-                    dashcooldown = 0.22f;
-                    soulcost = 0;
-                    timer = 8;
-                    break;
-                default:
-                    runspeed = 2.5f;
-                    dashcooldown = 0.6f;
-                    soulcost = 0;
-                    timer = -1;
-                    break;
+                ChangeCartridgeCharges(increase: true);
+                soulC_Energy = 0;
             }
-            timer = lowerAdrenalineTimer ? (timer/2): timer;
-
-            UpdateAdrenalineStats(runspeed, dashcooldown, soulcost, timer);
         }
 
-        public void ExtendAdrenalineTime(float time)
+        //Cartridge Level Details
+        /*  -1 = Empty State, has 0 charges, any energy increases automatically transitions to next level
+         *  0 = Currently in base charging state, timer is started, if timer runs out revert back 1 level
+         *  1 = same but now the player has 1 charge  || consuming heals 1 mask
+         *  2 = same but now the player has 2 charges || consuming heals 1 mask
+         *  3 = same but now the player has 3 charge  || consuming heals 3 mask
+         */
+        void ChangeCartridgeCharges(bool increase)
         {
-            float[] extensionLimitByLevel = {-1, 10, 8, 8, 8, 8};
+            soulC_Charges += (increase && soulC_Charges < 3) ? 1 : (!increase)? -1 : 0;
+            if(soulC_Charges > 0) soulC_DecayTimer = 10;
 
-            if(adrenalineRushLevel >= 2)
-            {
-                adrenalineRushTimer += time;
-                adrenalineRushTimer = Mathf.Clamp(adrenalineRushTimer, 0, extensionLimitByLevel[adrenalineRushLevel]);
-            }
+            Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
 
+            //Update the UI
+            AdrenalineIcon?.Invoke(soulC_Charges.ToString());
+        }
+
+        void ExtendCartridgeDecayTime(bool enemyKilled)
+        {
+            Log("[Stats] Extending Decay Time");
+            soulC_DecayTimer += (enemyKilled) ? 3: 1;
+            soulC_DecayTimer = (soulC_DecayTimer > 10) ? 10 : soulC_DecayTimer;
+        }
+
+        void ConsumeCartridge()
+        {
+            Log("[Stats] Consuming Cartridge");
+            soulC_Charges = 0;
+            soulC_OnCooldown = true;
+            soulC_CooldownTimer = 5f;
+            AdrenalineIcon?.Invoke(soulC_Charges.ToString());
         }
 
         //TODO: can actually just merge this with ChangeAdrenaline
         public void Stats_TakeDamageEvent()
         {
-            SetAdrenalineLevel(0, false, increased: false);
-            adrenalineFreezeTimer = 5f;
-            canGainAdrenaline = false;
+            ConsumeCartridge();
         }
 
         void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -507,12 +458,11 @@ namespace HollowPoint
 
         public int MPChargeOnKill()
         {
-
             //prevent soul drain per shot
             recentlyKilledTimer = 3f;
             HeatHandler.currentHeat -= adrenalineRushLevel * 5;
 
-            int mpGainOnKill = 2;
+            int mpGainOnKill = 15;
             //mpGainOnKill += (adrenalineRushLevel-2 > 0)? 1 : adrenalineRushLevel - 2;
             mpGainOnKill += adrenalineRushLevel;
 
@@ -568,7 +518,6 @@ namespace HollowPoint
         void OnDestroy()
         {
             ModHooks.Instance.CharmUpdateHook -= CharmUpdate;
-            ModHooks.Instance.FocusCostHook -= FocusCost;
             ModHooks.Instance.LanguageGetHook -= LanguageHook;
             ModHooks.Instance.SoulGainHook -= Instance_SoulGainHook;
             ModHooks.Instance.BlueHealthHook -= Instance_BlueHealthHook;

@@ -60,17 +60,38 @@ namespace HollowPoint
 
         }
 
-        private void UpdateAdrenalineIcon(string adrenalineLevel)
+        private void UpdateAdrenalineIcon(string chargeLevel)
         {
             string[] romanNumeral = { "...", "I", "II", "III", "IV", "V" };
+
+            int level = 0;
+            switch (int.Parse(chargeLevel))
+            {
+                case -1:
+                    level = 0;
+                    break;
+                case 0:
+                    level = 1;
+                    break;
+                case 1:
+                    level = 2;
+                    break;
+                case 2:
+                    level = 3;
+                    break;
+                case 3:
+                    level = 4;
+                    break;
+            }
+
             try
             {
                 var AdrenalineText = adrenalineHudIcon.GetComponent<DisplayItemAmount>().textObject;
                 //adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_adrenaline"+adrenalineLevel+".png"];
-                adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_adrenaline" + int.Parse(adrenalineLevel) + ".png"];
+                adrenalineHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_adrenaline" + level + ".png"];
                 Color color = Color.grey;
 
-                switch (int.Parse(adrenalineLevel))
+                switch (level)
                 {
                     case 1:
                         color = new Color(0, 1f, 0); //186, 227, 39

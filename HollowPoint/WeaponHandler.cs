@@ -20,6 +20,11 @@ namespace HollowPoint
         public WeaponType currentWeapon = WeaponType.Melee;
         public GunType currentGun = GunType.Primary;
 
+        const float DEFAULT_ATTACK_SPEED = 0.41f;
+        const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
+        const float DEFAULT_ANIMATION_SPEED = 0.35f;
+        const float DEFAULT_ANIMATION_SPEED_CH = 0.28f;
+
         void Awake()
         {
             if(instance == null) instance = this;
@@ -53,6 +58,7 @@ namespace HollowPoint
             currentGun = (currentGun == GunType.Primary) ? GunType.Secondary : GunType.Primary;
 
             Modding.Logger.Log(String.Format("Changing guns from {0} to {1}", prevGun, currentGun));
+
         }
 
         //Swap between guns or nail
@@ -62,6 +68,25 @@ namespace HollowPoint
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
 
             Modding.Logger.Log(String.Format("Changing weapons from {0} to {1}", prevWep, currentWeapon));
+
+            if (currentWeapon == WeaponType.Ranged)
+            {
+                HeroController.instance.ATTACK_DURATION = 0.0f;
+                HeroController.instance.ATTACK_DURATION_CH = 0f;
+
+                HeroController.instance.ATTACK_COOLDOWN_TIME = 1000f;
+                HeroController.instance.ATTACK_COOLDOWN_TIME_CH = 1000f;
+            }
+            else
+            {
+                HeroController.instance.ATTACK_COOLDOWN_TIME = DEFAULT_ANIMATION_SPEED;
+                HeroController.instance.ATTACK_COOLDOWN_TIME_CH = DEFAULT_ANIMATION_SPEED_CH;
+
+                HeroController.instance.ATTACK_DURATION = DEFAULT_ATTACK_SPEED;
+                HeroController.instance.ATTACK_DURATION_CH = DEFAULT_ATTACK_SPEED_CH;
+            }
+
+
         }
 
         public static float ExtraCooldown()

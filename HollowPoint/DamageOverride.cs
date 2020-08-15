@@ -130,7 +130,7 @@ namespace HollowPoint
                 hitInstance.DamageDealt = 5;
 
                 float dir = (HeroController.instance.cState.facingRight) ? 180 : 0;
-                Stats.instance.IncreaseAdrenalinePoints(35);
+                Stats.instance.IncreaseCartridgeEnergy();
                 StartCoroutine(SplatterBlood(self.gameObject.transform.position, 10, dir));
 
                 orig(self, hitInstance);
@@ -284,7 +284,7 @@ namespace HollowPoint
             {
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(3);
-                if (Stats.instance.canGainAdrenaline) Stats.instance.IncreaseAdrenalinePoints(3);
+                if (Stats.instance.canGainAdrenaline) Stats.instance.IncreaseCartridgeEnergy();
             }
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
@@ -313,7 +313,7 @@ namespace HollowPoint
             }
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
             HeroController.instance.AddMPCharge(Stats.instance.MPChargeOnKill());
-            Stats.instance.ExtendAdrenalineTime(2);
+            Stats.instance.IncreaseCartridgeEnergy();
             //GameManager.instance.FreezeMoment(1);
 
             //Log("Spawning Weavers");

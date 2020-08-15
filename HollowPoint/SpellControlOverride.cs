@@ -156,7 +156,7 @@ namespace HollowPoint
                 spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 0).intValue = 3; //Heal Amt
                 spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 2).intValue = 3; //Heal Amt w/ Shape of Unn
                 spellControlFSM.GetAction<GetPlayerDataInt>("Can Focus?", 1).storeValue = 0; //Heal Soul Cost Requirement
-                spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain UnCH").Value = 0.018f; //default: 0.0325
+                spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain UnCH").Value = 0.0225f; //default: 0.0325
                 //spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain CH").Value = 0.01f;
 
                 //TODO: Get rid of the infusion stuff
