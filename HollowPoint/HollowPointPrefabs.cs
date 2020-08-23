@@ -5,45 +5,59 @@ using System.Collections.Generic;
 using Modding;
 using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
+using HutongGames.PlayMaker;
+using HutongGames.PlayMaker.Actions;
 using ModCommon.Util;
 
 
 namespace HollowPoint
 {
+
     class HollowPointPrefabs : MonoBehaviour
     {
 
         public static GameObject bulletPrefab;
-        public static GameObject bulletFadePrefab;
-        public static GameObject bulletTrailPrefab;
 
-
+        //TODO: Clean this up too and the dictionary checking
         //public static GameObject greenscreen;
         public static GameObject blood = null;
         public static GameObject dungexplosion = null;
         public static GameObject explosion = null;
         public static GameObject knight_spore = null;
         public static GameObject takeDamage = null;
+        public static GameObject fireballImpactPrefab = null;
+        public static RandomFloat grimmChildAttackSpeed = null; //TODO: transfer this method to the Stats class instead
 
         public static Dictionary<String, Sprite> projectileSprites = new Dictionary<String, Sprite>();
         public static Dictionary<string, GameObject> prefabDictionary = new Dictionary<string, GameObject>();
+
+
         public void Start()
         {
             StartCoroutine(CreateBulletPrefab());
+            StartCoroutine(GetFSMPrefabsAndParticles());
             ModHooks.Instance.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
         }
 
         //On objects spawning on the world
+
+
         private GameObject Instance_ObjectPoolSpawnHook(GameObject go)
         {
-            Log(go.name);
-            //if (go.name.Contains("Weaverling")) Destroy(go);
-            //else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
-            //{
-            //    prefabDictionary.Add("Orbit Shield", go);
-            //}
+            //Log(go.name);
+            /*
+            if (go.name.Contains("Weaverling")) Destroy(go);
+            else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
+            {
+                prefabDictionary.Add("Orbit Shield", go);
+            }
+            if(grimmChildAttackSpeed == null && go.name.Contains("Grimmchild"))
+            {
+                //StartCoroutine(ChangeGrimmChildFSM(go));
+            }
+            */
 
-            if (go.name.Contains("Hatchling") && !prefabDictionary.ContainsKey("Hatchling"))
+            if (!prefabDictionary.ContainsKey("Hatchling") && go.name.Contains("Hatchling"))
             {
                 prefabDictionary.Add("Hatchling", go);
             }
@@ -60,6 +74,18 @@ namespace HollowPoint
 
 
             return go;
+        }
+
+        IEnumerator ChangeGrimmChildFSM(GameObject grimmChild)
+        {
+            //PlayMakerFSM grimmChildFSM = grimmChild.LocateMyFSM("Control");
+            //grimmChildFSM.GetAction<SetFsmInt>("Shoot", 6).setValue.Value = 30;
+            //grimmChildFSM.GetAction<FireAtTarget>("Shoot", 7).speed.Value = 60f;
+            //grimmChildAttackSpeed = grimmChildFSM.GetAction<RandomFloat>("Antic", 3);
+            //grimmChildAttackSpeed.min.Value = 0.01f;
+            //grimmChildAttackSpeed.max.Value = 0.01f;
+
+            yield return null;
         }
 
         public void Instantiated()
@@ -83,7 +109,7 @@ namespace HollowPoint
             {
                 try
                 {
-                    //Modding.Logger.Log(go.name);
+                    //Log(go.name);
                     //if (go.name.Equals("shadow burst") && blood == null)
                     if (go.name.Equals("particle_orange blood") && blood == null)
                     {
@@ -135,7 +161,6 @@ namespace HollowPoint
 
             }
 
-
             LoadAssets.spriteDictionary.TryGetValue("bulletSprite.png", out Texture2D bulletTexture);
             LoadAssets.spriteDictionary.TryGetValue("bulletSpriteFade.png", out Texture2D fadeTexture);
 
@@ -144,8 +169,6 @@ namespace HollowPoint
             bulletPrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(bulletTexture,
                 new Rect(0, 0, bulletTexture.width, bulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42);
-
-
 
             string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png"};
             //Special bullet sprite
@@ -167,10 +190,9 @@ namespace HollowPoint
                 }
                 catch(Exception e)
                 {
-                    Modding.Logger.Log(e);
+                    Log(e);
                 }
             }
-
 
             //Rigidbody
             bulletPrefab.GetComponent<Rigidbody2D>().isKinematic = true;
@@ -183,80 +205,86 @@ namespace HollowPoint
             bulletCol.size = bulletPrefab.GetComponent<SpriteRenderer>().size + new Vector2(-0.30f, -0.60f);
             bulletCol.offset = new Vector2(0, 0);
 
-            bulletFadePrefab = new GameObject("bulletFadePrefabObject", typeof(SpriteRenderer));
-            bulletFadePrefab.GetComponent<SpriteRenderer>().sprite = Sprite.Create(fadeTexture,
-                new Rect(0, 0, fadeTexture.width, fadeTexture.height),
-                new Vector2(0.5f, 0.5f), 70);
-
-
-            //Trail
-            bulletTrailPrefab = new GameObject("bulletTrailPrefab", typeof(TrailRenderer));
-            TrailRenderer bulletTR = bulletTrailPrefab.GetComponent<TrailRenderer>();
-            //bulletTR.material = new Material(Shader.Find("Particles/Alpha Blended Premultiply"));
-            bulletTR.material = new Material(Shader.Find("Diffuse")); 
-            //bulletTR.material = new Material(Shader.Find("Particles/Additive"));
-            //bulletTR.widthMultiplier = 0.05f;
-            bulletTR.startWidth = 0.2f;
-            bulletTR.endWidth = 0.04f;
-            bulletTR.numCornerVertices = 50;
-            bulletTR.numCapVertices = 30;
-            bulletTR.enabled = true;
-            bulletTR.time = 0.01f;
-
-            //bulletTR.startColor = new Color(240, 234, 196);
-            //bulletTR.endColor = new Color(237, 206, 154);
-
-            bulletTR.startColor = new Color(102, 178, 255);
-            bulletTR.endColor = new Color(204, 229, 255);
-
             bulletPrefab.SetActive(false);
-
-            //Get the cool af white particles from fireball and add it to the bullets
             DontDestroyOnLoad(bulletPrefab);
-            DontDestroyOnLoad(bulletFadePrefab);
-            DontDestroyOnLoad(bulletTrailPrefab);
 
             Modding.Logger.Log("[HOLLOW POINT] Initalized BulletObject");
+        }
+
+        IEnumerator GetFSMPrefabsAndParticles()
+        {
+            while (HeroController.instance == null) yield return null;
+
+            //Fireball/Vengeful Spirit Wall Impact Prefab
+            PlayMakerFSM spellControlFSM = HeroController.instance.spellControl;
+            PlayMakerFSM fireball_FireballTopFSM = spellControlFSM.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value.LocateMyFSM("Fireball Cast");
+            GameObject go = Instantiate(fireball_FireballTopFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).gameObject.Value);
+            go.SetActive(false);
+            PlayMakerFSM fireballControl = go.LocateMyFSM("Fireball Control");
+            GameObject fireballImpactClone = Instantiate(fireballControl.GetAction<ActivateGameObject>("Wall Impact", 5).gameObject.GameObject.Value);
+            GameObject.DontDestroyOnLoad(fireballImpactClone);
+            //Destroy(fireballImpact);
+            fireballImpactPrefab = fireballImpactClone;
+            prefabDictionary.Add("FireballImpact", fireballImpactClone);
+
+            //Fireball/Vengeful Spirit Particles
+            GameObject spellParticlesClone = Instantiate(fireballControl.GetAction<StopParticleEmitter>("Wall Impact", 1).gameObject.GameObject.Value);
+            GameObject.DontDestroyOnLoad(spellParticlesClone);
+            prefabDictionary.Add("SpellParticlePrefab", spellParticlesClone);
+
+            //Grimmchild Particle
+            //TODO: Clean this up to reduce object clutter
+            try
+            {
+                PlayMakerFSM spawnGrimmChild = GameObject.Find("Charm Effects").LocateMyFSM("Spawn Grimmchild");
+                GameObject grimmChild = spawnGrimmChild.GetAction<SpawnObjectFromGlobalPool>("Spawn", 2).gameObject.Value;
+                PlayMakerFSM grimmChildControl = grimmChild.LocateMyFSM("Control");
+                GameObject grimmball = grimmChildControl.GetAction<SpawnObjectFromGlobalPool>("Shoot", 4).gameObject.Value;
+
+                GameObject grimmballClone = Instantiate(grimmball);
+                grimmballClone.SetActive(false);
+                PlayMakerFSM grimmballControl = FSMUtility.GetFSM(grimmballClone); //grimmball.LocateMyFSM("Control");
+                GameObject grimmParticle = grimmballControl.GetAction<StopParticleEmitter>("Impact", 4).gameObject.GameObject.Value;
+
+                GameObject grimmParticleClone = Instantiate(grimmParticle);
+                GameObject.DontDestroyOnLoad(grimmParticleClone);
+                prefabDictionary.Add("GrimmParticlePrefab", grimmParticleClone);
+            }
+            catch(Exception e)
+            {
+                Log("Getting the FSM prefabs was fucked my dude" + e);
+            }
 
         }
 
         public static GameObject SpawnBullet(float bulletDegreeDirection, DirectionalOrientation dirOrientation)
         {
+            //SpawnObjectFromDictionary("FireballImpact", HeroController.instance.transform.position, Quaternion.identity);
+            //Instantiate(fireballImpactPrefab, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
+
             bulletDegreeDirection = bulletDegreeDirection % 360;        
-
             float directionOffsetY = 0;
-
+        
             //If the player is aiming upwards, change the bullet offset of where it will spawn
             //Otherwise the bullet will spawn too high or inbetween the knight
-
             bool dirOffSetBool = (dirOrientation == DirectionalOrientation.Vertical || dirOrientation == DirectionalOrientation.Diagonal);
             bool posYQuadrant = (bulletDegreeDirection > 0 && bulletDegreeDirection < 180);
-            if (dirOffSetBool && posYQuadrant)
-            {
-                directionOffsetY = 0.8f;
-            }
-            else if(dirOffSetBool && !posYQuadrant)
-            {
-                directionOffsetY = -1.1f;
-            }
+            if (dirOffSetBool && posYQuadrant) directionOffsetY = 0.8f;
+            else if(dirOffSetBool && !posYQuadrant) directionOffsetY = -1.1f;
    
             float directionMultiplierX = (HeroController.instance.cState.facingRight) ? 1f : -1f;
-
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
-
             //Checks if the player is firing upwards/downwards, and enables the x offset so the bullets spawns directly ontop of the knight
             //from the gun's barrel instead of spawning to the upper right/left of them 
-
-            if (dirOrientation == DirectionalOrientation.Vertical)
-            {
-                directionMultiplierX = 0.2f * directionMultiplierX;
-            }
+            if (dirOrientation == DirectionalOrientation.Vertical)directionMultiplierX = 0.2f * directionMultiplierX;
 
             directionMultiplierX *= wallClimbMultiplier;
                 
             GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.4f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
-            bullet.GetComponent<BulletBehaviour>().bulletDegreeDirection = bulletDegreeDirection;
-            bullet.GetComponent<BulletBehaviour>().heatOnHit = HeatHandler.currentHeat;
+            BulletBehaviour bb = bullet.GetComponent<BulletBehaviour>();
+            bb.bulletDegreeDirection = bulletDegreeDirection;
+            bb.heatOnHit = HeatHandler.currentHeat;
+            bb.size = new Vector2(0.90f, 0.75f);
             bullet.SetActive(true);
 
             return bullet;
@@ -294,6 +322,30 @@ namespace HollowPoint
             catch (Exception e)
             {
                 Log("HP_Prefabs SpawnObjectFromDictionary(): Could not find GameObject with key " + key);
+                //Log("only available keys are");
+
+                //foreach (string keys in prefabDictionary.Keys) Log(keys);
+
+                return null;
+            }
+        }
+
+        public static GameObject SpawnObjectFromDictionary(string key, Transform parent)
+        {
+            try
+            {
+                prefabDictionary.TryGetValue(key, out GameObject spawnedGO);
+                GameObject spawnedGO_Instance = Instantiate(spawnedGO, parent);
+                spawnedGO_Instance.SetActive(true);
+                return spawnedGO_Instance;
+            }
+            catch (Exception e)
+            {
+                Log("HP_Prefabs SpawnObjectFromDictionary(): Could not find GameObject with key " + key);
+                //Log("only available keys are");
+
+                //foreach (string keys in prefabDictionary.Keys) Log(keys);
+
                 return null;
             }
         }

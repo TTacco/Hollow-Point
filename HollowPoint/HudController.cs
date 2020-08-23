@@ -41,7 +41,7 @@ namespace HollowPoint
             adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3.8f, 11.4f));
 
             Stats.FireModeIcon += UpdateFireModeIcon;
-            Stats.AdrenalineIcon += UpdateAdrenalineIcon;
+            Stats.bloodRushIcon += UpdateAdrenalineIcon;
         }
 
         private void UpdateFireModeIcon(string firemode)
@@ -63,24 +63,27 @@ namespace HollowPoint
         private void UpdateAdrenalineIcon(string chargeLevel)
         {
             string[] romanNumeral = { "...", "I", "II", "III", "IV", "V" };
-
+            //TODO: clean up the HudController
             int level = 0;
             switch (int.Parse(chargeLevel))
             {
-                case -1:
-                    level = 0;
-                    break;
                 case 0:
-                    level = 1;
+                    level = 1; //Charge Ready
                     break;
                 case 1:
-                    level = 2;
+                    level = 2; //Currently charging
                     break;
                 case 2:
-                    level = 3;
+                    level = 3; //1 Charge
                     break;
                 case 3:
-                    level = 4;
+                    level = 4; //2 Charge
+                    break;
+                case 4:
+                    level = 5; //3 Charge
+                    break;
+                default:
+                    level = 0; //Cannot Charge
                     break;
             }
 

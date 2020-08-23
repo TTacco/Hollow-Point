@@ -55,7 +55,7 @@ namespace HollowPoint
         public static Stats instance = null;
 
         public static event Action<string> FireModeIcon;
-        public static event Action<string> AdrenalineIcon;
+        public static event Action<string> bloodRushIcon;
 
         const int DEFAULT_SINGLE_COST = 3;
         const int DEFAULT_BURST_COST = 1;
@@ -65,14 +65,14 @@ namespace HollowPoint
         const float DEFAULT_ANIMATION_SPEED_CH = 0.28f;
 
         //static ShitStack extraWeavers = new ShitStack();
+        //TODO: clean unused variables
         public int soulCostPerShot = 1;
-        public int burstSoulCost = 15;
         public float soulRegenTimer = 3f;
         public float max_soul_regen = 33;
-        public float passiveSoulTimer = 3f;
+        public float passiveSoulTimer = 5f;
         public float walkSpeed = 3f;
         public float fireRateCooldown = 5f;
-        public float fireRateCooldownTimer = 5.75f;
+        public float fireRateCooldownTimer = 5f;
         public float bulletRange = 0;
         public float heatPerShot = 0;
         public float bulletVelocity = 0;
@@ -80,29 +80,23 @@ namespace HollowPoint
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
         public bool slowWalk = false;
-        static float recentlyFiredTimer = 60f;
+        static float recentlyFiredTimer = 0;
         public int soulGained = 0;
         public bool hasActivatedAdrenaline = false;
-        //Adrenaline Rush Vars
-        private int adrenalineRushLevel;
-        private int adrenalineRushPoints;
-        private float adrenalineRushTimer;
-        private float adrenalineFreezeTimer;
-        public bool canGainAdrenaline;
+
         private float recentlyKilledTimer;
         int totalGeo = 0;
         //Dash float values
-        public static int currentPrimaryAmmo;
         public PlayerData pd_instance;
         public HeroController hc_instance;
         public AudioManager am_instance;
 
         //New Soul Cartridge System
-        int soulC_Charges;
+        int bloodRush_Charges;
         int soulC_Energy;
-        float soulC_CooldownTimer;
-        float soulC_DecayTimer;
-        bool soulC_OnCooldown;
+        float bloodRush_CooldownTimer;
+        float bloodRush_DecayTimer;
+        bool bloodRush_OnCooldown;
 
         public void Awake()
         {
@@ -131,10 +125,6 @@ namespace HollowPoint
             Log("Default Dash Gravity " + hc_instance.DEFAULT_GRAVITY);
             //Log(am_instance.GetAttr<float>("Volume"));
 
-            adrenalineRushLevel = 0;
-            adrenalineRushPoints = 0;
-            adrenalineRushTimer = 0;
-
         //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
@@ -143,7 +133,15 @@ namespace HollowPoint
             ModHooks.Instance.BlueHealthHook += Instance_BlueHealthHook;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
             On.HeroController.CanDreamNail += HeroController_CanDreamNail;
+            On.HeroController.CanFocus += HeroController_CanFocus;
             //On.HeroController.AddGeo += HeroController_AddGeo;
+        }
+
+        private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
+        {
+            if (bloodRush_Charges < 0) return false; //If your soul charges are less than 1, you cant heal bud
+
+            return orig(self);
         }
 
         private bool HeroController_CanDreamNail(On.HeroController.orig_CanDreamNail orig, HeroController self)
@@ -155,7 +153,7 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 5;
+            return 10;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -173,7 +171,6 @@ namespace HollowPoint
 
         private int Instance_BlueHealthHook()
         {
-
             return 0;
         }
 
@@ -207,116 +204,36 @@ namespace HollowPoint
         {
             Log("Charm Update Called");
             //Initialise stats
-            currentPrimaryAmmo = 10;
             bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 35f;
-            burstSoulCost = 1;
-            fireRateCooldown = 3.5f; 
+            bulletVelocity = 25f;
+            fireRateCooldown = 0.12f; 
             soulCostPerShot = 3;
-            heatPerShot = 0.7f;
-            max_soul_regen = 25;
+            heatPerShot = 20f;
             soulGained = 2;
             soulRegenTimer = 2.75f;
             walkSpeed = 3f;
-
-            //Charm 3 Grubsong
-            soulRegenTimer = (PlayerData.instance.equippedCharm_3) ? 1.25f : 2.75f;
-
-            //Charm 6 Fury of the Fallen
-            if (PlayerData.instance.equippedCharm_6)
-            {
-                walkSpeed += 2f;
-                soulRegenTimer -= 1f;
-                fireRateCooldown -= 0.4f;
-            }
-
-            //Charm 8 Lifeblood Heart
-            currentPrimaryAmmo += (PlayerData.instance.equippedCharm_8)? 2 : 0;
-
-            //Charm 11 Flukenest, add additional soul cost
-            if (PlayerData.instance.equippedCharm_11)
-            {
-                heatPerShot += 3f;
-                soulCostPerShot += 7;
-                fireRateCooldown += 6.5f;
-                bulletRange += -0.025f;
-            }
-
-            //Charm 13 Mark of Pride, increase range, increases heat, increases soul cost, decrease firing speed (SNIPER MODULE)
-            if (PlayerData.instance.equippedCharm_13)
-            {
-                bulletRange += 0.5f;
-                bulletVelocity += 15f;
-                heatPerShot -= 0.55f;
-                soulCostPerShot += 5;
-                fireRateCooldown += 3.75f;
-                walkSpeed += -1f;
-            }
-            //yeet
-
-            //Charm 14 Steady Body 
-            //walkSpeed = (PlayerData.instance.equippedCharm_14) ? (walkSpeed) : walkSpeed;
-
-            //Charm 16 Sharp Shadow and Fury of the fallen sprite changes
-            //bulletSprite = (PlayerData.instance.equippedCharm_16) ? "shadebullet.png" : bulletSprite;
-            //bulletSprite = (PlayerData.instance.equippedCharm_6) ? "furybullet.png" : bulletSprite;
-
-            //Charm 18 Long Nail
-            bulletVelocity += (PlayerData.instance.equippedCharm_18) ? 20f : 0;
-
-            //soulGained += (PlayerData.instance.equippedCharm_20) ? 1 : 0;
-
-            //Charm 21 Soul Eater
-            if (PlayerData.instance.equippedCharm_21)
-            {
-                soulCostPerShot -= 2;
-                max_soul_regen += 10;
-                soulGained += 2;
-            }
-
-            //Charm 23 Fragile/Unbrekable Heart
-            hasActivatedAdrenaline = (PlayerData.instance.equippedCharm_23) ? false : true;
-
-            //Charm 25 Fragile Strength
-            heatPerShot += (PlayerData.instance.equippedCharm_25) ? 0.25f : 0;
-
-            //Charm 32 Quick Slash, increase firerate, decrease heat, 
-            if (PlayerData.instance.equippedCharm_32)
-            {
-                heatPerShot += 0.3f;
-                soulCostPerShot += 1;
-                fireRateCooldown -= 2.5f;
-                walkSpeed += -2.25f;
-            }
-
-            //Charm 37 Sprint
-            walkSpeed += 1.75f;
-
-            //Charm 37 Sprintmaster 
-
+                 
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             soulCostPerShot = (soulCostPerShot < 2) ? 2 : soulCostPerShot;
             walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
-            fireRateCooldown = (fireRateCooldown < 1f)? 1f: fireRateCooldown;
+            fireRateCooldown = (fireRateCooldown < 0.01f)? 0.01f: fireRateCooldown;
 
             FireModeIcon?.Invoke("hudicon_omni.png");
             //AdrenalineIcon?.Invoke("0");
-            adrenalineFreezeTimer = 0;
-            canGainAdrenaline = true;
             recentlyKilledTimer = 0;
-            //Adrenaline
-            //adrenalineRushLevel = 0;
-            //adrenalineRushPoints = 0;
-            //adrenalineRushTimer = 0;
-            HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 3f;
+            HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 0.5f;
 
+            soulRegenTimer = 0.1f;
+            recentlyFiredTimer = 0.1f;
 
             //Cartridge
-            soulC_Charges = 0;
+            bloodRush_Charges = 0;
             soulC_Energy = 0 ;
-            soulC_DecayTimer = 0;
-            soulC_CooldownTimer = 0;
-            soulC_OnCooldown = false;
+            bloodRush_DecayTimer = 0;
+            bloodRush_CooldownTimer = 0;
+            bloodRush_OnCooldown = false;
+            bloodRushIcon?.Invoke("0");
+
         }
 
 
@@ -334,7 +251,7 @@ namespace HollowPoint
 
             if (fireRateCooldownTimer >= 0)
             {
-                fireRateCooldownTimer -= Time.deltaTime * 30f;
+                fireRateCooldownTimer -= Time.deltaTime * 1f;
                 //canFire = false;
             }
             else
@@ -343,151 +260,152 @@ namespace HollowPoint
 
                 if (usingGunMelee) usingGunMelee = false;
             }
-
-            return;
-            //actually put this on the weapon handler so its not called 24/7
-            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) // && !HP_HeatHandler.overheat
-            {
-                hc_instance.ATTACK_DURATION = 0.0f;
-                hc_instance.ATTACK_DURATION_CH = 0f;
-
-                hc_instance.ATTACK_COOLDOWN_TIME = 500f;
-                hc_instance.ATTACK_COOLDOWN_TIME_CH = 500f;
-            }
-            else
-            {
-                hc_instance.ATTACK_COOLDOWN_TIME = DEFAULT_ANIMATION_SPEED;
-                hc_instance.ATTACK_COOLDOWN_TIME_CH = DEFAULT_ANIMATION_SPEED_CH;
-
-                hc_instance.ATTACK_DURATION = DEFAULT_ATTACK_SPEED;
-                hc_instance.ATTACK_DURATION_CH = DEFAULT_ATTACK_SPEED_CH;
-            }       
         }
 
         void FixedUpdate()
         {
-            if (hc_instance.cState.isPaused) return;
+            if (hc_instance.cState.isPaused || hc_instance.cState.transitioning) return;
 
             //Soul Cartridge Disable Cooldown Time
-            if(soulC_CooldownTimer > 0) soulC_CooldownTimer -= Time.deltaTime * 1f;
-            else if (soulC_OnCooldown)
+            if(bloodRush_CooldownTimer > 0) bloodRush_CooldownTimer -= Time.deltaTime * 1f;
+            else if (bloodRush_OnCooldown)
             {
-                ChangeCartridgeCharges(increase: true);
-                soulC_OnCooldown = false;          
+                ChangeBloodRushCharges(increase: true);
+                bloodRush_OnCooldown = false;          
                 Log("[Stats] Player is now off cooldown");
             }  
 
             //Soul Cartridge Decay
-            if (soulC_DecayTimer > 0) soulC_DecayTimer -= Time.deltaTime * 1f;
-            else if(soulC_Charges > 0) ChangeCartridgeCharges(increase: false);
+            if (bloodRush_DecayTimer > 0) bloodRush_DecayTimer -= Time.deltaTime * 1f;
+            else if(bloodRush_Charges > 0) ChangeBloodRushCharges(increase: false);
+
+            //On Kill Bonus
+            if (recentlyKilledTimer > 0) recentlyKilledTimer -= Time.deltaTime * 1f;
 
             //Soul Gain Timer
-            if (recentlyFiredTimer >= 0) recentlyFiredTimer -= Time.deltaTime * 30f;
-            else if (passiveSoulTimer > 0) passiveSoulTimer -= Time.deltaTime * 30f;
-
+            if (recentlyFiredTimer >= 0)
+            {
+                recentlyFiredTimer -= Time.deltaTime * 1;
+            }
+            else if (passiveSoulTimer > 0)
+            {
+                passiveSoulTimer -= Time.deltaTime * 1;
+                if (passiveSoulTimer <= 0)
+                {
+                    passiveSoulTimer = 0.06f;
+                    HeroController.instance.TryAddMPChargeSpa(1);
+                }
+            }
         }
 
-        public void IncreaseCartridgeEnergy()
+        public void IncreaseBloodRushEnergy()
         {
             //If the player is on cooldown, disable soul gain
-            if (soulC_OnCooldown) return;
-            if (soulC_Charges == 0) 
+            if (bloodRush_OnCooldown) return;
+            if (bloodRush_Charges == 0) 
             {
-                ChangeCartridgeCharges(increase: true);
+                ChangeBloodRushCharges(increase: true);
                 soulC_Energy = 0;
+                return;
             } 
 
 
-            int energyIncrease = 33; //Alter this value later
+            int energyIncrease = 5; //Alter this value later
+            //Log("Increasing Energy, current is " + soulC_Energy);
             soulC_Energy += energyIncrease;
             if (soulC_Energy > 100)
             {
-                ChangeCartridgeCharges(increase: true);
+                ChangeBloodRushCharges(increase: true);
                 soulC_Energy = 0;
             }
         }
 
         //Cartridge Level Details
         /*  -1 = Empty State, has 0 charges, any energy increases automatically transitions to next level
-         *  0 = Currently in base charging state, timer is started, if timer runs out revert back 1 level
-         *  1 = same but now the player has 1 charge  || consuming heals 1 mask
-         *  2 = same but now the player has 2 charges || consuming heals 1 mask
-         *  3 = same but now the player has 3 charge  || consuming heals 3 mask
+         *  0 = Dormant state, but ready to charge
+         *  1 = 0 charges but is currently charging, can still go back to 0
+         *  2 = same but now the player has 1 charge  || consuming heals 1 mask
+         *  3 = same but now the player has 2 charges || consuming heals 1 mask
+         *  4 = same but now the player has 3 charge  || consuming heals 3 mask
          */
-        void ChangeCartridgeCharges(bool increase)
+        void ChangeBloodRushCharges(bool increase)
         {
-            soulC_Charges += (increase && soulC_Charges < 3) ? 1 : (!increase)? -1 : 0;
-            if(soulC_Charges > 0) soulC_DecayTimer = 10;
+            bloodRush_Charges += (increase && bloodRush_Charges < 4) ? 1 : (!increase)? -1 : 0;
+            if(bloodRush_Charges > 0) bloodRush_DecayTimer = 10;
 
-            Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
+            //Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
 
             //Update the UI
-            AdrenalineIcon?.Invoke(soulC_Charges.ToString());
+            bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
         }
 
         void ExtendCartridgeDecayTime(bool enemyKilled)
         {
-            Log("[Stats] Extending Decay Time");
-            soulC_DecayTimer += (enemyKilled) ? 3: 1;
-            soulC_DecayTimer = (soulC_DecayTimer > 10) ? 10 : soulC_DecayTimer;
+            //Log("[Stats] Extending Decay Time");
+            bloodRush_DecayTimer += (enemyKilled) ? 4: 1;
+            bloodRush_DecayTimer = (bloodRush_DecayTimer > 10) ? 10 : bloodRush_DecayTimer;
         }
 
-        void ConsumeCartridge()
+        public void ConsumeBloodRushCharges(bool consumeAll = true)
         {
-            Log("[Stats] Consuming Cartridge");
-            soulC_Charges = 0;
-            soulC_OnCooldown = true;
-            soulC_CooldownTimer = 5f;
-            AdrenalineIcon?.Invoke(soulC_Charges.ToString());
+            //Log("[Stats] Consuming Cartridge");
+            if(!consumeAll)
+            {
+                ChangeBloodRushCharges(false);
+                bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
+                return;
+            }
+
+            bloodRush_Charges = -1;
+            bloodRush_OnCooldown = true;
+            bloodRush_CooldownTimer = 10f;
+            bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
         }
+
 
         //TODO: can actually just merge this with ChangeAdrenaline
         public void Stats_TakeDamageEvent()
         {
-            ConsumeCartridge();
+            ConsumeBloodRushCharges(true);
         }
 
-        void UpdateAdrenalineStats(float runspeed, float dashcooldown, int soulusage, float timer)
+        void UpdateBloodRushBuffs(float runspeed, float dashcooldown, int soulusage, float timer)
         {
             //Default Dash speeds default_dash_cooldown = 0.6f; default_dash_cooldown_charm = 0.4f; default_dash_speed = 20f; default_dash_speed_sharp = 28f; default_dash_time = 0.25f; default_gravity = 0.79f;
             HeroController.instance.WALK_SPEED = runspeed;
             HeroController.instance.DASH_COOLDOWN = dashcooldown;
-
-            adrenalineRushTimer = timer;
         }
 
-        public int MPChargeOnKill()
+        public int Stats_EnemyKilled()
         {
             //prevent soul drain per shot
-            recentlyKilledTimer = 3f;
-            HeatHandler.currentHeat -= adrenalineRushLevel * 5;
+            recentlyKilledTimer += 0.8f;
+            //HeatHandler.currentHeat -= adrenalineRushLevel * 5;
 
-            int mpGainOnKill = 15;
+            int mpGainOnKill = 10;
             //mpGainOnKill += (adrenalineRushLevel-2 > 0)? 1 : adrenalineRushLevel - 2;
-            mpGainOnKill += adrenalineRushLevel;
-
             return mpGainOnKill;
         }
 
-        public int MPCostOnShot()
+        public int SoulCostPerShot()
         {
-            int mpCost = 2;
-            mpCost += (int)(HeatHandler.currentHeat / 33f);
+            float mpCost = 6;
+            //mpCost += (HeatHandler.currentHeat / 33f);
 
-            //If the player has recently killed someone, prevent soul draining
-            mpCost *= (recentlyKilledTimer > 0) ? 0 : 1;
-            return mpCost;
+            //If the player has recently killed someone, prevent soul drainings
+            mpCost *= (recentlyKilledTimer > 0) ? 0.25f : 1;
+            return (int) mpCost;
         }
 
-        public static int CalculateDamage(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
+        public static int DamageInflictedByShot(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
             int dam = 3 + (PlayerData.instance.nailSmithUpgrades * 2);
             return dam;
         }
 
-        public static int CalculateSoulGain()
+        public static int SoulGainPerHit()
         {
-            int soul = 4;//soulGained;
+            int soul = 2;//soulGained;
             return soul;
         }
 
@@ -504,7 +422,7 @@ namespace HollowPoint
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = fireRateCooldown;
             canFire = false;
-            recentlyFiredTimer = 60;
+            recentlyFiredTimer = 1.5f;
         }
 
         public void StartBothCooldown(float overrideCooldown)
@@ -512,7 +430,7 @@ namespace HollowPoint
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = overrideCooldown; 
             canFire = false;
-            recentlyFiredTimer = 60;
+            recentlyFiredTimer = 1.5f;
         }
 
         void OnDestroy()

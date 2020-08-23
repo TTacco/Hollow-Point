@@ -80,6 +80,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\..\Games\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
+    <Reference Include="Vasi">
+      <HintPath>..\..\..\..\..\..\Games\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\Mods\Vasi.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AudioHandler.cs" />
@@ -264,6 +267,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_gatlinggun.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\muzzleflashAlt.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

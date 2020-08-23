@@ -45,33 +45,31 @@ namespace HollowPoint
 
         private void HealthManager_Die(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion)
         {
-            Log("ENEMY HAS DIED");
+            //Log("ENEMY HAS DIED");
 
-            HollowPointPrefabs.SpawnObjectFromDictionary("Hatchling", self.transform.position, Quaternion.identity);
+            //HollowPointPrefabs.SpawnObjectFromDictionary("Hatchling", self.transform.position, Quaternion.identity);
 
             orig(self, attackDirection, attackType, ignoreEvasion);
         }
 
         public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
         {
-            Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
-
-            Stats.instance.Stats_TakeDamageEvent();
+            //Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
             if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
             {
                 Log("negating bomb damage weary");
-                //TODO: remove this because it sometimes causes the player to still receive damage when rocket jumping
+                orig(self, go, damageSide, damageAmount * 0, hazardType);
             }
             //Adrenaline from fragile heart
 
-            if (!Stats.instance.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1) && PlayerData.instance.equippedCharm_27)
+            if (false)
             {
                 Stats.instance.hasActivatedAdrenaline = true;
                 HeroController.instance.AddMPCharge(99);
                 orig(self, go, damageSide, 0, hazardType);
                 return;
             }
-            else if (!Stats.instance.hasActivatedAdrenaline && (PlayerData.instance.health <= damageAmount + 1)) 
+            else if (false) 
             {
 
                 LoadAssets.sfxDictionary.TryGetValue("focussound.wav", out AudioClip ac);
@@ -100,6 +98,8 @@ namespace HollowPoint
                 return;
             }
 
+            if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
+
             orig(self, go, damageSide, damageAmount, hazardType);
         }
 
@@ -108,30 +108,33 @@ namespace HollowPoint
         {
             //Alternative hit damages from other sources like weaver or explosions 
             string srcName = hitInstance.Source.name;
-            Log("[DamageOverride] Source Name is " + srcName);
+            //Log("[DamageOverride] Source Name is " + srcName);
 
             if (srcName.Contains("Gas"))
             {
                 //Explosion damage
-                hitInstance.DamageDealt = 15 + (PlayerData.instance.nailSmithUpgrades * 5);
+                hitInstance.DamageDealt = 3 + (PlayerData.instance.nailSmithUpgrades * 5);
+                orig(self, hitInstance);
+                return;
+            }
+            if (srcName.Contains("Dung"))
+            {
+                //Explosion damage
+                Log("Dung damage!");
                 orig(self, hitInstance);
                 return;
             }
             else if (srcName.Contains("Damager"))
             {
                 //Glowing Womblings
-                HeroController.instance.AddMPCharge(15);
+                //HeroController.instance.AddMPCharge(15);
                 orig(self, hitInstance);
                 return;
             }
             else if (srcName.Contains("Great Slash") || srcName.Contains("Dash Slash"))
             {
                 Log("Player is nail art... ing?");
-                hitInstance.DamageDealt = 5;
 
-                float dir = (HeroController.instance.cState.facingRight) ? 180 : 0;
-                Stats.instance.IncreaseCartridgeEnergy();
-                StartCoroutine(SplatterBlood(self.gameObject.transform.position, 10, dir));
 
                 orig(self, hitInstance);
                 return;
@@ -139,7 +142,7 @@ namespace HollowPoint
             else if (srcName.Contains("Slash"))
             {
                 Log("Player is slashing!");
-                hitInstance.DamageDealt = 2 + (PlayerData.instance.nailSmithUpgrades * 2);
+                hitInstance.DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 3);
                 orig(self, hitInstance);
                 return;
             }
@@ -153,56 +156,13 @@ namespace HollowPoint
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<BulletBehaviour>().bulletOriginPosition;   
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
 
-            int damage = Stats.CalculateDamage(bulletOriginPosition, self.transform.position, hpbb);
-            int soulGainAmt = Stats.CalculateSoulGain();
-
-            //Log("DamageCalculator, damage dealt is " + damage + " against " + self.name)
-            //StartCoroutine(DamageOverTime(self)); //damage enemy overtime
-            StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
+            int damage = Stats.DamageInflictedByShot(bulletOriginPosition, self.transform.position, hpbb);
+            int soulGainAmt = Stats.SoulGainPerHit();
+            //StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
             DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
         }
-
-        public static IEnumerator SplatterBlood(Vector3 spawnPos, int repeat, float directionOfBlood)
-        {
-            for (int i = 0; i < repeat; i++)
-            {
-        
-                GameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, spawnPos, Quaternion.identity);
-                bloodSplat.transform.localScale = new Vector3(0.25f,0.25f, 0.1f);
-                bloodSplat.transform.Rotate(new Vector3(0, 0, directionOfBlood));
-                bloodSplat.SetActive(true);
-            }
-            yield return new WaitForEndOfFrame();
-        }
-
-        public static IEnumerator DamageOverTime(HealthManager hm)
-        {
-            //ParticleSystem fire = Instantiate(burnEffects, hm.transform.position, Quaternion.identity);      
-
-            for (int i = 0; i < 8; i++)
-            {
-                yield return new WaitForEndOfFrame();
-                if (hm == null)
-                {
-                    Log("[DamageOverride] Game Object/HealthManager null, cannot apply burning");
-                    yield break;
-                }
-
-                hm.hp -= 2;
-                //ameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, hm.gameObject.transform.position, Quaternion.identity);
-                //bloodSplat.transform.localScale = new Vector3(0.25f, 0.25f, 0.1f);
-                //bloodSplat.SetActive(true);
-                SpriteFlash f = hm.gameObject.GetComponent<SpriteFlash>();
-                if (f != null) f.flashWhiteQuick();
-                if (hm.hp <= 0)
-                {
-                    EnemyDeathEvent(hm, 90, false);
-                    yield break;
-                }
-                yield return new WaitForSeconds(0.2f);
-            }
-        }
-
+      
+        //+++DAMAGE OVERRIDE+++
         public static void DamageEnemyOverride(HealthManager targetHP, int damageDealt, HitInstance hitInstance, int soulGain, BulletBehaviour hpbb)
         {
             //TODO: this specifics might add up later, Moss Charger is just one of the few except and there maybe many more
@@ -212,7 +172,7 @@ namespace HollowPoint
             GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
 
             bool specialEnemy = (targetHP.name.Contains("Charger"));
-            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy || damageDealt <= 0)
+            if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy)
             {
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "BLOCKED HIT", false);
                 GameObject blockHit = blockHitPrefab.Spawn();
@@ -220,6 +180,14 @@ namespace HollowPoint
                 blockHit.transform.Rotate(new Vector3(0, 0, 90 * cardinalDirection));
                 return;
             }
+
+            if (false && !targetHP.IsInvincible) //enable disable damage overtime
+            {
+                InflictsDamageOvertime dm = targetHP.gameObject.GetComponent<InflictsDamageOvertime>();
+                if (dm == null) targetHP.gameObject.AddComponent<InflictsDamageOvertime>();
+                else dm.IncreaseStack();
+            }
+
             //bool specialEnemy = (targetHP.name.Contains("Moss Charger") || targetHP.name.Contains("Mushroom Brawler")); 
 
             /*
@@ -284,7 +252,7 @@ namespace HollowPoint
             {
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(3);
-                if (Stats.instance.canGainAdrenaline) Stats.instance.IncreaseCartridgeEnergy();
+                Stats.instance.IncreaseBloodRushEnergy();
             }
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
@@ -312,8 +280,8 @@ namespace HollowPoint
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
             }
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
-            HeroController.instance.AddMPCharge(Stats.instance.MPChargeOnKill());
-            Stats.instance.IncreaseCartridgeEnergy();
+            HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
+            Stats.instance.IncreaseBloodRushEnergy();
             //GameManager.instance.FreezeMoment(1);
 
             //Log("Spawning Weavers");
@@ -328,5 +296,21 @@ namespace HollowPoint
             On.HeroController.TakeDamage -= PlayerDamaged;
             Destroy(gameObject.GetComponent<DamageOverride>());
         }
+
+
+        public static IEnumerator SplatterBlood(Vector3 spawnPos, int repeat, float directionOfBlood)
+        {
+            for (int i = 0; i < repeat; i++)
+            {
+
+                GameObject bloodSplat = Instantiate(HollowPointPrefabs.blood, spawnPos, Quaternion.identity);
+                bloodSplat.transform.localScale = new Vector3(0.25f, 0.25f, 0.1f);
+                bloodSplat.transform.Rotate(new Vector3(0, 0, directionOfBlood));
+                bloodSplat.SetActive(true);
+            }
+            yield return new WaitForEndOfFrame();
+        }
+
     }
+
 }

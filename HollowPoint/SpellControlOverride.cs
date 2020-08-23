@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-
 using UnityEngine;
 using System.Collections;
 using ModCommon.Util;
@@ -9,7 +7,6 @@ using HutongGames.PlayMaker.Actions;
 using static UnityEngine.Random ;
 using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
-
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System.Reflection;
@@ -29,29 +26,30 @@ namespace HollowPoint
         float grenadeCooldown = 30f;
         float airstrikeCooldown = 300f;
         float typhoonTimer = 20f;
-        float infuseTimer = 20f;
 
+        static PlayMakerFSM soulOrbFSM;
         PlayMakerFSM spellControlFSM;
         static GameObject sharpFlash;
         public static GameObject focusBurstAnim;
 
-        public static float buff_duration = 0;
-        public static bool buffActive = false;
-        float buff_constantSoul_timer = 0;
 
-        public static GameObject artifactActivatedEffect;
         static GameObject infusionSoundGO;
+        public static GameObject grimmFireballGO;
 
         private ILHook removeFocusCost = null;
 
         void Awake()
         {
             StartCoroutine(InitSpellControl());
+            StartCoroutine(ModifySoulOrbFSM());
 
             try
             {
-                var method = typeof(HeroController).GetMethod("orig_Update", BindingFlags.NonPublic | BindingFlags.Instance);
-                removeFocusCost = new ILHook(method, RemoveFocusSoulCost);
+                if (removeFocusCost == null)
+                {
+                    var method = typeof(HeroController).GetMethod("orig_Update", BindingFlags.NonPublic | BindingFlags.Instance);
+                    removeFocusCost = new ILHook(method, RemoveFocusSoulCost);
+                }
             }
             catch (Exception e)
             {
@@ -59,80 +57,31 @@ namespace HollowPoint
             }
         }
 
+        public IEnumerator ModifySoulOrbFSM()
+        {
+            while (GameManager.instance.soulOrb_fsm == null)
+            {
+                yield return null;
+            }
+            soulOrbFSM = null;
+            soulOrbFSM = GameManager.instance.soulOrb_fsm;
+            //Array.ForEach<FsmState>(soulOrb.FsmStates, x => Log("FSM Soul Orb : " + x.Name));
+            //Array.ForEach<NamedVariable>(soulOrbFSM.FsmVariables.GetAllNamedVariables(), x => Log("FSM Soul Orb Vars : " + x.Name));
+            soulOrbFSM.RemoveAction("Can Heal 2", 4);
+            soulOrbFSM.RemoveAction("Can Heal 2", 3);
+            //PlayerData.instance.focusMP_amount = 15;
+        }
+
         static void RemoveFocusSoulCost(ILContext il)
         {
             Log("Removing Focus Cost");
-
             var cursor = new ILCursor(il).Goto(0);
             MethodInfo mi = typeof(HeroController).GetMethod("TakeMP");
-
             cursor.GotoNext(moveType: MoveType.Before, x => x.MatchLdarg(0), x => x.MatchLdcI4(1), x => x.MatchCallvirt(mi));
-
             for (int x = 0; x < 3; x++) cursor.Remove();
-
         }
 
-        void Update()
-        {
-            if (OrientationHandler.pressingAttack && typhoonTimer > 0)
-            {
-                typhoonTimer = -1;
-
-                int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 8 : 6; 
-                StartCoroutine(SpawnGasPulse(HeroController.instance.transform.position, pelletAmnt));
-            }
-        }
-
-        void FixedUpdate()
-        {
-            if (swapTimer > 0)
-            {
-                swapTimer -= Time.deltaTime * 30f;
-                canSwap = false;
-            }
-            else
-            {
-                canSwap = true;
-            }
-
-            if(grenadeCooldown > 0)
-            {
-                grenadeCooldown -= Time.deltaTime * 30f;
-            }
-
-            if(airstrikeCooldown > 0)
-            {
-                airstrikeCooldown -= Time.deltaTime * 30f;
-            }
-
-            if (typhoonTimer > 0)
-            {
-                typhoonTimer -= Time.deltaTime * 30f;
-            }
-            //BUFFS TIMER HANDLERS
-
-            if(buff_duration > 0)
-            {
-                buff_duration -= Time.deltaTime * 10f;
-            }
-            else
-            {
-                buffActive = false;
-                return;
-            }
-
-            if (buff_constantSoul_timer < 0)
-            {
-                buff_constantSoul_timer = 5f;
-                HeroController.instance.AddMPChargeSpa(3);
-            }
-            else
-            {
-                buff_constantSoul_timer -= Time.deltaTime * 10f;
-            }
-
-        }
-
+   
         public IEnumerator InitSpellControl()
         {
             while (HeroController.instance == null)
@@ -141,22 +90,32 @@ namespace HollowPoint
             }
 
             try
-            {
+            {         
+                //Get the spellControl and Nail Art FSMs 
                 spellControlFSM = HeroController.instance.spellControl;
                 nailArtFSM = HeroController.instance.gameObject.LocateMyFSM("Nail Arts");
 
+                //Grimmchild
+                //PlayMakerFSM spawnGrimmChild = GameObject.Find("Charm Effects").LocateMyFSM("Spawn Grimmchild");
+                //GameObject grimmChild = spawnGrimmChild.GetAction<SpawnObjectFromGlobalPool>("Spawn", 2).gameObject.Value;
+                //PlayMakerFSM grimmChildControl = grimmChild.LocateMyFSM("Control");
+                //GameObject grimmchildFireball = grimmChildControl.GetAction<SpawnObjectFromGlobalPool>("Shoot", 4).gameObject.Value;
+                //grimmchildFireball.AddComponent<TestBehaviour>();
+
+                //grimmChildControl.GetAction<RandomFloat>("Antic", 3).min.Value = 0.1f;
+                //grimmChildControl.GetAction<RandomFloat>("Antic", 3).max.Value = 0.1f;
 
                 //Makes hatchlings free
                 glowingWombFSM = GameObject.Find("Charm Effects").LocateMyFSM("Hatchling Spawn");
                 glowingWombFSM.GetAction<IntCompare>("Can Hatch?", 2).integer2.Value = 0;
                 glowingWombFSM.GetAction<Wait>("Equipped", 0).time.Value = 2.5f;
                 glowingWombFSM.RemoveAction("Hatch", 0); //Removes the soul consume on spawn
-
+           
                 //Modifies Heal Amount, Heal Cost and Heal Speed
-                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 0).intValue = 3; //Heal Amt
-                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 2).intValue = 3; //Heal Amt w/ Shape of Unn
+                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 0).intValue = 0; //Heal Amt
+                spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 2).intValue = 0; //Heal Amt w/ Shape of Unn
                 spellControlFSM.GetAction<GetPlayerDataInt>("Can Focus?", 1).storeValue = 0; //Heal Soul Cost Requirement
-                spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain UnCH").Value = 0.0225f; //default: 0.0325
+                spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain UnCH").Value = 0.01f; //default: 0.0325
                 //spellControlFSM.FsmVariables.GetFsmFloat("Time Per MP Drain CH").Value = 0.01f;
 
                 //TODO: Get rid of the infusion stuff
@@ -168,11 +127,11 @@ namespace HollowPoint
                 sharpFlash = HeroController.instance.spellControl.FsmVariables.GetFsmGameObject("SD Sharp Flash").Value;
                 //Instantiate(qTrail.Value, HeroController.instance.transform).SetActive(true);
 
-
-                FsmGameObject fsmgo = spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
-                fsmgo.Value.gameObject.transform.position = new Vector3(0, 0, 0);
-                fsmgo.Value.gameObject.transform.localPosition = new Vector3(0, -3, 0);
-                spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = fsmgo;
+                //lowers the scream effects
+                FsmGameObject screamFsmGO = spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject;
+                screamFsmGO.Value.gameObject.transform.position = new Vector3(0, 0, 0);
+                screamFsmGO.Value.gameObject.transform.localPosition = new Vector3(0, -3, 0);
+                spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = screamFsmGO;
 
                 //Note some of these repeats because after removing an action, their index is pushed backwards to fill in the missing parts
                 spellControlFSM.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
@@ -297,7 +256,23 @@ namespace HollowPoint
                 spellControlFSM.RemoveAction("Scream Burst 1", 3);
                 spellControlFSM.RemoveAction("Scream Burst 2", 4);
 
-                DontDestroyOnLoad(artifactActivatedEffect);
+                spellControlFSM.InsertAction("Focus Heal", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "KnightHasHealed",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 0);
+
+                spellControlFSM.InsertAction("Focus Heal 2", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "KnightHasHealed",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                , 0);
 
             }
             catch (Exception e)
@@ -320,15 +295,15 @@ namespace HollowPoint
 
         IEnumerator SpawnGasPulse(Vector3 spawnPos, float explosionAmount)
         {
-            Modding.Logger.Log("Spawning Gas Pulse");
+            Log("Spawning Gas Pulse");
             float addedDegree = 180 / (explosionAmount + 1);
             AudioHandler.PlaySoundsMisc("divedetonate");
             GameObject dungCloud;
             for (int pulse = 0; pulse < 1; pulse++)
             {
                 dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
-                dungCloud.transform.localScale = new Vector3(1.75f, 1.75f, 0);
-                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.2f); //DEFAULT: 0.15
+                dungCloud.transform.localScale = new Vector3(2f, 2f, 0);
+                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.10f); //DEFAULT: 0.15
             }
             yield break;
         }
@@ -421,6 +396,7 @@ namespace HollowPoint
             }
             else
             {
+                typhoonTimer = 20f;
                 HeroController.instance.TakeMP(soulCost);
             }
         }
@@ -436,9 +412,52 @@ namespace HollowPoint
                 return;
             }
             HeroController.instance.TakeMP(soulCost);
-            StartCoroutine(BurstShot(5));
+            //StartCoroutine(BurstShot(9));
+            StartCoroutine(SpreadShot(6));
+            //StartCoroutine(FireGAU(5));
+            HeroController.instance.TakeMP(33);
             HeroController.instance.spellControl.SetState("Spell End");
         }
+
+        void Update()
+        {
+            if (OrientationHandler.pressingAttack && typhoonTimer > 0)
+            {
+                typhoonTimer = -1;
+
+                int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 8 : 6;
+                StartCoroutine(SpawnGasPulse(HeroController.instance.transform.position, pelletAmnt));
+            }
+        }
+
+        void FixedUpdate()
+        {
+            if (swapTimer > 0)
+            {
+                swapTimer -= Time.deltaTime * 30f;
+                canSwap = false;
+            }
+            else
+            {
+                canSwap = true;
+            }
+
+            if (grenadeCooldown > 0)
+            {
+                grenadeCooldown -= Time.deltaTime * 30f;
+            }
+
+            if (airstrikeCooldown > 0)
+            {
+                airstrikeCooldown -= Time.deltaTime * 30f;
+            }
+
+            if (typhoonTimer > 0)
+            {
+                typhoonTimer -= Time.deltaTime * 30f;
+            }
+        }
+
 
         //========================================SECONDARY FIRE METHODS====================================
 
@@ -478,7 +497,7 @@ namespace HollowPoint
             float direction = OrientationHandler.finalDegreeDirection; //90 degrees
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
 
-            float coneDegree = 40;
+            float coneDegree = 30;
             float angleToSpawnBullet = direction - (coneDegree / 2); //90 - (30 / 2) = 75, start at 75 degrees
             float angleIncreasePerPellet = coneDegree / (pellets + 2); // 30 / (5 + 2) = 4.3, move angle to fire for every pellet by 4.3 degrees
 
@@ -494,15 +513,47 @@ namespace HollowPoint
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(angleToSpawnBullet, orientation);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
-                //hpbb.pierce = PlayerData.instance.equippedCharm_13;
+                hpbb.pierce = true;
                 bullet.transform.localScale = new Vector3(0.2f, 0.2f, 0.1f);
-                hpbb.specialAttrib = "Explosion";
+                //hpbb.specialAttrib = "Explosion";
 
                 angleToSpawnBullet += angleIncreasePerPellet;
                 Destroy(bullet, 0.7f);
             }
 
             yield return new WaitForSeconds(0.3f);
+            AttackHandler.isFiring = false;
+        }
+
+        public IEnumerator FireGAU(int rounds)
+        {
+            AttackHandler.isFiring = true;
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            //float direction = (hc_instance.cState.facingRight) ? 315 : 225;
+            //DirectionalOrientation orientation = DirectionalOrientation.Diagonal;
+            float direction = OrientationHandler.finalDegreeDirection;
+            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
+
+            AudioHandler.PlayGunSounds("gatlinggun", 1f);
+            for (int b = 0; b < rounds; b++)
+            {
+                GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
+                HeatHandler.IncreaseHeat(15f);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                bullet.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungExplosionSmall;
+                hpbb.bulletOriginPosition = bullet.transform.position; //set the origin position of where the bullet was spawned
+                //hpbb.specialAttrib = "DungExplosionSmall";
+                hpbb.bulletSpeed = 40;
+
+                HollowPointSprites.StartGunAnims();
+                HollowPointSprites.StartFlash();
+                HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
+
+                Destroy(bullet, 2f);
+                yield return new WaitForSeconds(0.03f); //0.12f This yield will determine the time inbetween shots   
+            }
+
+            yield return new WaitForSeconds(0.02f);
             AttackHandler.isFiring = false;
         }
 
@@ -534,6 +585,13 @@ namespace HollowPoint
             //infuseTimer = 500f;
         }
 
+        public void KnightHasHealed()
+        {
+            Log("Knight Has Focused");
+            HeroController.instance.AddHealth(2);//TODO: change this depending on fury
+            Stats.instance.ConsumeBloodRushCharges(true);
+        }
+
         //========================================FIRE SUPPORT SPAWN METHODS====================================
 
         //Regular steel rain (non tracking)
@@ -544,34 +602,27 @@ namespace HollowPoint
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             for (int shells = 0; shells < totalShells; shells++)
             {
+                AudioHandler.PlaySoundsMisc("mortarclose", 1);
+                yield return new WaitForSeconds(0.65f);
                 //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 30, -0.1f), 0);
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 60, -0.1f), 0);
                 shellAimPosition += 3 * artyDirection;
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
-                hpbb.isFireSupportBullet = true;
+                hpbb.artilleryShell = true;
                 hpbb.ignoreCollisions = true;
-                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(3f,6f), -0.1f);
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f,8f), -0.1f);
+                shell.AddComponent<BulletIsExplosive>().artilleryShell = true;
                 shell.SetActive(true);
-                yield return new WaitForSeconds(0.5f);
+                yield return new WaitForSeconds(0.1f);
             }
         }
 
         public static IEnumerator StartInfusion()
         {
             
-            artifactActivatedEffect.SetActive(false);
             LoadAssets.sfxDictionary.TryGetValue("infusionsound.wav", out AudioClip ac);
             AudioSource aud = infusionSoundGO.GetComponent<AudioSource>();
             aud.PlayOneShot(ac);
-            buffActive = true;
-            if (PlayerData.instance.equippedCharm_34)
-            {
-                buff_duration = -40f;
-                HeroController.instance.AddHealth(4);
-            }
-
-            //To make sure the minimum buff duration is always at 30f
-            buff_duration = (buff_duration < 30f) ? 30f : buff_duration;
 
             GameCameras.instance.cameraShakeFSM.SendEvent("BigShake");
 
@@ -579,13 +630,12 @@ namespace HollowPoint
             Instantiate(sharpFlash, HeroController.instance.transform).SetActive(true);
             Instantiate(focusBurstAnim, HeroController.instance.transform).SetActive(true);
 
-            SpriteFlash knightFlash = HeroController.instance.GetAttr<SpriteFlash>("spriteFlash");
-            knightFlash.flashBenchRest();
+            //SpriteFlash knightFlash = HeroController.instance.GetAttr<SpriteFlash>("spriteFlash");
+            //knightFlash.flashBenchRest();
 
             GameObject artChargeEffect = Instantiate(HeroController.instance.artChargedEffect, HeroController.instance.transform.position, Quaternion.identity);
             artChargeEffect.SetActive(true);
             artChargeEffect.transform.SetParent(HeroController.instance.transform);
-            Destroy(artChargeEffect, buff_duration/10f);
 
             GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform.position, Quaternion.identity);
             artChargeFlash.SetActive(true);

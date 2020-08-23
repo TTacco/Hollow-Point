@@ -19,6 +19,7 @@ namespace HollowPoint
         public static GameObject gunSpriteGO;
         public static GameObject flashSpriteGO;
         public static GameObject muzzleFlashGO;
+        public static GameObject muzzleFlashGOAlt;
         public static GameObject whiteFlashGO;
 
         System.Random shakeNum = new System.Random();
@@ -35,6 +36,7 @@ namespace HollowPoint
         public static bool idleAnim = true;
         public static bool isWallClimbing = false;
         public static bool facingNorthFirstTime = false;
+        public static bool altMuzzleflash = false;
 
         public static HeroActions ha;
 
@@ -84,8 +86,9 @@ namespace HollowPoint
                 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
                 shakeNum = new System.Random();
 
-                whiteFlashGO = CreateGameObjectSprite("lightflash.png", "lightFlashGO", 30);
+                whiteFlashGO = CreateGameObjectSprite("lightflash.png", "lightFlashGO", 65);
                 muzzleFlashGO = CreateGameObjectSprite("muzzleflash.png", "bulletFadePrefabObject", 150);
+                muzzleFlashGOAlt = CreateGameObjectSprite("muzzleflashAlt.png", "bulletFadePrefabObjectAlt", 150);
             }
             catch (Exception e)
             {
@@ -99,6 +102,7 @@ namespace HollowPoint
             DontDestroyOnLoad(transformSlave);
             DontDestroyOnLoad(gunSpriteGO);
             DontDestroyOnLoad(muzzleFlashGO);
+            DontDestroyOnLoad(muzzleFlashGOAlt);
 
             try
             {
@@ -404,14 +408,20 @@ namespace HollowPoint
             flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 0) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
 
             Vector3 muzzleFlashSpawnPos = gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f);
-            GameObject muzzleFlashClone = Instantiate(muzzleFlashGO, muzzleFlashSpawnPos, new Quaternion(0, 0, 0, 0));
+
+            //Alternate between muzzle flashes
+            altMuzzleflash = !altMuzzleflash;
+            GameObject muzzleFlashToUse = null;
+            if (altMuzzleflash) muzzleFlashToUse = muzzleFlashGO;
+            else muzzleFlashToUse = muzzleFlashGOAlt;
+
+            GameObject muzzleFlashClone = Instantiate(muzzleFlashToUse, muzzleFlashSpawnPos, new Quaternion(0, 0, 0, 0));
             muzzleFlashClone.transform.Rotate(0, 0, degree, 0);
             muzzleFlashClone.transform.localScale = new Vector3(size, size, 0.1f);
 
             //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
 
             Destroy(muzzleFlashClone, 0.04f);
-
             instance.StartCoroutine(MuzzleSmoke(muzzleFlashClone));
         }
 
@@ -441,6 +451,7 @@ namespace HollowPoint
             Destroy(transformSlave);
 
             Destroy(muzzleFlashGO);
+            Destroy(muzzleFlashGOAlt);
         }
 
     }

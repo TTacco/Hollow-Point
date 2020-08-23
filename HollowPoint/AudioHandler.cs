@@ -85,7 +85,7 @@ namespace HollowPoint
             }
         }
 
-        public static void PlaySoundsMisc(string soundName)
+        public static void PlaySoundsMisc(string soundName, float? pitch = null)
         {
             try
             {
@@ -95,24 +95,8 @@ namespace HollowPoint
 
                 audios.clip = ac;
                 audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
-            }
-            catch (Exception e)
-            {
-                Log("HP_AudioHandler.cs, cannot find the SFX " + soundName + " " + e);
-            }
-        }
+                if (pitch != null) audios.pitch = (float)pitch;
 
-        public static void PlaySoundsMisc(string soundName, float pitch)
-        {
-            try
-            {
-                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
-                LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
-                AudioSource audios = emptyGunSFX.GetComponent<AudioSource>();
-
-                audios.clip = ac;
-                audios.pitch = pitch;
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
             catch (Exception e)

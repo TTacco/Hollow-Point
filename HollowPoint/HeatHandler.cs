@@ -52,7 +52,7 @@ namespace HollowPoint
 
             if (currentHeat > 0)
             {
-                currentHeat -= Time.deltaTime * 70f; //Speed heat dissipates
+                currentHeat -= Time.deltaTime * 80f; //Speed heat dissipates
                 if (currentHeat < 0)
                 {
                     currentHeat = 0;

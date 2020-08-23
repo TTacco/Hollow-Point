@@ -82,31 +82,25 @@ namespace HollowPoint
                 }
                 else if(OrientationHandler.heldAttack && Stats.instance.canFire)
                 {
-                    Stats.instance.StartBothCooldown();
-                    FireGun(FireModes.Single);
-                    //FireGun(FireModes.Burst);
-                }
-                else if (OrientationHandler.pressingAttack && Stats.instance.canFire && false)
-                {
-                    if (Stats.currentPrimaryAmmo > 0)
+
+                    if(PlayerData.instance.MPCharge >= Stats.instance.SoulCostPerShot())
                     {
-                        //HP_Stats.ReduceAmmunition();
-                        Stats.instance.StartBothCooldown();
-                        FireGun(FireModes.Spread);
-                        //FireGun((PlayerData.instance.equippedCharm_11) ? FireModes.Spread : FireModes.Single);
+                        FireGun(FireModes.Single);
                     }
                     else if(clickTimer <= 0)
                     {
-                        clickTimer = 3f;
                         AudioHandler.PlaySoundsMisc("cantfire");
+                        clickTimer = 1f;
                     }
+
+                    //FireGun(FireModes.Burst);
                 }
             }
             else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 if (Stats.instance.canFire && OrientationHandler.heldAttack)
                 {
-                    Stats.instance.StartBothCooldown(30f);
+                    Stats.instance.StartBothCooldown(4f);
                     StartCoroutine(FireGAU());
                     return;
                 }
@@ -142,7 +136,7 @@ namespace HollowPoint
 
             if (clickTimer > 0)
             {
-                clickTimer -= Time.deltaTime * 10;
+                clickTimer -= Time.deltaTime * 1;
             }
         }
 
@@ -159,12 +153,11 @@ namespace HollowPoint
         {
             if (isFiring) return;
             isFiring = true;
+            Stats.instance.StartBothCooldown();
 
             if (fm == FireModes.Single)
             {
-                hc_instance.TakeMPQuick(Stats.instance.MPCostOnShot());
-                //slowWalk = ((PlayerData.instance.equippedCharm_37 && PlayerData.instance.equippedCharm_32) || !PlayerData.instance.equippedCharm_37);
-                //HeroController.instance.WALK_SPEED = Stats.walkSpeed;
+                hc_instance.TakeMPQuick(Stats.instance.SoulCostPerShot());
                 StartCoroutine(SingleShot());
             }
             if (fm == FireModes.Burst)
@@ -188,12 +181,12 @@ namespace HollowPoint
             float fireDegree = OrientationHandler.finalDegreeDirection;
             if (hc_instance.cState.wallSliding)
             {
-                StartCoroutine(KnockbackRecoil(3 * mult, 270));
+                StartCoroutine(KnockbackRecoil(2.5f * mult, 270));
                 return;
             }
             else if (fireDegree == 270)
             {
-                StartCoroutine(KnockbackRecoil(4 * mult, 270));
+                StartCoroutine(KnockbackRecoil(7 * mult, 270));
             }
             else if (fireDegree < 350 && fireDegree > 190)
             {
@@ -203,9 +196,8 @@ namespace HollowPoint
 
         public IEnumerator SingleShot()
         {
-
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-            HeatHandler.IncreaseHeat(20f);      
+            HeatHandler.IncreaseHeat(Stats.instance.heatPerShot);      
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
@@ -216,22 +208,19 @@ namespace HollowPoint
 
             //Charm 14 Steady Body
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
-            hpbb.pierce = PlayerData.instance.equippedCharm_13;
-            
+            hpbb.pierce = PlayerData.instance.equippedCharm_13;         
             //set the origin position of where the bullet was spawned
             hpbb.bulletOriginPosition = bullet.transform.position;
+            hpbb.bulletSpeed = Stats.instance.bulletVelocity;
 
-            Destroy(bullet, 0.35f);
+            Destroy(bullet, 0.3f);
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
             HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
             slowWalkDisableTimer = 14f;
-
-            string weaponType = PlayerData.instance.equippedCharm_13 ? "sniper" : "rifle";
             AudioHandler.PlayGunSounds("rifle");
-            if(weaponType == "sniper") bullet.transform.localScale = new Vector3(1.8f, 1.8f, 0.1f);
 
             yield return new WaitForSeconds(0.02f);
             isFiring = false;
@@ -249,7 +238,7 @@ namespace HollowPoint
                 GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
 
                 AudioHandler.PlayGunSounds("rifle");
-                Destroy(bullet, .4f);
+                Destroy(bullet, .45f);
 
                 HollowPointSprites.StartGunAnims();
                 HollowPointSprites.StartFlash();
@@ -258,7 +247,7 @@ namespace HollowPoint
 
                 if (h_state.dashing) break;
             }
-            HeatHandler.IncreaseHeat(8f);
+            HeatHandler.IncreaseHeat(Stats.instance.heatPerShot);
             isFiring = false;
             slowWalkDisableTimer = 4f * burst;
         }
@@ -335,7 +324,6 @@ namespace HollowPoint
 
         public IEnumerator KnockbackRecoil(float recoilStrength, float applyForceFromDegree)
         {
-            //TODO: Develop the direction launch soon 
             if (recoilStrength < 0.05) yield break;
             float deg = applyForceFromDegree + 180;
             deg = deg % 360;

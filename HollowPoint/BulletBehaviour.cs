@@ -9,13 +9,12 @@ namespace HollowPoint
 {
     public class BulletBehaviour : MonoBehaviour
     {
-        GameObject bulletTrailObjectClone;
         Rigidbody2D rb2d;
         BoxCollider2D bc2d;
         SpriteRenderer bulletSprite;
         HealthManager hm;
         double xDeg, yDeg;
-        double bulletSpeed = 10;
+        public float bulletSpeed = 25;
 
         public string specialAttrib;
         public bool pierce = false;
@@ -29,10 +28,10 @@ namespace HollowPoint
         public bool hasSporeCloud = true;
 
         //Fire Support Attribs
-        public bool flareRound = false;
-        public bool isFireSupportBullet = false;
+        public bool artilleryShell = false;
 
         public bool noDeviation = false;
+        public bool useDefaultParticles = true;
         public bool noHeat = false;
         public bool perfectAccuracy = false;
         public float heatOnHit = 0;
@@ -40,12 +39,13 @@ namespace HollowPoint
 
         public Vector3 bulletOriginPosition;
         public Vector3 targetDestination;
+        public Vector3 gameObjectScale = new Vector3(1.2f, 1.2f, 0);
+        public Vector3 size = new Vector3(1.2f, 1.2f, 0.90f);
 
+        //TODO: Clean this up, and the bullet types too with structs instead
         public FireModes fm = FireModes.Single;
         public BulletType bt = BulletType.Standard;
 
-        public GameObject bulletTrailClone;
-        HealthManager pureVesselHM = null;
         static System.Random rand = new System.Random();
 
         public static HitInstance bulletDummyHitInstance = new HitInstance
@@ -71,75 +71,51 @@ namespace HollowPoint
             bc2d.enabled = !ignoreCollisions;
 
             gameObject.tag = "Wall Breaker";
-            //Trail    
-            bulletTrailClone = Instantiate(HollowPointPrefabs.bulletTrailPrefab, gameObject.transform);
-
-            //Increase the bullet size
-            bc2d.size = new Vector2(1f, 0.65f);
-
-            // +---| Bullet Sprite Swapper |---+
-
-            //Bullet sprite changer
-            /*
-            string sn = Stats.bulletSprite;
-            if (sn != "" && false)
-            {
-                HollowPointPrefabs.projectileSprites.TryGetValue(Stats.bulletSprite, out Sprite regularBulletSprite);
-                bulletSprite.sprite = regularBulletSprite;
-            }
-            */
 
             // +---| Bullet Origin for Distance Calculation |---+
             bulletOriginPosition = gameObject.transform.position;
 
-            // +---| Bullet Degree And Recoil |---+
-            float heat = HeatHandler.currentHeat;
-            noDeviation = (PlayerData.instance.equippedCharm_14);
-            float deviationFromMovement = (noDeviation) ? 0 : SpreadDeviationControl.ExtraDeviation();
-            float currentHeat = HeatHandler.currentHeat;
-            int heatCount = (int)(currentHeat / 33);
-            float heatMult = 0.01f + (heatCount * 0.06f);
-            float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 2f)/500; //exponential
-            deviationFromHeat *= (PlayerData.instance.equippedCharm_37) ? 1.25f : 1.15f; //Increase movement penalty when equipping sprint master
-            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
-
-            float deviation = (perfectAccuracy) ? 0 : (deviationFromHeat + deviationFromMovement);
-            deviation = Mathf.Clamp(deviation, 0, 14); //just set up the minimum value, bullets starts acting weird when deviation is negative
-            //deviation = (deviation < 0) ? 0 : deviation; 
-
-            // +---| Bullet Properties |---+
-            bulletSpeed = Stats.instance.bulletVelocity;
-            float size = bulletSizeOverride;
+            //float size = bulletSizeOverride;
+            gameObject.transform.localScale = size;
+            bc2d.size = size;//Collider size
 
             // +---| Air Strike Bullet Modifier |---+
-            //Override this entire code if its from fire support and give the bullet its own special properties aka because making new GOs with code is effort
-            if (isFireSupportBullet)
+            if (artilleryShell)
             {
-                //bulletTrailObjectClone.GetComponent<TrailRenderer>().time = 0.9f;
                 HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
                 bulletSprite.sprite = fireSupportBulletSprite;
                 bulletSpeed = 120;
             }
 
-            gameObject.transform.localScale = new Vector3(size, size, 0.90f);
-            gameObject.transform.localScale = new Vector3(size, size, 0.90f);
+            //Particle Effects
+
+            string particlePrefabName = (useDefaultParticles) ? "SpellParticlePrefab" : "GrimmParticlePrefab"; 
+            GameObject fireballParticles = HollowPointPrefabs.SpawnObjectFromDictionary(particlePrefabName, gameObject.transform.position, Quaternion.identity);
+            fireballParticles.AddComponent<ParticlesController>().parent = gameObject;
+            //fireballParticles.GetComponent<ParticlesController>().size = bullet.size;
+            fireballParticles.SetActive(true);
+
+
+            // +---| Bullet Heat |---+
+            float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 2f) / 500; //exponential
+            deviationFromHeat *= (PlayerData.instance.equippedCharm_37) ? 1.25f : 1.15f; //Increase movement penalty when equipping sprint master
+            deviationFromHeat -= (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? 18 : 0; //Decrease innacuracy when on ground and steady body is equipped
+
+            float deviation = (perfectAccuracy) ? 0 : (deviationFromHeat);
+            deviation = Mathf.Clamp(deviation, 0, 20); //just set up the minimum value, bullets starts acting weird when deviation is negative
+            //deviation = (deviation < 0) ? 0 : deviation; 
 
             // +---| Bullet Spread and Recoil |---+
-            //a moving pivot for where the bullet can spread, with its maximum and minimum deviation, this allows the bullet to
-            //smoothly spread instead of being just random
-            bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the value
+            //a moving pivot for where the bullet can spread, with its maximum and minimum deviation, this allows the bullet to smoothly spread instead of being just random
+            bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the max/min deviation, shrinking the cone of fire
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
-            bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta; 
-            bulletPivot += bulletPivotDelta * rand.Next(5,9); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
+            bulletPivot += bulletPivotDelta * rand.Next(3, 11); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
-
-            //float degree = bulletDegreeDirection + (rand.Next((int)-deviation, (int)deviation + 1)) - (float)rand.NextDouble();
             float radian = (float)(degree * Math.PI / 180);
 
             xDeg = bulletSpeed * Math.Cos(radian) * bulletSpeedMult;
             yDeg = bulletSpeed * Math.Sin(radian) * bulletSpeedMult;
-
-
 
             //Changes the degree of bullet sprite rotation and the bullet direction when wall sliding
             if (HeroController.instance.cState.wallSliding)
@@ -155,12 +131,12 @@ namespace HollowPoint
         //Destroy the artillery shell when it hits the destination
         void FixedUpdate()
         {
-            if (isFireSupportBullet)
+            if (artilleryShell)
             {
                 if (gameObject.transform.position.y < targetDestination.y)
                 {
-                    Log("[BulletBehaviour] Reached destroy point for artillery shell");
-                    Destroy(gameObject);
+                    //Log("[BulletBehaviour] Reached destroy point for artillery shell");
+                    Destroy(gameObject, 0.05f);
                 }
             }
         }
@@ -171,12 +147,13 @@ namespace HollowPoint
             hm = col.GetComponentInChildren<HealthManager>();
             bulletDummyHitInstance.Source = gameObject;
 
-           // Log("[BulletBehaviour] Col Name" + col.name);
-            if(col.gameObject.name.Contains("Idle") || hm != null)
+            // Log("[BulletBehaviour] Col Name" + col.name);
+            if (col.gameObject.name.Contains("Idle") || hm != null)
             {
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-                Destroy(gameObject);
+                if (pierce) return;
+                Destroy(gameObject, 0.03f);
                 return;
             }
 
@@ -189,7 +166,7 @@ namespace HollowPoint
                     bulletDummyHitInstance.Direction = 270f;
                     br.Hit(bulletDummyHitInstance);
                 }
-                //TODO: change this audio source location
+                //TODO: change this audio source location to the sound handler
                 LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
                 //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
                 HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
@@ -219,44 +196,224 @@ namespace HollowPoint
         //TODO: Create an "explosion component" to spawn on destroy instead of creating the object at the Destroy of the bullet
         public void OnDestroy()
         {
-            
-            bulletTrailClone.transform.parent = null;
-            Destroy(bulletTrailClone, 1f); //just to make sure theres no lingering game objects in the background
+            GameObject fireballImpact = HollowPointPrefabs.SpawnObjectFromDictionary("FireballImpact", gameObject.transform.position, Quaternion.identity);
+            fireballImpact.transform.Rotate(0, 0, gameObject.transform.eulerAngles.z, 0);
+            fireballImpact.transform.localScale = new Vector3(1.1f, 0.3f);
+            Destroy(fireballImpact, 1.5f);
+        }
 
-            Destroy(Instantiate(HollowPointPrefabs.bulletFadePrefab, gameObject.transform.position + new Vector3(0, 0, -0.5f), gameObject.transform.localRotation), 0.03f); //bullet fade out sprite
+    }
 
-            if (specialAttrib.Contains("Explosion") && PlayerData.instance.equippedCharm_17)
+    //Attaches itself to an enemy with a Health Manager
+    public class InflictsDamageOvertime : MonoBehaviour
+    {
+        int stack;
+        int damage;
+        float tick;
+        float duration;
+        HealthManager hm = null;
+        GameObject particles = null;
+        ParticleSystem particleSystem = null;
+
+        bool playFireAnim = false;
+
+        void Start()
+        {
+            try
+            {
+                Log("[DamageOverride:DamageOvertime] Awakening Damage Overtime");
+                stack = 1;
+                damage = 1;
+                tick = 0.2f;
+                duration = 2f;
+
+                hm = gameObject.GetComponent<HealthManager>();
+                Vector2 enemySize = gameObject.GetComponent<BoxCollider2D>().size;
+                particles = HollowPointPrefabs.SpawnObjectFromDictionary("SpellParticlePrefab", gameObject.transform.position, Quaternion.identity);
+
+                ParticlesController fpc = particles.AddComponent<ParticlesController>();
+                fpc.parent = gameObject;
+                fpc.rateOverTimeMultiplier = 100;
+                fpc.size = enemySize;
+
+                particles.SetActive(true);
+                particleSystem = particles.GetComponent<ParticleSystem>();
+                particleSystem.Stop();
+                //Log("ENEMY SIZE IS " + enemySize);
+                //gameObject.GetComponent<SetParticleScale>().transform.localScale = enemySize - new Vector2(0.3f, 0.3f);
+            }
+            catch(Exception e)
+            {
+                Log("DamageOvertime " + e);
+            }
+        }
+
+        void Update()
+        {
+            tick -= Time.deltaTime * 1f;
+            duration -= Time.deltaTime * 1f;
+
+            if (tick < 0 && stack > 0)
+            {
+                tick = 0.2f;
+                DamageEnemy();
+            }
+            if (duration < 0 && stack > 0)
+            {
+                duration = 3f;
+                stack--;
+            }
+
+            if(stack <= 0 && playFireAnim)
+            {
+                particleSystem.Stop();
+                playFireAnim = false;
+            }
+        }
+
+        void DamageEnemy()
+        {
+            if (hm == null)
+            {
+                Log("[DamageOverride:DamageOvertime] Game Object/HealthManager null, cannot apply damage overtime");
+                stack = 0;             
+                return;
+            }
+
+            if (!playFireAnim)
+            {
+                particleSystem.Play();
+                playFireAnim = true;
+            }
+            //TODO: Add sounds whenever they take damage
+
+            hm.hp -= damage * stack;
+            SpriteFlash f = hm.gameObject.GetComponent<SpriteFlash>();
+            if (f != null) f.flashBenchRest();
+            if (hm.hp <= 0) DamageOverride.EnemyDeathEvent(hm, 90, false);       
+        }
+
+        public void IncreaseStack()
+        {
+            Log("[BulletBehaviour:DamageOvertime] Increasing Damage Stack");
+            if (stack < 3) stack++;
+           
+            duration = 2f;
+        }
+
+    }
+    
+    //This behaviour is attached to the particle gameobjects, and from here we control the particles properties like size, emission etc
+    public class ParticlesController : MonoBehaviour
+    {
+        public GameObject parent;
+        public float rateOverTimeMultiplier = 30f;
+        ParticleSystemRenderer particleSystemRenderer;
+        ParticleSystem particleSystem;
+        SetParticleScale setParticleScale;
+        bool toBeDestroyed = false;
+        public Vector2 size = new Vector2(0.2f, 0.2f);
+
+        void Start()
+        {
+            //Log("BulletBehaviour:FireballParticlesProperties Start()");
+            //Array.ForEach<Component>(gameObject.GetComponents<Component>(), x => Log(x));
+
+            particleSystemRenderer = gameObject.GetComponent<ParticleSystemRenderer>();
+            particleSystem = gameObject.GetComponent<ParticleSystem>();
+            setParticleScale = gameObject.GetComponent<SetParticleScale>();
+
+            ParticleSystem.EmissionModule emissionModule = particleSystem.emission;
+            emissionModule.rateOverTimeMultiplier = rateOverTimeMultiplier;
+            setParticleScale.transform.localScale = size;
+        }
+
+        void Update()
+        {
+            if (parent == null && !toBeDestroyed)
+            {
+                toBeDestroyed = true;
+                //Log("BulletBehaviour:FireballParticlesProperties Parent gone, behaviour will destroy itself in a bit");
+                particleSystem.Stop();
+                Destroy(gameObject, 2.7f);
+            }
+            gameObject.transform.position = parent.transform.position;
+        }
+
+        void OnDestroy()
+        {
+            //Log("BulletBehaviour:FireballParticlesProperties Destroy()");
+        }
+    }
+
+    public class BulletIsExplosive : MonoBehaviour
+    {
+        public ExplosionType explosionType;
+        public bool artilleryShell = false;
+        static UnityEngine.Random rand = new UnityEngine.Random();
+        public enum ExplosionType
+        {
+            GasExplosion,
+            DungExplosion,
+            DungExplosionSmall,
+        }
+
+        public void OnDestroy()
+        {
+            //TODO: Convert this into a component
+            if (explosionType == ExplosionType.GasExplosion && PlayerData.instance.equippedCharm_17)
             {
                 //HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
                 //GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 //sporeCloudGO.SetActive(true);
             }
 
-            if (specialAttrib.Contains("DungExplosion"))
+            if (explosionType == ExplosionType.DungExplosion || explosionType == ExplosionType.DungExplosionSmall)
             {
                 HollowPointPrefabs.prefabDictionary.TryGetValue("Dung Explosion", out GameObject dungExplosion);
                 GameObject dungExplosionGO = Instantiate(dungExplosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 dungExplosionGO.SetActive(true);
                 dungExplosionGO.name += " KnightMadeDungExplosion";
 
-                if (specialAttrib.Contains("Small"))
+                if (explosionType == ExplosionType.DungExplosionSmall)
                 {
                     dungExplosionGO.transform.localScale = new Vector3(0.6f, 0.6f, 0);
                 }
             }
 
             //If its from a grenade launch or a offensive fire support projectile, make it explode
-            else if (gameObject.GetComponent<BulletBehaviour>().specialAttrib.Contains("Explosion") || isFireSupportBullet)
+            else if (explosionType == ExplosionType.GasExplosion || artilleryShell)
             {
+                Log("ARTILLERY!");
                 GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.name += " KnightMadeExplosion";
 
                 //Shrinks the explosion when its not a fire support bullet or its not an upgraded vengeful, as a nerf/downgrade
-                if (isFireSupportBullet) SpellControlOverride.PlayAudio("mortarexplosion", true);
+                if (artilleryShell)
+                {
+                    SpellControlOverride.PlayAudio("mortarexplosion", true);
+                    //StartCoroutine(SpawnCluster());
+                    for (int shrapnel = 0; shrapnel < 6; shrapnel++)
+                    {
+                        GameObject s = HollowPointPrefabs.SpawnBulletAtCoordinate(UnityEngine.Random.Range(190, 350), gameObject.transform.position, 0);
+                        s.AddComponent<BulletIsExplosive>().explosionType = ExplosionType.DungExplosion;
+                        Destroy(s, 1f);
+                    }
+                }
                 else if (PlayerData.instance.fireballLevel > 1) explosionClone.transform.localScale = new Vector3(1.3f, 1.3f, 0);
                 else explosionClone.transform.localScale = new Vector3(0.7f, 0.7f, 0);
             }
+            
         }
-
+        IEnumerator SpawnCluster()
+        {
+            for(int shrapnel = 0; shrapnel < 6; shrapnel++)
+            {
+                GameObject s = HollowPointPrefabs.SpawnBulletAtCoordinate(UnityEngine.Random.Range(190, 350), gameObject.transform.position, 0);
+                s.AddComponent<BulletIsExplosive>().explosionType = ExplosionType.DungExplosion;
+                Destroy(s, 1f);
+            }
+            yield return null;
+        }
     }
 }
