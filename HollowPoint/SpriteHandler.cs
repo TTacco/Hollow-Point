@@ -22,7 +22,7 @@ namespace HollowPoint
         public static GameObject muzzleFlashGOAlt;
         public static GameObject whiteFlashGO;
 
-        System.Random shakeNum = new System.Random();
+        static System.Random rand = new System.Random();
         static private Vector3 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
 
         int rotationNum = 0;
@@ -37,6 +37,7 @@ namespace HollowPoint
         public static bool isWallClimbing = false;
         public static bool facingNorthFirstTime = false;
         public static bool altMuzzleflash = false;
+        static bool lowerGunCoroutineActive = false;
 
         public static HeroActions ha;
 
@@ -84,7 +85,7 @@ namespace HollowPoint
                 gunSpriteGO.transform.SetParent(ts);
 
                 defaultWeaponPos = new Vector3(-0.2f, -0.84f, -0.0001f);
-                shakeNum = new System.Random();
+                rand = new System.Random();
 
                 whiteFlashGO = CreateGameObjectSprite("lightflash.png", "lightFlashGO", 65);
                 muzzleFlashGO = CreateGameObjectSprite("muzzleflash.png", "bulletFadePrefabObject", 150);
@@ -187,7 +188,6 @@ namespace HollowPoint
 
 
         }
-
         public void ShootAnim()
         {
             if (startFiringAnim)
@@ -200,7 +200,8 @@ namespace HollowPoint
             }
         }
 
-        
+        static float currentDegree = 0;
+
         public void SprintAnim()
         {
             //If the player is ducking and collecting, lower gun aim further
@@ -208,31 +209,34 @@ namespace HollowPoint
             if (isFiring) //If the player fires, make it so that they put the gun at a straight angle, otherwise make the gun lower
             {
                 StopCoroutine("SprintingShake");
+                StopCoroutine("SprintingShakeRotation");
                 lowerGunTimer -= Time.deltaTime;
-                gunSpriteGO.transform.SetRotationZ(SpriteRotation() * -1); //Point gun at the direction you are shooting
 
+                currentDegree = Mathf.Lerp(currentDegree, SpriteRotation() * -1, Time.deltaTime * 28);
+                gunSpriteGO.transform.SetRotationZ(currentDegree); //Point gun at the direction you are shooting
                 float gunHeightWhenPointingUpwards = (SpriteRotation() == 90 || SpriteRotation() == 45) ? 0.3f: 0f;
-                //gunSpriteGO.transform.localPosition.x 
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0.10f + gunHeightWhenPointingUpwards, -0.0001f); //0.10f * yMult
 
                 if (lowerGunTimer < 0)
                 {
                     isFiring = false;
                     isSprinting = false;
-                    gunSpriteGO.transform.localPosition = new Vector3(0, 0.10f, -0.0001f);
+                    gunSpriteGO.transform.localPosition = new Vector3(0, 0, -0.0001f);
+                    currentDegree = 0;
                 }
             }
             else if (HeroController.instance.hero_state == ActorStates.running && !isFiring) //Shake gun a bit while moving
             {
                 // gunSpriteGO.transform.SetRotationZ(25); 
-                if (!isSprinting) //This bool check prevents the couroutine from running multiple times && !HP_WeaponHandler.currentGun.gunName.Equals("Nail")
+                if (!isSprinting) //This bool check prevents the couroutine from running multiple times 
                 {
                     StartCoroutine("SprintingShake");
-                    StartCoroutine("SprintingShakeRotation");
+                    StartCoroutine("SprintingShakeRotation");                 
                     isSprinting = true;
                 }
             }
             //Idle animation/ Knight standing still
+
             else if (!isFiring)
             {
                 isSprinting = false;
@@ -240,15 +244,9 @@ namespace HollowPoint
                 StopCoroutine("SprintingShakeRotation");
                 //gunSpriteGO.transform.localPosition = defaultWeaponPos;
 
-                if (BadStareDown())
-                {
-                    gunSpriteGO.transform.SetRotationZ(50);
-                }
-                else
-                {
-                    gunSpriteGO.transform.SetRotationZ(35);
-                }
-
+                float lowerGunThreshold = (BadStareDown()) ? 50 : 32;
+                currentDegree = Mathf.Lerp(currentDegree, lowerGunThreshold, Time.deltaTime * 28);
+                gunSpriteGO.transform.SetRotationZ(currentDegree);
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0, -0.001f);
             }
         }
@@ -276,7 +274,6 @@ namespace HollowPoint
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, gunSpriteGO.transform.localPosition.y, -0.0001f);
             }
         }
-
 
         //Player is facing the front, not like, hes literally staring in front, like when they enter a room thats not either left or right
         bool BadAnimFace()
@@ -317,11 +314,11 @@ namespace HollowPoint
         IEnumerator SprintingShake()
         {
             spriteSprintDropdownHeight = 0;
-
+            //Log("[SPRITEHANDLER] STARTING SprintingShake()");
             while (true)
             {
                 yield return new WaitForSeconds(0.02f);
-                float y = Mathf.Sin(Time.time * 16)/100;
+                float y = Mathf.Sin(Time.time * 20)/100;
                 //gunSpriteGO.transform.SetRotationZ(shakeNum.Next(15, 24));
                 gunSpriteGO.transform.localPosition += new Vector3(0, y, 0);
             }
@@ -329,22 +326,35 @@ namespace HollowPoint
 
         IEnumerator SprintingShakeRotation()
         {
+            //Log("[SPRITEHANDLER] STARTING SprintingRotation()");
+
+     
+            float maxSprintDegree = 40;
+            float minSprintDegree = 10;
+            float medianDegree = (maxSprintDegree + minSprintDegree) / 2;
             while (true)
             {
-                yield return new WaitForSeconds(0.082f);
-                float y = Mathf.Sin(Time.time * 10) * 8;
-                y += 24;
-                gunSpriteGO.transform.SetRotationZ(y);
+                if(currentDegree < minSprintDegree || currentDegree > maxSprintDegree)
+                {
+                    //Rotation is out of range, lets reach the threshold for it first before using the sprint animator
+                    currentDegree = Mathf.Lerp(currentDegree, medianDegree, Time.deltaTime * 40f);
+                    continue;
+                }
+                yield return new WaitForSeconds(0.07f);
+                currentDegree = Mathf.Lerp(minSprintDegree + 1, maxSprintDegree - 1, Mathf.PingPong(Time.time * 2.4f, 1f));
+                gunSpriteGO.transform.SetRotationZ(currentDegree);
                 //gunSpriteGO.transform.localPosition += new Vector3(0, y, 0);
+                yield return null;
             }
         }
 
         IEnumerator ShootAnimation(float degreeDirection)
         {
+            //Log("[SPRITEHANDLER] STARTING ShootAnimation()");
             float face = (HeroController.instance.cState.facingRight) ? 1 : -1;
 
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
-            gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + shakeNum.Next(-7,8));
+            //gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + rand.Next(-7,8)); //-7 , 8
             yield return new WaitForSeconds(0.15f);
 
             // float faceX = (HeroController.instance.cState.facingRight) ? 0.1f : -0.1f;
@@ -357,15 +367,16 @@ namespace HollowPoint
         //basically it just rotates the gun based on shooting direction
         static float SpriteRotation()
         {
+            float gunRotation = 0;
             if(!((ha.right.IsPressed || ha.left.IsPressed)) || Stats.instance.cardinalFiringMode)
             {
-                return (ha.up.IsPressed) ? 90 : (ha.down.IsPressed)? -90 : 0;
+                gunRotation= (ha.up.IsPressed) ? 90 : (ha.down.IsPressed)? -90 : 0;
             }
             else if(ha.right.IsPressed || ha.left.IsPressed)
             {
-                return (ha.up.IsPressed) ? 45 : (ha.down.IsPressed) ? -45 : 0;
+                gunRotation = (ha.up.IsPressed) ? 45 : (ha.down.IsPressed) ? -45 : 0;
             }
-            return 0;
+            return gunRotation;// + rand.Next(-3,3);
         }
 
         public static void StartGunAnims()
@@ -375,7 +386,7 @@ namespace HollowPoint
             startFiringAnim = true;
             isFiring = false;
             isFiring = true;
-            lowerGunTimer = 0.40f;
+            lowerGunTimer = 0.32f;
         }
 
         public static void StartFlash()
@@ -422,7 +433,7 @@ namespace HollowPoint
             //muzzleFlashClone.transform.localPosition += new Vector3(0, 0, -2f);
 
             Destroy(muzzleFlashClone, 0.04f);
-            instance.StartCoroutine(MuzzleSmoke(muzzleFlashClone));
+            //instance.StartCoroutine(MuzzleSmoke(muzzleFlashClone)); Create a muzzle smoke
         }
 
         public static IEnumerator MuzzleSmoke(GameObject muzzleFlashSpawnPos)

@@ -153,7 +153,7 @@ namespace HollowPoint
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
                 if (pierce) return;
-                Destroy(gameObject, 0.03f);
+                Destroy(gameObject, 0.056f);
                 return;
             }
 
@@ -171,7 +171,7 @@ namespace HollowPoint
                 //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
                 HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
                 //Mark target for fire support
-                Destroy(gameObject);
+                Destroy(gameObject, 0.04f);
             }
         }
 
