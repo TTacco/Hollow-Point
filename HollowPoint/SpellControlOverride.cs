@@ -36,7 +36,7 @@ namespace HollowPoint
         static GameObject infusionSoundGO;
         public static GameObject grimmFireballGO;
 
-        private ILHook removeFocusCost = null;
+        private static ILHook removeFocusCost = null;
 
         void Awake()
         {

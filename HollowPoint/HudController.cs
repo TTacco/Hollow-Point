@@ -34,7 +34,7 @@ namespace HollowPoint
                 hudSpriteDictionary.Add(textureName, shardSprite);
             }
 
-            Modding.Logger.Log("did pepega");
+            //Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
             directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
@@ -49,13 +49,14 @@ namespace HollowPoint
             try
             {
                 var fireModeText = directionalFireModeHudIcon.GetComponent<DisplayItemAmount>().textObject;
+
                 directionalFireModeHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary[firemode];
                 Color color = new Color(0.55f, 0.55f, 0.55f);
                 StartCoroutine(BadAnimation(fireModeText, "", color));
             }
             catch(Exception e)
             {
-                Modding.Logger.Log("[HudController] Exception in UpdateFireModeIcon() Method");
+                Modding.Logger.Log("[HudController] Exception in UpdateFireModeIcon() Method" + e);
             }
 
         }
@@ -120,7 +121,7 @@ namespace HollowPoint
             }
             catch (Exception e)
             {
-                Modding.Logger.Log("[HudController] Exception in UpdateAdrenalineIcon() Method");
+                Modding.Logger.Log("[HudController] Exception in UpdateAdrenalineIcon() Method" + e);
             }
 
         }
@@ -147,7 +148,10 @@ namespace HollowPoint
             return go;
         }
 
-        void Destroy()
-            => Stats.FireModeIcon -= UpdateFireModeIcon;
+        void OnDestroy()
+        {
+            Stats.FireModeIcon -= UpdateFireModeIcon;
+            Stats.bloodRushIcon -= UpdateAdrenalineIcon;
+        }
     }
 }

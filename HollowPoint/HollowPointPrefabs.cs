@@ -223,6 +223,7 @@ namespace HollowPoint
             PlayMakerFSM fireballControl = go.LocateMyFSM("Fireball Control");
             GameObject fireballImpactClone = Instantiate(fireballControl.GetAction<ActivateGameObject>("Wall Impact", 5).gameObject.GameObject.Value);
             GameObject.DontDestroyOnLoad(fireballImpactClone);
+            fireballImpactClone.SetActive(false);
             //Destroy(fireballImpact);
             fireballImpactPrefab = fireballImpactClone;
             prefabDictionary.Add("FireballImpact", fireballImpactClone);
@@ -231,6 +232,7 @@ namespace HollowPoint
             GameObject spellParticlesClone = Instantiate(fireballControl.GetAction<StopParticleEmitter>("Wall Impact", 1).gameObject.GameObject.Value);
             GameObject.DontDestroyOnLoad(spellParticlesClone);
             prefabDictionary.Add("SpellParticlePrefab", spellParticlesClone);
+            spellParticlesClone.SetActive(false);
 
             //Grimmchild Particle
             //TODO: Clean this up to reduce object clutter
