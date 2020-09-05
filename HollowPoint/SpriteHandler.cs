@@ -329,8 +329,8 @@ namespace HollowPoint
             //Log("[SPRITEHANDLER] STARTING SprintingRotation()");
 
      
-            float maxSprintDegree = 40;
-            float minSprintDegree = 10;
+            float maxSprintDegree = 43; //40
+            float minSprintDegree = 18; //10
             float medianDegree = (maxSprintDegree + minSprintDegree) / 2;
             while (true)
             {
@@ -340,8 +340,8 @@ namespace HollowPoint
                     currentDegree = Mathf.Lerp(currentDegree, medianDegree, Time.deltaTime * 40f);
                     continue;
                 }
-                yield return new WaitForSeconds(0.07f);
-                currentDegree = Mathf.Lerp(minSprintDegree + 1, maxSprintDegree - 1, Mathf.PingPong(Time.time * 2.4f, 1f));
+                yield return new WaitForSeconds(0.06f);
+                currentDegree = Mathf.Lerp(minSprintDegree + 1, maxSprintDegree - 1, Mathf.PingPong(Time.time * 2.9f, 1f));
                 gunSpriteGO.transform.SetRotationZ(currentDegree);
                 //gunSpriteGO.transform.localPosition += new Vector3(0, y, 0);
                 yield return null;

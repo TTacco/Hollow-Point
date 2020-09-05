@@ -253,6 +253,7 @@ namespace HollowPoint
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(3);
                 Stats.instance.IncreaseBloodRushEnergy();
+                Stats.instance.ExtendCartridgeDecayTime(false);
             }
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
@@ -282,8 +283,8 @@ namespace HollowPoint
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
             HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
             Stats.instance.IncreaseBloodRushEnergy();
+            Stats.instance.ExtendCartridgeDecayTime(true);
             //GameManager.instance.FreezeMoment(1);
-
             //Log("Spawning Weavers");
             //GameObject weaverPrefab = HollowPointPrefabs.prefabDictionary["Weaverling"];
             //GameObject weaverClone = Instantiate(weaverPrefab, HeroController.instance.transform.position, Quaternion.identity);

@@ -215,29 +215,29 @@ namespace HollowPoint
         {
             while (HeroController.instance == null) yield return null;
 
-            //Fireball/Vengeful Spirit Wall Impact Prefab
-            PlayMakerFSM spellControlFSM = HeroController.instance.spellControl;
-            PlayMakerFSM fireball_FireballTopFSM = spellControlFSM.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value.LocateMyFSM("Fireball Cast");
-            GameObject go = Instantiate(fireball_FireballTopFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).gameObject.Value);
-            go.SetActive(false);
-            PlayMakerFSM fireballControl = go.LocateMyFSM("Fireball Control");
-            GameObject fireballImpactClone = Instantiate(fireballControl.GetAction<ActivateGameObject>("Wall Impact", 5).gameObject.GameObject.Value);
-            GameObject.DontDestroyOnLoad(fireballImpactClone);
-            fireballImpactClone.SetActive(false);
-            //Destroy(fireballImpact);
-            fireballImpactPrefab = fireballImpactClone;
-            prefabDictionary.Add("FireballImpact", fireballImpactClone);
-
-            //Fireball/Vengeful Spirit Particles
-            GameObject spellParticlesClone = Instantiate(fireballControl.GetAction<StopParticleEmitter>("Wall Impact", 1).gameObject.GameObject.Value);
-            GameObject.DontDestroyOnLoad(spellParticlesClone);
-            prefabDictionary.Add("SpellParticlePrefab", spellParticlesClone);
-            spellParticlesClone.SetActive(false);
-
-            //Grimmchild Particle
-            //TODO: Clean this up to reduce object clutter
             try
             {
+                //Fireball/Vengeful Spirit Wall Impact Prefab
+                PlayMakerFSM spellControlFSM = HeroController.instance.spellControl;
+                PlayMakerFSM fireball_FireballTopFSM = spellControlFSM.GetAction<SpawnObjectFromGlobalPool>("Fireball 1", 3).gameObject.Value.LocateMyFSM("Fireball Cast");
+                GameObject go = Instantiate(fireball_FireballTopFSM.GetAction<SpawnObjectFromGlobalPool>("Cast Left", 4).gameObject.Value);
+                go.SetActive(false);
+                PlayMakerFSM fireballControl = go.LocateMyFSM("Fireball Control");
+                GameObject fireballImpactClone = Instantiate(fireballControl.GetAction<ActivateGameObject>("Wall Impact", 5).gameObject.GameObject.Value);
+                GameObject.DontDestroyOnLoad(fireballImpactClone);
+                fireballImpactClone.SetActive(false);
+                //Destroy(fireballImpact);
+                fireballImpactPrefab = fireballImpactClone;
+                prefabDictionary.Add("FireballImpact", fireballImpactClone);
+
+                //Fireball/Vengeful Spirit Particles
+                GameObject spellParticlesClone = Instantiate(fireballControl.GetAction<StopParticleEmitter>("Wall Impact", 1).gameObject.GameObject.Value);
+                GameObject.DontDestroyOnLoad(spellParticlesClone);
+                prefabDictionary.Add("SpellParticlePrefab", spellParticlesClone);
+                spellParticlesClone.SetActive(false);
+
+                //Grimmchild Particle
+                //TODO: Clean this up to reduce object clutter
                 PlayMakerFSM spawnGrimmChild = GameObject.Find("Charm Effects").LocateMyFSM("Spawn Grimmchild");
                 GameObject grimmChild = spawnGrimmChild.GetAction<SpawnObjectFromGlobalPool>("Spawn", 2).gameObject.Value;
                 PlayMakerFSM grimmChildControl = grimmChild.LocateMyFSM("Control");
@@ -251,6 +251,17 @@ namespace HollowPoint
                 GameObject grimmParticleClone = Instantiate(grimmParticle);
                 GameObject.DontDestroyOnLoad(grimmParticleClone);
                 prefabDictionary.Add("GrimmParticlePrefab", grimmParticleClone);
+
+                PlayMakerFSM furyFSM = GameObject.Find("Charm Effects").LocateMyFSM("Fury");
+                GameObject furyParticles = Instantiate(furyFSM.GetAction<PlayParticleEmitter>("Activate", 2).gameObject.GameObject.Value);
+                GameObject.DontDestroyOnLoad(furyParticles);
+                furyParticles.SetActive(false);
+                prefabDictionary.Add("FuryParticlePrefab",furyParticles);
+
+                GameObject furyBurst = Instantiate(furyFSM.GetAction<ActivateGameObject>("Activate", 20).gameObject.GameObject.Value);
+                GameObject.DontDestroyOnLoad(furyBurst);
+                furyBurst.SetActive(false);
+                prefabDictionary.Add("FuryBurstPrefab", furyBurst);
             }
             catch(Exception e)
             {
@@ -286,7 +297,7 @@ namespace HollowPoint
             BulletBehaviour bb = bullet.GetComponent<BulletBehaviour>();
             bb.bulletDegreeDirection = bulletDegreeDirection;
             bb.heatOnHit = HeatHandler.currentHeat;
-            bb.size = new Vector2(0.90f, 0.75f);
+            bb.size = new Vector2(0.80f, 0.80f);
             bullet.SetActive(true);
 
             return bullet;

@@ -73,30 +73,33 @@ namespace HollowPoint
         public float walkSpeed = 3f;
         public float fireRateCooldown = 5f;
         public float fireRateCooldownTimer = 5f;
-        public float bulletRange = 0;
+        public float bulletLifetime = 0;
         public float heatPerShot = 0;
         public float bulletVelocity = 0;
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
         public bool slowWalk = false;
-        static float recentlyFiredTimer = 0;
         public int soulGained = 0;
         public bool hasActivatedAdrenaline = false;
 
+        public float recentlyFiredTimer = 0;
         private float recentlyKilledTimer;
         int totalGeo = 0;
+
         //Dash float values
         public PlayerData pd_instance;
         public HeroController hc_instance;
         public AudioManager am_instance;
 
         //New Soul Cartridge System
-        int bloodRush_Charges;
+        int heal_Charges;
         int soulC_Energy;
-        float bloodRush_CooldownTimer;
-        float bloodRush_DecayTimer;
-        bool bloodRush_OnCooldown;
+        float heal_ChargesCoolDown;
+        float heal_ChargesDecayTimer;
+        bool heal_OnCooldown;
+
+
 
         public void Awake()
         {
@@ -139,7 +142,7 @@ namespace HollowPoint
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
-            if (bloodRush_Charges < 0) return false; //If your soul charges are less than 1, you cant heal bud
+            if (heal_Charges < 0) return false; //If your soul charges are less than 1, you cant heal bud
 
             return orig(self);
         }
@@ -204,11 +207,11 @@ namespace HollowPoint
         {
             Log("Charm Update Called");
             //Initialise stats
-            bulletRange = .20f + (PlayerData.instance.nailSmithUpgrades * 0.02f);
-            bulletVelocity = 25f;
-            fireRateCooldown = 0.12f; 
-            soulCostPerShot = 3;
-            heatPerShot = 20f;
+            bulletLifetime = 0.26f;//SMG 0.29f
+            bulletVelocity = 25f; //SMG 24f
+            fireRateCooldown = 0.08f; //0.06 SMG22f
+            soulCostPerShot = 8;
+            heatPerShot = 10f;
             soulGained = 2;
             soulRegenTimer = 2.75f;
             walkSpeed = 3f;
@@ -227,11 +230,11 @@ namespace HollowPoint
             recentlyFiredTimer = 0.1f;
 
             //Cartridge
-            bloodRush_Charges = 0;
+            heal_Charges = 0;
             soulC_Energy = 0 ;
-            bloodRush_DecayTimer = 0;
-            bloodRush_CooldownTimer = 0;
-            bloodRush_OnCooldown = false;
+            heal_ChargesDecayTimer = 0;
+            heal_ChargesCoolDown = 0;
+            heal_OnCooldown = false;
             bloodRushIcon?.Invoke("0");
 
         }
@@ -267,17 +270,17 @@ namespace HollowPoint
             if (hc_instance.cState.isPaused || hc_instance.cState.transitioning) return;
 
             //Soul Cartridge Disable Cooldown Time
-            if(bloodRush_CooldownTimer > 0) bloodRush_CooldownTimer -= Time.deltaTime * 1f;
-            else if (bloodRush_OnCooldown)
+            if(heal_ChargesCoolDown > 0) heal_ChargesCoolDown -= Time.deltaTime * 1f;
+            else if (heal_OnCooldown)
             {
                 ChangeBloodRushCharges(increase: true);
-                bloodRush_OnCooldown = false;          
+                heal_OnCooldown = false;          
                 Log("[Stats] Player is now off cooldown");
             }  
 
             //Soul Cartridge Decay
-            if (bloodRush_DecayTimer > 0) bloodRush_DecayTimer -= Time.deltaTime * 1f;
-            else if(bloodRush_Charges > 0) ChangeBloodRushCharges(increase: false);
+            //if (heal_ChargesDecayTimer > 0) heal_ChargesDecayTimer -= Time.deltaTime * 1f;
+            //else if(heal_Charges > 0) ChangeBloodRushCharges(increase: false);
 
             //On Kill Bonus
             if (recentlyKilledTimer > 0) recentlyKilledTimer -= Time.deltaTime * 1f;
@@ -301,8 +304,8 @@ namespace HollowPoint
         public void IncreaseBloodRushEnergy()
         {
             //If the player is on cooldown, disable soul gain
-            if (bloodRush_OnCooldown) return;
-            if (bloodRush_Charges == 0) 
+            if (heal_OnCooldown) return;
+            if (heal_Charges == 0) 
             {
                 ChangeBloodRushCharges(increase: true);
                 soulC_Energy = 0;
@@ -310,7 +313,7 @@ namespace HollowPoint
             } 
 
 
-            int energyIncrease = 5; //Alter this value later
+            int energyIncrease = 8; //Alter this value later
             //Log("Increasing Energy, current is " + soulC_Energy);
             soulC_Energy += energyIncrease;
             if (soulC_Energy > 100)
@@ -330,20 +333,20 @@ namespace HollowPoint
          */
         void ChangeBloodRushCharges(bool increase)
         {
-            bloodRush_Charges += (increase && bloodRush_Charges < 4) ? 1 : (!increase)? -1 : 0;
-            if(bloodRush_Charges > 0) bloodRush_DecayTimer = 10;
+            heal_Charges += (increase && heal_Charges < 4) ? 1 : (!increase)? -1 : 0;
+            //if(heal_Charges > 0) heal_ChargesDecayTimer = 10;
 
             //Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
 
             //Update the UI
-            bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
+            bloodRushIcon?.Invoke(heal_Charges.ToString());
         }
 
-        void ExtendCartridgeDecayTime(bool enemyKilled)
+        public void ExtendCartridgeDecayTime(bool enemyKilled)
         {
             //Log("[Stats] Extending Decay Time");
-            bloodRush_DecayTimer += (enemyKilled) ? 4: 1;
-            bloodRush_DecayTimer = (bloodRush_DecayTimer > 10) ? 10 : bloodRush_DecayTimer;
+            heal_ChargesDecayTimer += (enemyKilled) ? 4: 2;
+            heal_ChargesDecayTimer = (heal_ChargesDecayTimer > 10) ? 10 : heal_ChargesDecayTimer;
         }
 
         public void ConsumeBloodRushCharges(bool consumeAll = true)
@@ -352,14 +355,14 @@ namespace HollowPoint
             if(!consumeAll)
             {
                 ChangeBloodRushCharges(false);
-                bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
+                bloodRushIcon?.Invoke(heal_Charges.ToString());
                 return;
             }
 
-            bloodRush_Charges = -1;
-            bloodRush_OnCooldown = true;
-            bloodRush_CooldownTimer = 10f;
-            bloodRushIcon?.Invoke(bloodRush_Charges.ToString());
+            heal_Charges = -1;
+            heal_OnCooldown = true;
+            heal_ChargesCoolDown = 10f;
+            bloodRushIcon?.Invoke(heal_Charges.ToString());
         }
 
 
@@ -389,7 +392,7 @@ namespace HollowPoint
 
         public int SoulCostPerShot()
         {
-            float mpCost = 6;
+            float mpCost = soulCostPerShot;
             //mpCost += (HeatHandler.currentHeat / 33f);
 
             //If the player has recently killed someone, prevent soul drainings

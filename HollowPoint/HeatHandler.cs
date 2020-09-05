@@ -11,7 +11,7 @@ namespace HollowPoint
     {
         public static float currentHeat;
         public static float currentEnergy = 100;
-        public float cooldownPause; //This is so whenever the player fires, theres a short pause before the heat goes down
+        public static float heatPauseTimer = 0.27f;//This is so whenever the player fires, theres a short pause before the heat goes down
         public const int MAX_HEAT = 100;
         public bool overheat = false;
 
@@ -39,20 +39,21 @@ namespace HollowPoint
 
             //Modding.Logger.Log(fastCooldownTimer);
             //Heat
-            if (cooldownPause > 0)
-            {
-                cooldownPause -= Time.deltaTime;
-                return;
-            }
 
             if (fastCooldownTimer > 0)
             {
                 fastCooldownTimer -= Time.deltaTime * 20f;
             }
 
+            if (heatPauseTimer > 0)
+            {
+                heatPauseTimer -= Time.deltaTime * 1f; 
+                return;
+            }
+
             if (currentHeat > 0)
             {
-                currentHeat -= Time.deltaTime * 80f; //Speed heat dissipates
+                currentHeat -= Time.deltaTime * 180f; //Speed heat dissipates
                 if (currentHeat < 0)
                 {
                     currentHeat = 0;
@@ -64,6 +65,8 @@ namespace HollowPoint
         {
             currentHeat = (currentHeat + increaseAmount > 100) ? 100 : currentHeat + increaseAmount;
             fastCooldownTimer = 10f;
+            heatPauseTimer = 0.27f;
+
             return;
         }
 

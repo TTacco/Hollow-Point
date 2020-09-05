@@ -20,6 +20,8 @@ namespace HollowPoint
         public WeaponType currentWeapon = WeaponType.Melee;
         public GunType currentGun = GunType.Primary;
 
+        public Dictionary<string, PrimaryModifiers> primaryModifierDictionary = new Dictionary<string, PrimaryModifiers>();
+
         const float DEFAULT_ATTACK_SPEED = 0.41f;
         const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
         const float DEFAULT_ANIMATION_SPEED = 0.35f;
@@ -31,6 +33,8 @@ namespace HollowPoint
             //DontDestroyOnLoad(this);
 
             StartCoroutine(InitWeaponSwapHandler());
+
+            CreateGuns();
         }
 
         public IEnumerator InitWeaponSwapHandler()
@@ -40,7 +44,7 @@ namespace HollowPoint
             {
                 yield return null;
             }
-
+            
             currentWeapon = WeaponType.Melee;
             currentGun = GunType.Primary;
         }
@@ -109,6 +113,30 @@ namespace HollowPoint
             }
         }
 
+
+        void CreateGuns()
+        {
+            Modding.Logger.Log("[WeaponHandler] Creating Gun Structs");
+
+            primaryModifierDictionary.Add("Sniper", new PrimaryModifiers
+            {
+                modifierName = "Rhagio",
+                soulCost = 10,
+                soulGainOnHit = 4,
+                soulGainOnKill = 8,
+                damageBase = 6,
+                damageScale = 4,
+                fireRate = 0.18f,
+                velocity = 60f,
+                heatGain = 20,
+                liftMultiplier = 5,
+                bulletSize = new Vector3(1.1f, 1.1f, 0)
+            });
+
+
+
+        }
+
         void OnDestroy()
         {
             Destroy(gameObject.GetComponent<WeaponSwapHandler>());
@@ -121,39 +149,19 @@ namespace HollowPoint
     //===========================================================
     //Gun Struct
     //===========================================================
-    struct HP_Gun
+    public struct PrimaryModifiers
     {
-        public String gunName;
-        public int gunDamage;
-        public int gunAmmo;
-        public int gunAmmo_Max;
-        public int gunHeatGain;
-        public String spriteName;
-        public float gunDeviation;
-        public float gunBulletSpeed;
-        public float gunDamMultiplier;
-        public float gunBulletSize;
-        public float gunCooldown;
-        public bool gunIgnoresInvuln;
-        public String flavorName;
-
-        public HP_Gun(string gunName, int gunDamage, int gunAmmo, int gunAmmo_Max, int gunHeatGain, string spriteName, 
-            float gunDeviation, float gunBulletSpeed, float gunDamMultiplier, float gunBulletSize, float gunCooldown, bool gunIgnoresInvuln, String flavorName)
-        {
-            this.gunName = gunName;
-            this.gunDamage = gunDamage;
-            this.gunAmmo = gunAmmo;
-            this.gunAmmo_Max = gunAmmo_Max;
-            this.gunHeatGain = gunHeatGain;
-            this.spriteName = spriteName;
-            this.gunDeviation = gunDeviation;
-            this.gunBulletSpeed = gunBulletSpeed;
-            this.gunDamMultiplier = gunDamMultiplier;
-            this.gunBulletSize = gunBulletSize;
-            this.gunCooldown = gunCooldown;
-            this.gunIgnoresInvuln = gunIgnoresInvuln;
-            this.flavorName = flavorName;
-        }
+        public string modifierName;
+        public int soulCost;
+        public int soulGainOnHit;
+        public int soulGainOnKill;
+        public int damageBase;
+        public int damageScale;
+        public float fireRate;
+        public float velocity;
+        public float heatGain;
+        public float liftMultiplier;
+        public Vector3 bulletSize;
     }
 
     //===========================================================

@@ -110,7 +110,7 @@ namespace HollowPoint
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the max/min deviation, shrinking the cone of fire
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * rand.Next(3, 11); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(10, 13); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
             float radian = (float)(degree * Math.PI / 180);
 
@@ -198,7 +198,7 @@ namespace HollowPoint
         {
             GameObject fireballImpact = HollowPointPrefabs.SpawnObjectFromDictionary("FireballImpact", gameObject.transform.position, Quaternion.identity);
             fireballImpact.transform.Rotate(0, 0, gameObject.transform.eulerAngles.z, 0);
-            fireballImpact.transform.localScale = new Vector3(1.1f, 0.3f);
+            fireballImpact.transform.localScale = size - new Vector3(0, 0.50f, 0);
             Destroy(fireballImpact, 1.5f);
         }
 
@@ -348,7 +348,7 @@ namespace HollowPoint
 
     public class BulletIsExplosive : MonoBehaviour
     {
-        public ExplosionType explosionType;
+        public ExplosionType explosionType = ExplosionType.DungExplosion;
         public bool artilleryShell = false;
         static UnityEngine.Random rand = new UnityEngine.Random();
         public enum ExplosionType

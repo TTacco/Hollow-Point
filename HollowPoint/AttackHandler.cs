@@ -155,6 +155,15 @@ namespace HollowPoint
             isFiring = true;
             Stats.instance.StartBothCooldown();
 
+            /*
+            GameObject furyParticle = HollowPointPrefabs.SpawnObjectFromDictionary("FuryParticlePrefab", HeroController.instance.transform);
+            furyParticle.SetActive(true);
+            furyParticle.GetComponent<ParticleSystem>().Play();
+
+            GameObject furyBurst = HollowPointPrefabs.SpawnObjectFromDictionary("FuryBurstPrefab", HeroController.instance.transform);
+            furyBurst.SetActive(true);
+             */
+
             if (fm == FireModes.Single)
             {
                 hc_instance.TakeMPQuick(Stats.instance.SoulCostPerShot());
@@ -186,7 +195,7 @@ namespace HollowPoint
             }
             else if (fireDegree == 270)
             {
-                StartCoroutine(KnockbackRecoil(7 * mult, 270));
+                StartCoroutine(KnockbackRecoil(8.5f * mult, 270));
             }
             else if (fireDegree < 350 && fireDegree > 190)
             {
@@ -196,7 +205,7 @@ namespace HollowPoint
 
         public IEnumerator SingleShot()
         {
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");           
             HeatHandler.IncreaseHeat(Stats.instance.heatPerShot);      
 
             float direction = OrientationHandler.finalDegreeDirection;
@@ -213,14 +222,14 @@ namespace HollowPoint
             hpbb.bulletOriginPosition = bullet.transform.position;
             hpbb.bulletSpeed = Stats.instance.bulletVelocity;
 
-            Destroy(bullet, 0.3f);
+            Destroy(bullet, Stats.instance.bulletLifetime);
 
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
             HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
             slowWalkDisableTimer = 14f;
-            AudioHandler.PlayGunSounds("rifle");
+            AudioHandler.PlayGunSounds("submachinegun");
 
             yield return new WaitForSeconds(0.02f);
             isFiring = false;
