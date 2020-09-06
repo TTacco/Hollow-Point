@@ -270,7 +270,7 @@ namespace HollowPoint
 
         }
 
-        public static GameObject SpawnBullet(float bulletDegreeDirection, DirectionalOrientation dirOrientation)
+        public static GameObject SpawnBulletFromGun(float bulletDegreeDirection, DirectionalOrientation dirOrientation)
         {
             //SpawnObjectFromDictionary("FireballImpact", HeroController.instance.transform.position, Quaternion.identity);
             //Instantiate(fireballImpactPrefab, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);
@@ -294,10 +294,10 @@ namespace HollowPoint
             directionMultiplierX *= wallClimbMultiplier;
                 
             GameObject bullet = Instantiate(bulletPrefab, HeroController.instance.transform.position + new Vector3(1.4f * directionMultiplierX, -0.7f + directionOffsetY, -0.002f), new Quaternion(0, 0, 0, 0));
-            BulletBehaviour bb = bullet.GetComponent<BulletBehaviour>();
-            bb.bulletDegreeDirection = bulletDegreeDirection;
-            bb.heatOnHit = HeatHandler.currentHeat;
-            bb.size = new Vector2(0.80f, 0.80f);
+           //BulletBehaviour bb = bullet.GetComponent<BulletBehaviour>();
+           // bb.bulletDegreeDirection = bulletDegreeDirection;
+            //bb.heatOnHit = HeatHandler.currentHeat;
+            //bb.size = Stats.instance.currentWeapon.bulletSize;
             bullet.SetActive(true);
 
             return bullet;

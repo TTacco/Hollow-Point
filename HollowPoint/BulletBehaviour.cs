@@ -34,7 +34,6 @@ namespace HollowPoint
         public bool useDefaultParticles = true;
         public bool noHeat = false;
         public bool perfectAccuracy = false;
-        public float heatOnHit = 0;
         static float bulletPivot = 0;
 
         public Vector3 bulletOriginPosition;
@@ -43,8 +42,7 @@ namespace HollowPoint
         public Vector3 size = new Vector3(1.2f, 1.2f, 0.90f);
 
         //TODO: Clean this up, and the bullet types too with structs instead
-        public FireModes fm = FireModes.Single;
-        public BulletType bt = BulletType.Standard;
+        public WeaponModifierName weaponUsed;
 
         static System.Random rand = new System.Random();
 

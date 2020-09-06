@@ -326,7 +326,7 @@ namespace HollowPoint
             Modding.Logger.Log("Swaping weapons");
 
             AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
-            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
+            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 //Holster gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_holster.wav", out AudioClip ac);
@@ -337,14 +337,14 @@ namespace HollowPoint
                  * thus giving that weird head jerk anim playing on the knight
                 */
                 HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
-                WeaponSwapHandler.instance.SwapBetweenNail();
+                WeaponSwapAndStatHandler.instance.SwapBetweenNail();
             }
             else
             {             
                 //Equip gun
                 LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
                 audios.PlayOneShot(ac);
-                WeaponSwapHandler.instance.SwapBetweenNail();
+                WeaponSwapAndStatHandler.instance.SwapBetweenNail();
             }
             isUsingGun = !isUsingGun;
 
@@ -368,7 +368,7 @@ namespace HollowPoint
                 return;
             }
 
-            if ((WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
+            if ((WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
                 grenadeCooldown = 30f;
 
@@ -378,7 +378,7 @@ namespace HollowPoint
 
                 //WeaponSwapHandler.SwapBetweenGun();
             }
-            else if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
+            else if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 spellControlFSM.SetState("Inactive");
             }
@@ -390,7 +390,7 @@ namespace HollowPoint
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
 
-            if(PlayerData.instance.MPCharge < 33 || WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
+            if(PlayerData.instance.MPCharge < 33 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {       
                 HeroController.instance.spellControl.SetState("Inactive");
             }
@@ -406,7 +406,7 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Inactive");
 
             int soulCost = (PlayerData.instance.equippedCharm_33) ? 22 : 33;
-            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
+            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
@@ -472,7 +472,7 @@ namespace HollowPoint
                 AudioHandler.PlayGunSounds("rifle");
                 float direction = OrientationHandler.finalDegreeDirection;
                 DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-                GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
                 bullet.GetComponent<BulletBehaviour>().bulletSizeOverride = 1.6f;
 
                 Destroy(bullet, .4f);
@@ -510,7 +510,7 @@ namespace HollowPoint
             {
                 yield return new WaitForEndOfFrame();
 
-                GameObject bullet = HollowPointPrefabs.SpawnBullet(angleToSpawnBullet, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(angleToSpawnBullet, orientation);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
                 hpbb.pierce = true;
@@ -537,7 +537,7 @@ namespace HollowPoint
             AudioHandler.PlayGunSounds("gatlinggun", 1f);
             for (int b = 0; b < rounds; b++)
             {
-                GameObject bullet = HollowPointPrefabs.SpawnBullet(direction, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
                 HeatHandler.IncreaseHeat(15f);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 bullet.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungExplosionSmall;
@@ -567,7 +567,7 @@ namespace HollowPoint
         {
 
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (PlayerData.instance.MPCharge < 99 || WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged)
+            if (PlayerData.instance.MPCharge < 99 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 spellControlFSM.SetState("Inactive");
             }

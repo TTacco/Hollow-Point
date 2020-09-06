@@ -142,7 +142,7 @@ namespace HollowPoint
             else if (srcName.Contains("Slash"))
             {
                 Log("Player is slashing!");
-                hitInstance.DamageDealt = 4 + (PlayerData.instance.nailSmithUpgrades * 3);
+                hitInstance.DamageDealt = 3 + (PlayerData.instance.nailSmithUpgrades * 3);
                 orig(self, hitInstance);
                 return;
             }
@@ -281,7 +281,7 @@ namespace HollowPoint
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
             }
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
-            HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
+            //HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
             Stats.instance.IncreaseBloodRushEnergy();
             Stats.instance.ExtendCartridgeDecayTime(true);
             //GameManager.instance.FreezeMoment(1);

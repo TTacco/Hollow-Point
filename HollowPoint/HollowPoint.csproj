@@ -161,7 +161,7 @@
     <EmbeddedResource Include="assets\bulletSpriteFade.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\shoot_sfx_submachinegun.wav" />
+    <EmbeddedResource Include="assets\shoot_sfx_smg.wav" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\Weapon_ShotgunSprite.png" />
@@ -270,6 +270,9 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\muzzleflashAlt.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_carbine.wav" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

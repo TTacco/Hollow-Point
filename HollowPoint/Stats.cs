@@ -66,40 +66,47 @@ namespace HollowPoint
 
         //static ShitStack extraWeavers = new ShitStack();
         //TODO: clean unused variables
-        public int soulCostPerShot = 1;
-        public float soulRegenTimer = 3f;
-        public float max_soul_regen = 33;
-        public float passiveSoulTimer = 5f;
-        public float walkSpeed = 3f;
-        public float fireRateCooldown = 5f;
-        public float fireRateCooldownTimer = 5f;
-        public float bulletLifetime = 0;
-        public float heatPerShot = 0;
-        public float bulletVelocity = 0;
+        //Setters for values values
+        public float current_bulletLifetime = 0;
+        public float current_bulletVelocity = 0;
+        public float current_boostMultiplier = 0;
+        public int current_damagePerShot = 0;
+        public int current_damagePerLevel = 0;
+        public float current_fireRateCooldown = 5f;
+        public float current_heatPerShot = 0;
+        public int current_soulCostPerShot = 1;
+        public float current_soulRegenSpeed = 0;
+        public float current_soulRegenTimer = 3f;
+        public float current_walkSpeed = 3f;
+        public int current_soulGainedPerHit = 0;
+        public int current_soulGainedPerKill = 0;
+        
+
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
         public bool slowWalk = false;
-        public int soulGained = 0;
         public bool hasActivatedAdrenaline = false;
 
+        //Update Timers
         public float recentlyFiredTimer = 0;
+        public float passiveSoulTimer = 5f;
         private float recentlyKilledTimer;
-        int totalGeo = 0;
+        public float fireRateCooldownTimer = 5f;
 
         //Dash float values
         public PlayerData pd_instance;
         public HeroController hc_instance;
         public AudioManager am_instance;
 
-        //New Soul Cartridge System
+        //Variables for the healing mechanic
         int heal_Charges;
         int soulC_Energy;
         float heal_ChargesCoolDown;
         float heal_ChargesDecayTimer;
         bool heal_OnCooldown;
 
-
+        public WeaponModifier currentWeapon;
 
         public void Awake()
         {
@@ -120,12 +127,14 @@ namespace HollowPoint
             hc_instance = HeroController.instance;
             am_instance = GameManager.instance.AudioManager;
 
+            /*
             Log("Default Dash Cooldown " + hc_instance.DASH_COOLDOWN);
             Log("Default Dash Cooldown Charm " + hc_instance.DASH_COOLDOWN_CH);
             Log("Default Dash Speed " + hc_instance.DASH_SPEED);
             Log("Default Dash Speed Sharp " + hc_instance.DASH_SPEED_SHARP);
             Log("Default Dash Time " + hc_instance.DASH_TIME);
             Log("Default Dash Gravity " + hc_instance.DEFAULT_GRAVITY);
+            */
             //Log(am_instance.GetAttr<float>("Volume"));
 
         //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
@@ -149,25 +158,18 @@ namespace HollowPoint
 
         private bool HeroController_CanDreamNail(On.HeroController.orig_CanDreamNail orig, HeroController self)
         {
-            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Ranged) return false;
+            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged) return false;
 
             return orig(self); 
         }
 
         private int Instance_SoulGainHook(int num)
         {
-            return 10;
+            return 11;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
         {
-            totalGeo += amount;
-
-            if(totalGeo >= 50)
-            {
-                HeroController.instance.AddMPChargeSpa(15);
-                totalGeo = 0;
-            }
 
             orig(self, amount);
         }
@@ -179,7 +181,7 @@ namespace HollowPoint
 
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
-            if (WeaponSwapHandler.instance.currentWeapon == WeaponType.Melee)
+            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee)
                 return orig(self);
 
             return false;
@@ -207,29 +209,38 @@ namespace HollowPoint
         {
             Log("Charm Update Called");
             //Initialise stats
-            bulletLifetime = 0.26f;//SMG 0.29f
-            bulletVelocity = 25f; //SMG 24f
-            fireRateCooldown = 0.08f; //0.06 SMG22f
-            soulCostPerShot = 8;
-            heatPerShot = 10f;
-            soulGained = 2;
-            soulRegenTimer = 2.75f;
-            walkSpeed = 3f;
-                 
-            //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
-            soulCostPerShot = (soulCostPerShot < 2) ? 2 : soulCostPerShot;
-            walkSpeed = (walkSpeed < 1) ? 1 : walkSpeed;
-            fireRateCooldown = (fireRateCooldown < 0.01f)? 0.01f: fireRateCooldown;
+            currentWeapon = WeaponSwapAndStatHandler.instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
+
+            current_damagePerShot = currentWeapon.damageBase;
+            current_damagePerLevel = currentWeapon.damageScale;
+            current_bulletLifetime = currentWeapon.bulletLifetime;
+            current_boostMultiplier = currentWeapon.boostMultiplier;
+            current_bulletVelocity = currentWeapon.bulletVelocity; //SMG 24f
+            current_fireRateCooldown = currentWeapon.fireRate; //0.06 SMG22f
+            current_soulCostPerShot = currentWeapon.soulCostPerShot;
+            current_heatPerShot = currentWeapon.heatPerShot;
+            current_soulGainedPerHit = currentWeapon.soulGainOnHit;
+            current_soulGainedPerKill = currentWeapon.soulGainOnHit;
+            current_soulRegenSpeed = currentWeapon.soulRegenSpeed;
+            current_walkSpeed = 3f;
+
+
+            /*
+            current_bulletLifetime = 0.26f;//SMG 0.29f
+            current_bulletVelocity = 25f; //SMG 24f
+            current_fireRateCooldown = 0.08f; //0.06 SMG22f
+            current_soulCostPerShot = 8;
+            current_heatPerShot = 10f;
+            current_soulGainedPerHit = 2;
+            current_walkSpeed = 3f;                
+            */
 
             FireModeIcon?.Invoke("hudicon_omni.png");
             //AdrenalineIcon?.Invoke("0");
             recentlyKilledTimer = 0;
             HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 0.5f;
 
-            soulRegenTimer = 0.1f;
-            recentlyFiredTimer = 0.1f;
-
-            //Cartridge
+            //Charge Abilities
             heal_Charges = 0;
             soulC_Energy = 0 ;
             heal_ChargesDecayTimer = 0;
@@ -237,6 +248,10 @@ namespace HollowPoint
             heal_OnCooldown = false;
             bloodRushIcon?.Invoke("0");
 
+            //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
+            if (current_soulCostPerShot < 2) current_soulCostPerShot = 2;
+            if (current_walkSpeed < 1) current_walkSpeed = 1;
+            if (current_fireRateCooldown < 0.01f) current_fireRateCooldown = 0.01f;
         }
 
 
@@ -295,7 +310,7 @@ namespace HollowPoint
                 passiveSoulTimer -= Time.deltaTime * 1;
                 if (passiveSoulTimer <= 0)
                 {
-                    passiveSoulTimer = 0.06f;
+                    passiveSoulTimer = current_soulRegenSpeed;
                     HeroController.instance.TryAddMPChargeSpa(1);
                 }
             }
@@ -385,14 +400,13 @@ namespace HollowPoint
             recentlyKilledTimer += 0.8f;
             //HeatHandler.currentHeat -= adrenalineRushLevel * 5;
 
-            int mpGainOnKill = 10;
-            //mpGainOnKill += (adrenalineRushLevel-2 > 0)? 1 : adrenalineRushLevel - 2;
+            int mpGainOnKill = current_soulGainedPerKill;
             return mpGainOnKill;
         }
 
         public int SoulCostPerShot()
         {
-            float mpCost = soulCostPerShot;
+            float mpCost = current_soulCostPerShot;
             //mpCost += (HeatHandler.currentHeat / 33f);
 
             //If the player has recently killed someone, prevent soul drainings
@@ -402,13 +416,13 @@ namespace HollowPoint
 
         public static int DamageInflictedByShot(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
         {
-            int dam = 3 + (PlayerData.instance.nailSmithUpgrades * 2);
+            int dam = instance.current_damagePerShot + (PlayerData.instance.nailSmithUpgrades * instance.current_damagePerLevel);
             return dam;
         }
 
         public static int SoulGainPerHit()
         {
-            int soul = 2;//soulGained;
+            int soul = instance.current_soulGainedPerHit;//soulGained;
             return soul;
         }
 
@@ -423,7 +437,7 @@ namespace HollowPoint
         public void StartBothCooldown()
         {
             fireRateCooldownTimer = -1;
-            fireRateCooldownTimer = fireRateCooldown;
+            fireRateCooldownTimer = current_fireRateCooldown;
             canFire = false;
             recentlyFiredTimer = 1.5f;
         }
