@@ -154,14 +154,14 @@ namespace HollowPoint
 
             weaponModifierDictionary.Add(WeaponModifierName.CARBINE, new WeaponModifier
             {
-                boostMultiplier = 12,
+                boostMultiplier = 15,
                 bulletLifetime = 0.24f,
                 bulletSize = new Vector3(1f, 0.7f, 0),
                 bulletVelocity = 28f,
                 damageBase = 4,
-                damageScale = 2,
-                fireRate = 0.42f,
-                heatPerShot = 60,
+                damageScale = 3,
+                fireRate = 0.40f,
+                heatPerShot = 33,
                 gunName = WeaponModifierName.CARBINE,
                 soulCostPerShot = 21,
                 soulGainOnHit = 2,

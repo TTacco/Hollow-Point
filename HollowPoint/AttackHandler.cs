@@ -151,14 +151,6 @@ namespace HollowPoint
             //if (isFiring) return;
             isFiring = true;
             Stats.instance.StartBothCooldown();
-            /*
-            GameObject furyParticle = HollowPointPrefabs.SpawnObjectFromDictionary("FuryParticlePrefab", HeroController.instance.transform);
-            furyParticle.SetActive(true);
-            furyParticle.GetComponent<ParticleSystem>().Play();
-
-            GameObject furyBurst = HollowPointPrefabs.SpawnObjectFromDictionary("FuryBurstPrefab", HeroController.instance.transform);
-            furyBurst.SetActive(true);
-             */
 
             if (Stats.instance.currentWeapon.gunName == WeaponModifierName.CARBINE)
             {
@@ -188,9 +180,11 @@ namespace HollowPoint
 
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-            GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
+            GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);
 
             BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+            hpbb.bulletDamage = Stats.instance.current_damagePerShot;
+            hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
             hpbb.weaponUsed = Stats.instance.currentWeapon.gunName;
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
             hpbb.pierce = PlayerData.instance.equippedCharm_13;         
@@ -213,15 +207,17 @@ namespace HollowPoint
         public IEnumerator BurstShot(int burst)
         {
             hc_instance.TakeMP(Stats.instance.SoulCostPerShot());
-            HeatHandler.IncreaseHeat(20);
+            HeatHandler.IncreaseHeat(33);
             GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
 
             for (int i = 0; i < burst; i++)
             {
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.bulletDamage = Stats.instance.current_damagePerShot;
+                hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
                 hpbb.weaponUsed = Stats.instance.currentWeapon.gunName;
                 hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
                 hpbb.pierce = PlayerData.instance.equippedCharm_13;
@@ -272,7 +268,7 @@ namespace HollowPoint
             {
                 yield return new WaitForEndOfFrame();
 
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(angleToSpawnBullet, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(angleToSpawnBullet, orientation);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
                 //hpbb.pierce = PlayerData.instance.equippedCharm_13;
@@ -298,7 +294,7 @@ namespace HollowPoint
             AudioHandler.PlayGunSounds("gatlinggun", 1f);
             for (int b = 0; b < 14; b++)
             {
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);
                 HeatHandler.IncreaseHeat(1.5f);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 hpbb.bulletOriginPosition = bullet.transform.position; //set the origin position of where the bullet was spawned

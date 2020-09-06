@@ -75,13 +75,12 @@ namespace HollowPoint
         public float current_fireRateCooldown = 5f;
         public float current_heatPerShot = 0;
         public int current_soulCostPerShot = 1;
-        public float current_soulRegenSpeed = 0;
+        public float current_soulRegenSpeed = 1;
         public float current_soulRegenTimer = 3f;
         public float current_walkSpeed = 3f;
         public int current_soulGainedPerHit = 0;
         public int current_soulGainedPerKill = 0;
         
-
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
@@ -90,7 +89,7 @@ namespace HollowPoint
 
         //Update Timers
         public float recentlyFiredTimer = 0;
-        public float passiveSoulTimer = 5f;
+        public float passiveSoulTimer = 3f;
         private float recentlyKilledTimer;
         public float fireRateCooldownTimer = 5f;
 
@@ -100,11 +99,18 @@ namespace HollowPoint
         public AudioManager am_instance;
 
         //Variables for the healing mechanic
-        int heal_Charges;
+        public int heal_Charges;
         int soulC_Energy;
         float heal_ChargesCoolDown;
         float heal_ChargesDecayTimer;
         bool heal_OnCooldown;
+
+
+        //Infusion Stuff
+        GameObject furyParticle = null;
+        GameObject furyBurst = null;
+        float infusionTimer = 0;
+        bool infusionActivated = false;
 
         public WeaponModifier currentWeapon;
 
@@ -137,17 +143,18 @@ namespace HollowPoint
             */
             //Log(am_instance.GetAttr<float>("Volume"));
 
-        //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
+            //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
 
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
             ModHooks.Instance.LanguageGetHook += LanguageHook;
             ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
-            ModHooks.Instance.BlueHealthHook += Instance_BlueHealthHook;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
             On.HeroController.CanDreamNail += HeroController_CanDreamNail;
             On.HeroController.CanFocus += HeroController_CanFocus;
+            On.HeroController.CanNailArt += HeroController_CanNailArt;
             //On.HeroController.AddGeo += HeroController_AddGeo;
         }
+
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
@@ -174,17 +181,19 @@ namespace HollowPoint
             orig(self, amount);
         }
 
-        private int Instance_BlueHealthHook()
-        {
-            return 0;
-        }
-
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
             if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee)
                 return orig(self);
 
             return false;
+        }
+
+        private bool HeroController_CanNailArt(On.HeroController.orig_CanNailArt orig, HeroController self)
+        {
+            //throw new NotImplementedException();
+
+            return orig(self);
         }
 
         public string LanguageHook(string key, string sheet)
@@ -207,6 +216,18 @@ namespace HollowPoint
 
         public void CharmUpdate(PlayerData data, HeroController controller)
         {
+            if (furyParticle == null)
+            {
+                furyParticle = HollowPointPrefabs.SpawnObjectFromDictionary("FuryParticlePrefab", HeroController.instance.transform);
+                furyParticle.SetActive(false);
+            }
+
+            if (furyBurst == null)
+            {
+                furyBurst = HollowPointPrefabs.SpawnObjectFromDictionary("FuryBurstPrefab", HeroController.instance.transform);
+                furyBurst.SetActive(false);
+            }
+
             Log("Charm Update Called");
             //Initialise stats
             currentWeapon = WeaponSwapAndStatHandler.instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
@@ -224,19 +245,6 @@ namespace HollowPoint
             current_soulRegenSpeed = currentWeapon.soulRegenSpeed;
             current_walkSpeed = 3f;
 
-
-            /*
-            current_bulletLifetime = 0.26f;//SMG 0.29f
-            current_bulletVelocity = 25f; //SMG 24f
-            current_fireRateCooldown = 0.08f; //0.06 SMG22f
-            current_soulCostPerShot = 8;
-            current_heatPerShot = 10f;
-            current_soulGainedPerHit = 2;
-            current_walkSpeed = 3f;                
-            */
-
-            FireModeIcon?.Invoke("hudicon_omni.png");
-            //AdrenalineIcon?.Invoke("0");
             recentlyKilledTimer = 0;
             HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 0.5f;
 
@@ -246,6 +254,7 @@ namespace HollowPoint
             heal_ChargesDecayTimer = 0;
             heal_ChargesCoolDown = 0;
             heal_OnCooldown = false;
+            FireModeIcon?.Invoke("hudicon_omni.png");
             bloodRushIcon?.Invoke("0");
 
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
@@ -297,6 +306,7 @@ namespace HollowPoint
             //if (heal_ChargesDecayTimer > 0) heal_ChargesDecayTimer -= Time.deltaTime * 1f;
             //else if(heal_Charges > 0) ChangeBloodRushCharges(increase: false);
 
+
             //On Kill Bonus
             if (recentlyKilledTimer > 0) recentlyKilledTimer -= Time.deltaTime * 1f;
 
@@ -312,6 +322,16 @@ namespace HollowPoint
                 {
                     passiveSoulTimer = current_soulRegenSpeed;
                     HeroController.instance.TryAddMPChargeSpa(1);
+                }
+            }
+
+            if (infusionTimer > 0 && infusionActivated)
+            {
+                infusionTimer -= Time.deltaTime * 1;
+
+                if (infusionTimer <= 0)
+                {
+                    ActivateInfusionBuff(false);
                 }
             }
         }
@@ -414,12 +434,6 @@ namespace HollowPoint
             return (int) mpCost;
         }
 
-        public static int DamageInflictedByShot(Vector3 bulletOriginPosition, Vector3 enemyPosition, BulletBehaviour hpbb)
-        {
-            int dam = instance.current_damagePerShot + (PlayerData.instance.nailSmithUpgrades * instance.current_damagePerLevel);
-            return dam;
-        }
-
         public static int SoulGainPerHit()
         {
             int soul = instance.current_soulGainedPerHit;//soulGained;
@@ -450,12 +464,46 @@ namespace HollowPoint
             recentlyFiredTimer = 1.5f;
         }
 
+        public void ActivateInfusionBuff(bool activate)
+        {
+            if (activate)
+            {
+                infusionActivated = true;
+                infusionTimer = 10;
+                furyParticle.SetActive(true);
+                furyParticle.GetComponent<ParticleSystem>().Play();
+                furyBurst.SetActive(true);
+
+                GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform);
+                artChargeFlash.SetActive(true);
+                Destroy(artChargeFlash, 0.5f);
+                GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform);
+                dJumpFlash.SetActive(true);
+                Destroy(dJumpFlash, 0.5f);
+
+                Instantiate(SpellControlOverride.sharpFlash, HeroController.instance.transform).SetActive(true);
+                Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
+                GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
+                AudioHandler.PlayInfusionSound("infusionsound", pitch: 1);
+
+  
+
+            }
+            else
+            {
+                infusionActivated = false;
+                furyParticle.SetActive(false);
+                furyParticle.GetComponent<ParticleSystem>().Stop();
+                furyBurst.SetActive(false);
+
+            }
+        }
+
         void OnDestroy()
         {
             ModHooks.Instance.CharmUpdateHook -= CharmUpdate;
             ModHooks.Instance.LanguageGetHook -= LanguageHook;
             ModHooks.Instance.SoulGainHook -= Instance_SoulGainHook;
-            ModHooks.Instance.BlueHealthHook -= Instance_BlueHealthHook;
             On.HeroController.CanNailCharge -= HeroController_CanNailCharge;
             On.HeroController.CanDreamNail -= HeroController_CanDreamNail;
             Destroy(gameObject.GetComponent<Stats>());

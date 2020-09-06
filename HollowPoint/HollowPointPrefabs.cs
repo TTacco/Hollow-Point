@@ -270,7 +270,7 @@ namespace HollowPoint
 
         }
 
-        public static GameObject SpawnBulletFromGun(float bulletDegreeDirection, DirectionalOrientation dirOrientation)
+        public static GameObject SpawnBulletFromKnight(float bulletDegreeDirection, DirectionalOrientation dirOrientation)
         {
             //SpawnObjectFromDictionary("FireballImpact", HeroController.instance.transform.position, Quaternion.identity);
             //Instantiate(fireballImpactPrefab, HeroController.instance.transform.position, Quaternion.identity).SetActive(true);

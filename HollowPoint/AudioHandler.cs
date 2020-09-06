@@ -15,8 +15,7 @@ namespace HollowPoint
         static GameObject shootSFX;
         static GameObject enemyHitSFX;
         static GameObject terrainHitSFX;
-
-        
+        static GameObject infusionSFX;
 
         public void Awake()
         {
@@ -33,11 +32,13 @@ namespace HollowPoint
             shootSFX = new GameObject("ShootSFX", typeof(AudioSource));
             enemyHitSFX = new GameObject("EmptySFX", typeof(AudioSource));
             terrainHitSFX = new GameObject("ShootSFX", typeof(AudioSource));
+            infusionSFX = new GameObject("ShootSFX", typeof(AudioSource));
 
             DontDestroyOnLoad(emptyGunSFX);
             DontDestroyOnLoad(shootSFX);
             DontDestroyOnLoad(enemyHitSFX);
             DontDestroyOnLoad(terrainHitSFX);
+            DontDestroyOnLoad(infusionSFX);
         }
 
 
@@ -92,6 +93,26 @@ namespace HollowPoint
                 //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
                 LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
                 AudioSource audios = emptyGunSFX.GetComponent<AudioSource>();
+
+                audios.clip = ac;
+                audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
+                if (pitch != null) audios.pitch = (float)pitch;
+
+                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
+            }
+            catch (Exception e)
+            {
+                Log("HP_AudioHandler.cs, cannot find the SFX " + soundName + " " + e);
+            }
+        }
+
+        public static void PlayInfusionSound(string soundName, float? pitch = null)
+        {
+            try
+            {
+                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
+                AudioSource audios = infusionSFX.GetComponent<AudioSource>();
 
                 audios.clip = ac;
                 audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);

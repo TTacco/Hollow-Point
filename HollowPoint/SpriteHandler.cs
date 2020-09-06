@@ -416,7 +416,7 @@ namespace HollowPoint
             flashOffsetX += (bulletDegreeDirection == 90) ? (OrientationHandler.facingRight) ? -0.2f : 0.2f : 0;
 
             //So if the player is firing forward or upwards while wall sliding, make it so to lower the muzzle flash so it doesnt look weird
-            flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 0) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
+            flashOffsetY += ((bulletDegreeDirection <= 180 && bulletDegreeDirection >= 1) && HeroController.instance.cState.wallSliding) ? -0.6f : 0;
 
             Vector3 muzzleFlashSpawnPos = gunSpriteGO.transform.position + new Vector3(flashOffsetX, flashOffsetY + 0.3f, -1f);
 

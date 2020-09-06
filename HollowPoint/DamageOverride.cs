@@ -156,9 +156,19 @@ namespace HollowPoint
             Vector3 bulletOriginPosition = hitInstance.Source.GetComponent<BulletBehaviour>().bulletOriginPosition;   
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(self.transform));
 
-            int damage = Stats.DamageInflictedByShot(bulletOriginPosition, self.transform.position, hpbb);
+            int damage = hpbb.bulletDamage + (PlayerData.instance.nailSmithUpgrades * hpbb.bulletDamageScale);
             int soulGainAmt = Stats.SoulGainPerHit();
             //StartCoroutine(SplatterBlood(self.gameObject.transform.position, 1, cardinalDirection * 90));
+            if (hpbb.appliesDamageOvertime)
+            {
+                EnemyDamageOvertime edo = self.gameObject.GetComponent<EnemyDamageOvertime>();
+
+                if (edo == null) self.gameObject.AddComponent<EnemyDamageOvertime>();
+                else
+                {
+                    edo.IncreaseStack();
+                }
+            }
             DamageEnemyOverride(self, damage, BulletBehaviour.bulletDummyHitInstance, soulGainAmt, hpbb);
         }
       
@@ -183,8 +193,8 @@ namespace HollowPoint
 
             if (false && !targetHP.IsInvincible) //enable disable damage overtime
             {
-                InflictsDamageOvertime dm = targetHP.gameObject.GetComponent<InflictsDamageOvertime>();
-                if (dm == null) targetHP.gameObject.AddComponent<InflictsDamageOvertime>();
+                EnemyDamageOvertime dm = targetHP.gameObject.GetComponent<EnemyDamageOvertime>();
+                if (dm == null) targetHP.gameObject.AddComponent<EnemyDamageOvertime>();
                 else dm.IncreaseStack();
             }
 
@@ -251,7 +261,7 @@ namespace HollowPoint
             else
             {
                 targetHP.hp -= damageDealt; // the actual damage          
-                HeroController.instance.AddMPCharge(3);
+                HeroController.instance.AddMPCharge(Stats.instance.current_soulGainedPerHit);
                 Stats.instance.IncreaseBloodRushEnergy();
                 Stats.instance.ExtendCartridgeDecayTime(false);
             }
@@ -281,7 +291,7 @@ namespace HollowPoint
                 HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
             }
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
-            //HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
+            HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
             Stats.instance.IncreaseBloodRushEnergy();
             Stats.instance.ExtendCartridgeDecayTime(true);
             //GameManager.instance.FreezeMoment(1);

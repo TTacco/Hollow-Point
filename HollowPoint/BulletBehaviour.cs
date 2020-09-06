@@ -19,7 +19,8 @@ namespace HollowPoint
         public string specialAttrib;
         public bool pierce = false;
 
-        public int bulletDamage;
+        public int bulletDamage = 5;
+        public int bulletDamageScale = 5;
         public float bulletSpeedMult = 1;
         public float bulletDegreeDirection = 0;
         public float bulletSizeOverride = 1.2f;
@@ -34,6 +35,7 @@ namespace HollowPoint
         public bool useDefaultParticles = true;
         public bool noHeat = false;
         public bool perfectAccuracy = false;
+        public bool appliesDamageOvertime = false;
         static float bulletPivot = 0;
 
         public Vector3 bulletOriginPosition;
@@ -203,7 +205,7 @@ namespace HollowPoint
     }
 
     //Attaches itself to an enemy with a Health Manager
-    public class InflictsDamageOvertime : MonoBehaviour
+    public class EnemyDamageOvertime : MonoBehaviour
     {
         int stack;
         int damage;

@@ -29,7 +29,7 @@ namespace HollowPoint
 
         static PlayMakerFSM soulOrbFSM;
         PlayMakerFSM spellControlFSM;
-        static GameObject sharpFlash;
+        public static GameObject sharpFlash;
         public static GameObject focusBurstAnim;
 
 
@@ -274,6 +274,17 @@ namespace HollowPoint
                 }
                 , 0);
 
+                nailArtFSM.GetAction<ActivateGameObject>("G Slash", 2).activate = false;
+
+                nailArtFSM.AddAction("G Slash", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "State_GSlash",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                );
+
             }
             catch (Exception e)
             {
@@ -405,18 +416,42 @@ namespace HollowPoint
         {
             HeroController.instance.spellControl.SetState("Inactive");
 
-            int soulCost = (PlayerData.instance.equippedCharm_33) ? 22 : 33;
-            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee || PlayerData.instance.fireballLevel == 0 || PlayerData.instance.MPCharge < soulCost)
+
+            if (PlayerData.instance.fireballLevel == 0 || Stats.instance.heal_Charges <= 0)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
             }
-            HeroController.instance.TakeMP(soulCost);
-            //StartCoroutine(BurstShot(9));
-            StartCoroutine(SpreadShot(6));
-            //StartCoroutine(FireGAU(5));
-            HeroController.instance.TakeMP(33);
+            //HeroController.instance.TakeMP(soulCost);
+            //HeroController.instance.TakeMP(33);
+
+            Stats.instance.ActivateInfusionBuff(true);
+            Stats.instance.ConsumeBloodRushCharges();
+
             HeroController.instance.spellControl.SetState("Spell End");
+        }
+
+        public void State_GSlash()
+        {
+            float startingDegree = HeroController.instance.cState.facingRight ? -25 : 155; 
+
+
+            for(int k = 0; k < 5; k++)
+            {
+                GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Horizontal);
+                BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
+                hpbb.weaponUsed = Stats.instance.currentWeapon.gunName;
+                hpbb.noDeviation = true;
+                hpbb.pierce = true;
+                hpbb.bulletOriginPosition = knife.transform.position;
+                hpbb.bulletSpeed = 40f;
+                hpbb.bulletDegreeDirection = startingDegree;
+                hpbb.appliesDamageOvertime = true;
+                startingDegree += 10;
+                hpbb.size = new Vector3(1, 0.6f, 1);
+                Destroy(knife, 1f);
+
+            }
         }
 
         void Update()
@@ -461,70 +496,6 @@ namespace HollowPoint
 
         //========================================SECONDARY FIRE METHODS====================================
 
-
-        public IEnumerator BurstShot(int burst)
-        {
-            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
-
-            for (int i = 0; i < burst; i++)
-            {
-                //HeatHandler.IncreaseHeat(20f);
-                AudioHandler.PlayGunSounds("rifle");
-                float direction = OrientationHandler.finalDegreeDirection;
-                DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
-                bullet.GetComponent<BulletBehaviour>().bulletSizeOverride = 1.6f;
-
-                Destroy(bullet, .4f);
-
-                HollowPointSprites.StartGunAnims();
-                HollowPointSprites.StartFlash();
-                HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-                yield return new WaitForSeconds(0.07f); //0.12f This yield will determine the time inbetween shots   
-
-                if (HeroController.instance.cState.dashing) break;
-            }
-        }
-
-        public IEnumerator SpreadShot(int pellets)
-        {
-            GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake"); //SmallShake
-            HollowPointSprites.StartGunAnims();
-            HollowPointSprites.StartFlash();
-            HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-            AudioHandler.PlayGunSounds("Shotgun");
-
-            float direction = OrientationHandler.finalDegreeDirection; //90 degrees
-            DirectionalOrientation orientation = OrientationHandler.directionOrientation;
-
-            float coneDegree = 30;
-            float angleToSpawnBullet = direction - (coneDegree / 2); //90 - (30 / 2) = 75, start at 75 degrees
-            float angleIncreasePerPellet = coneDegree / (pellets + 2); // 30 / (5 + 2) = 4.3, move angle to fire for every pellet by 4.3 degrees
-
-            angleToSpawnBullet = angleToSpawnBullet + angleIncreasePerPellet;
-
-            //Checks if the player is firing upwards, and enables the x offset so the bullets spawns directly ontop of the knight
-            //from the gun's barrel instead of spawning to the upper right/left of them 
-            bool fixYOrientation = (direction == 270 || direction == 90) ? true : false;
-            for (int i = 0; i < pellets; i++)
-            {
-                yield return new WaitForEndOfFrame();
-
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(angleToSpawnBullet, orientation);
-                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
-                hpbb.bulletDegreeDirection += UnityEngine.Random.Range(-3, 3);
-                hpbb.pierce = true;
-                bullet.transform.localScale = new Vector3(0.2f, 0.2f, 0.1f);
-                //hpbb.specialAttrib = "Explosion";
-
-                angleToSpawnBullet += angleIncreasePerPellet;
-                Destroy(bullet, 0.7f);
-            }
-
-            yield return new WaitForSeconds(0.3f);
-            AttackHandler.isFiring = false;
-        }
-
         public IEnumerator FireGAU(int rounds)
         {
             AttackHandler.isFiring = true;
@@ -537,7 +508,7 @@ namespace HollowPoint
             AudioHandler.PlayGunSounds("gatlinggun", 1f);
             for (int b = 0; b < rounds; b++)
             {
-                GameObject bullet = HollowPointPrefabs.SpawnBulletFromGun(direction, orientation);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);
                 HeatHandler.IncreaseHeat(15f);
                 BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
                 bullet.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungExplosionSmall;
