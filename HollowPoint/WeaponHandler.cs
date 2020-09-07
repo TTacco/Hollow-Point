@@ -1,12 +1,11 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using On;
 using UnityEngine;
 using GlobalEnums;
 using static HollowPoint.HollowPointEnums;
+using ModCommon.Util;
+
 
 namespace HollowPoint
 {
@@ -54,19 +53,45 @@ namespace HollowPoint
             return;
         }
 
-        //Swap inbetween primary and secondary guns
-        public void SwapBetweenGun()
+        public void SwapWeapons()
         {
+            Stats.instance.swapTimer = (PlayerData.instance.equippedCharm_26) ? 1.5f : 7f;
+            Stats.instance.canSwap = false;
 
+            HeroController.instance.spellControl.SetState("Inactive");
+            Modding.Logger.Log("Swaping weapons");
+            if (instance.currentWeapon == WeaponType.Ranged)
+            {
+                //Holster gun
+                /*the ACTUAL attack cool down variable, i did this to ensure the player wont have micro stutters 
+                 * on animation because even at 0 animation time, sometimes they play for a quarter of a milisecond
+                 * thus giving that weird head jerk anim playing on the knight */
+
+                HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
+                instance.SwapBetweenNail();
+                AudioHandler.instance.PlayDrawHolsterSound("holster");
+            }
+            else
+            {
+                //Equip gun
+                instance.SwapBetweenNail();
+                AudioHandler.instance.PlayDrawHolsterSound("draw");
+            }
+
+            HeroController.instance.spellControl.SetState("Inactive");
+        }
+
+        //Swap inbetween primary and secondary guns
+        void SwapBetweenGun()
+        {
             GunType prevGun = currentGun;
             currentGun = (currentGun == GunType.Primary) ? GunType.Secondary : GunType.Primary;
 
             Modding.Logger.Log(String.Format("Changing guns from {0} to {1}", prevGun, currentGun));
-
         }
 
         //Swap between guns or nail
-        public void SwapBetweenNail()
+        void SwapBetweenNail()
         {
             WeaponType prevWep = currentWeapon;
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
@@ -89,8 +114,6 @@ namespace HollowPoint
                 HeroController.instance.ATTACK_DURATION = DEFAULT_ATTACK_SPEED;
                 HeroController.instance.ATTACK_DURATION_CH = DEFAULT_ATTACK_SPEED_CH;
             }
-
-
         }
 
         public static float ExtraCooldown()

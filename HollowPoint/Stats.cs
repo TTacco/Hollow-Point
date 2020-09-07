@@ -14,42 +14,6 @@ using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
 {
-    //I have no idea why generic stacks wont even show up on my Generic classes so wtv. 
-    class ShitStack
-    {
-        List<GameObject> stack;
-        int position;
-
-        public ShitStack()
-        {
-            stack = new List<GameObject>();
-            position = -1;
-        }
-
-        public void Push(GameObject go)
-        {
-            stack.Add(go);
-            position++;
-        }
-
-        public GameObject Pop()
-        {
-            if (position == -1) return null;
-            GameObject poppedGO = stack[position];
-            stack.RemoveAt(position);
-            position--;
-            return poppedGO;
-        }
-
-        public GameObject[] PopAll()
-        {
-            GameObject[] allGO = stack.ToArray();
-            stack.Clear();
-            position = -1;
-            return allGO;
-        }
-    }
-
     class Stats : MonoBehaviour
     {
         public static Stats instance = null;
@@ -93,7 +57,11 @@ namespace HollowPoint
         private float recentlyKilledTimer;
         public float fireRateCooldownTimer = 5f;
 
-        //Dash float values
+        //Weapon Swapping
+        public bool canSwap = true;
+        public float swapTimer = 30f;
+
+        //Quick Access Instances
         public PlayerData pd_instance;
         public HeroController hc_instance;
         public AudioManager am_instance;
@@ -300,7 +268,14 @@ namespace HollowPoint
                 ChangeBloodRushCharges(increase: true);
                 heal_OnCooldown = false;          
                 Log("[Stats] Player is now off cooldown");
-            }  
+            }
+
+            if (swapTimer > 0)
+            {
+                swapTimer -= Time.deltaTime * 30f;
+                if(swapTimer <= 0 ) canSwap = true;
+            }
+
 
             //Soul Cartridge Decay
             //if (heal_ChargesDecayTimer > 0) heal_ChargesDecayTimer -= Time.deltaTime * 1f;

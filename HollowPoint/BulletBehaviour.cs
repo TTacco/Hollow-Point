@@ -132,14 +132,7 @@ namespace HollowPoint
         //Destroy the artillery shell when it hits the destination
         void FixedUpdate()
         {
-            if (fuseTimerXAxis)
-            {
-                if (gameObject.transform.position.y < targetDestination.y)
-                {
-                    //Log("[BulletBehaviour] Reached destroy point for artillery shell");
-                    Destroy(gameObject, 0.05f);
-                }
-            }
+            if (fuseTimerXAxis && gameObject.transform.position.y < targetDestination.y) Destroy(gameObject);
         }
 
         //Handles the colliders
@@ -369,13 +362,13 @@ namespace HollowPoint
             if (explosionType == ExplosionType.DungExplosion || explosionType == ExplosionType.DungExplosionSmall)
             {
                 HollowPointPrefabs.prefabDictionary.TryGetValue("Dung Explosion", out GameObject dungExplosion);
-                GameObject dungExplosionGO = Instantiate(dungExplosion, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                GameObject dungExplosionGO = Instantiate(dungExplosion, gameObject.transform.position + new Vector3(0, 0, -1.5f), Quaternion.identity);
                 dungExplosionGO.SetActive(true);
                 dungExplosionGO.name += " KnightMadeDungExplosion";
 
                 if (explosionType == ExplosionType.DungExplosionSmall)
                 {
-                    dungExplosionGO.transform.localScale = new Vector3(0.6f, 0.6f, 0);
+                    dungExplosionGO.transform.localScale = new Vector3(0.6f, 0.6f, -1);
                 }
             }
 
@@ -393,25 +386,14 @@ namespace HollowPoint
                     //StartCoroutine(SpawnCluster());
                     for (int shrapnel = 0; shrapnel < 6; shrapnel++)
                     {
-                        GameObject s = HollowPointPrefabs.SpawnBulletAtCoordinate(UnityEngine.Random.Range(190, 350), gameObject.transform.position, 0);
+                        GameObject s = HollowPointPrefabs.SpawnBulletAtCoordinate(UnityEngine.Random.Range(190, 350), gameObject.transform.position, 1);
                         s.AddComponent<BulletIsExplosive>().explosionType = ExplosionType.DungExplosion;
                         Destroy(s, 1f);
                     }
                 }
                 else if (PlayerData.instance.fireballLevel > 1) explosionClone.transform.localScale = new Vector3(1.3f, 1.3f, 0);
                 else explosionClone.transform.localScale = new Vector3(0.7f, 0.7f, 0);
-            }
-            
-        }
-        IEnumerator SpawnCluster()
-        {
-            for(int shrapnel = 0; shrapnel < 6; shrapnel++)
-            {
-                GameObject s = HollowPointPrefabs.SpawnBulletAtCoordinate(UnityEngine.Random.Range(190, 350), gameObject.transform.position, 0);
-                s.AddComponent<BulletIsExplosive>().explosionType = ExplosionType.DungExplosion;
-                Destroy(s, 1f);
-            }
-            yield return null;
+            }       
         }
     }
 }

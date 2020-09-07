@@ -16,12 +16,9 @@ namespace HollowPoint
 {
     class SpellControlOverride : MonoBehaviour
     {
-        public static bool isUsingGun = false;
         //static UnityEngine.Random rand = new UnityEngine.Random();
         PlayMakerFSM nailArtFSM = null;
         PlayMakerFSM glowingWombFSM = null;
-        public static bool canSwap = true;
-        public float swapTimer = 30f;
 
         float grenadeCooldown = 30f;
         float airstrikeCooldown = 300f;
@@ -32,9 +29,7 @@ namespace HollowPoint
         public static GameObject sharpFlash;
         public static GameObject focusBurstAnim;
 
-
         static GameObject infusionSoundGO;
-        public static GameObject grimmFireballGO;
 
         private static ILHook removeFocusCost = null;
 
@@ -153,7 +148,7 @@ namespace HollowPoint
                 spellControlFSM.InsertAction("Can Cast?", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "SwapWeapon",
+                    methodName = "State_CanCast",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -162,7 +157,7 @@ namespace HollowPoint
                 spellControlFSM.InsertAction("Can Cast? QC", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "CanCastQC",
+                    methodName = "State_CanCastQC",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -177,32 +172,10 @@ namespace HollowPoint
                 }
                 , 3);
 
-                //Removes soul requirement
-                //HeroController.instance.spellControl.RemoveAction("Can Cast? QC", 2);
-
-
-                spellControlFSM.AddAction("Quake Antic", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "StartQuake",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
-
-                spellControlFSM.AddAction("Quake1 Land", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "StartTyphoon",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
-
                 spellControlFSM.AddAction("Q2 Land", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "StartTyphoon",
+                    methodName = "State_QuakeLand",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -259,7 +232,7 @@ namespace HollowPoint
                 spellControlFSM.InsertAction("Focus Heal", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "KnightHasHealed",
+                    methodName = "State_FocusHeal",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -268,7 +241,7 @@ namespace HollowPoint
                 spellControlFSM.InsertAction("Focus Heal 2", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "KnightHasHealed",
+                    methodName = "State_FocusHeal",
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
@@ -293,17 +266,6 @@ namespace HollowPoint
 
         }
 
-        public void StartQuake()
-        {
-            //LoadAssets.sfxDictionary.TryGetValue("divetrigger.wav", out AudioClip ac);
-            //AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
-            //audios.PlayOneShot(ac);
-        }
-
-        public void StartTyphoon()
-        {
-        }
-
         IEnumerator SpawnGasPulse(Vector3 spawnPos, float explosionAmount)
         {
             Log("Spawning Gas Pulse");
@@ -319,60 +281,30 @@ namespace HollowPoint
             yield break;
         }
 
-        public void SwapWeapon()
+        //Checks whether the player can cast or not, in this case we use this to swap between the guns
+        public void State_CanCast()
         {
- 
             string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
             if (animName.Contains("Sit") || animName.Contains("Get Off") || !HeroController.instance.CanCast()) return;
 
-            if (!canSwap)
+            if (Stats.instance.canSwap)
             {
-                HeroController.instance.spellControl.SetState("Inactive");
-                return;
+                WeaponSwapAndStatHandler.instance.SwapWeapons();
+                spellControlFSM.SetState("Inactive");
             }
 
-            swapTimer = (PlayerData.instance.equippedCharm_26)? 1.5f : 7f;
-
-            HeroController.instance.spellControl.SetState("Inactive");
-            Modding.Logger.Log("Swaping weapons");
-
-            AudioSource audios = HollowPointSprites.gunSpriteGO.GetComponent<AudioSource>();
-            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
-            {
-                //Holster gun
-                LoadAssets.sfxDictionary.TryGetValue("weapon_holster.wav", out AudioClip ac);
-                audios.PlayOneShot(ac);
-
-                /*the ACTUAL attack cool down variable, i did this to ensure the player wont have micro stutters 
-                 * on animation because even at 0 animation time, sometimes they play for a quarter of a milisecond
-                 * thus giving that weird head jerk anim playing on the knight
-                */
-                HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
-                WeaponSwapAndStatHandler.instance.SwapBetweenNail();
-            }
-            else
-            {             
-                //Equip gun
-                LoadAssets.sfxDictionary.TryGetValue("weapon_draw.wav", out AudioClip ac);
-                audios.PlayOneShot(ac);
-                WeaponSwapAndStatHandler.instance.SwapBetweenNail();
-            }
-            isUsingGun = !isUsingGun;
-
-            HeroController.instance.spellControl.SetState("Inactive");
+            spellControlFSM.SetState("Inactive");
+            return;
         }
 
         public void CanCastQC_SkipSpellReq()
         {
-            //HeroController.instance.spellControl.SetState("QC");
-            //this stuff allows using spells on times youre NOT supposed to use it which is pretty busted
-            //forgot why i wrote this, i think it was for preventing soul consumption but i already manually removed that
+
         }
 
-        public void CanCastQC()
+        //This state handles the checking whether a can cast during Quick Cast or not 
+        public void State_CanCastQC()
         {
-            //Modding.Logger.Log("Forcing Fireball");
-            //Modding.Logger.Log("[SpellControlOverride] Can Cast?  " + HeroController.instance.CanCast());
             if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0))
             {
                 spellControlFSM.SetState("Inactive");
@@ -386,7 +318,6 @@ namespace HollowPoint
                 //StartCoroutine(SpreadShot(1));
                 spellControlFSM.SetState("Has Fireball?"); 
                 spellControlFSM.SetState("Inactive");
-
                 //WeaponSwapHandler.SwapBetweenGun();
             }
             else if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
@@ -431,10 +362,10 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Spell End");
         }
 
+        //State GSlash is called whenever the player is about to perform a great slash, use this to spawn the knives
         public void State_GSlash()
         {
             float startingDegree = HeroController.instance.cState.facingRight ? -25 : 155; 
-
 
             for(int k = 0; k < 5; k++)
             {
@@ -448,10 +379,24 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = startingDegree;
                 hpbb.appliesDamageOvertime = true;
                 startingDegree += 10;
-                hpbb.size = new Vector3(1, 0.6f, 1);
+                hpbb.size = new Vector3(1.2f, 0.55f, 1);
                 Destroy(knife, 1f);
-
             }
+        }
+
+        //Called once the Scream/Shriek has ended, used to call in an airstrike
+        public void ScreamEnd()
+        {
+            HeroController.instance.TakeMP(99);
+            StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
+        }
+
+        //Triggers from both Heal 1 and Heal 2 states, this state is accessed when the knight successfully heals
+        public void State_FocusHeal()
+        {
+            Log("Knight Has Focused");
+            HeroController.instance.AddHealth(2);//TODO: change this depending on fury
+            Stats.instance.ConsumeBloodRushCharges(true);
         }
 
         void Update()
@@ -459,7 +404,6 @@ namespace HollowPoint
             if (OrientationHandler.pressingAttack && typhoonTimer > 0)
             {
                 typhoonTimer = -1;
-
                 int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 8 : 6;
                 StartCoroutine(SpawnGasPulse(HeroController.instance.transform.position, pelletAmnt));
             }
@@ -467,30 +411,11 @@ namespace HollowPoint
 
         void FixedUpdate()
         {
-            if (swapTimer > 0)
-            {
-                swapTimer -= Time.deltaTime * 30f;
-                canSwap = false;
-            }
-            else
-            {
-                canSwap = true;
-            }
+            if (grenadeCooldown > 0) grenadeCooldown -= Time.deltaTime * 30f;
 
-            if (grenadeCooldown > 0)
-            {
-                grenadeCooldown -= Time.deltaTime * 30f;
-            }
+            if (airstrikeCooldown > 0) airstrikeCooldown -= Time.deltaTime * 30f;
 
-            if (airstrikeCooldown > 0)
-            {
-                airstrikeCooldown -= Time.deltaTime * 30f;
-            }
-
-            if (typhoonTimer > 0)
-            {
-                typhoonTimer -= Time.deltaTime * 30f;
-            }
+            if (typhoonTimer > 0) typhoonTimer -= Time.deltaTime * 30f;
         }
 
 
@@ -520,7 +445,7 @@ namespace HollowPoint
                 HollowPointSprites.StartFlash();
                 HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
 
-                Destroy(bullet, 2f);
+                Destroy(bullet, 4f);
                 yield return new WaitForSeconds(0.03f); //0.12f This yield will determine the time inbetween shots   
             }
 
@@ -528,39 +453,13 @@ namespace HollowPoint
             AttackHandler.isFiring = false;
         }
 
-        public void CheckNailArt()
-        {
-            //Modding.Logger.Log("Passing Through Nail Art");
-            //nailArtFSM.SetState("Regain Control");
-        }
-
         public void HasScream_HasFireSupportAmmo()
         {
-
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
             if (PlayerData.instance.MPCharge < 99 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {
                 spellControlFSM.SetState("Inactive");
             }
-        }
-
-        public void ScreamEnd()
-        {
-            //Prepare the airstrike by taking 99 MP
-            HeroController.instance.TakeMP(99);
-            StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
-
-            //artifactActivatedEffect = Instantiate(HeroController.instance.artChargeEffect, HeroController.instance.transform);
-            //artifactActivatedEffect.SetActive(true);
-            //AttackHandler.airStrikeActive = true;
-            //infuseTimer = 500f;
-        }
-
-        public void KnightHasHealed()
-        {
-            Log("Knight Has Focused");
-            HeroController.instance.AddHealth(2);//TODO: change this depending on fury
-            Stats.instance.ConsumeBloodRushCharges(true);
         }
 
         //========================================FIRE SUPPORT SPAWN METHODS====================================
@@ -573,52 +472,19 @@ namespace HollowPoint
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             for (int shells = 0; shells < totalShells; shells++)
             {
-                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO);
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
                 yield return new WaitForSeconds(0.65f);
                 //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 60, -0.1f), 0);
-                shellAimPosition += 3 * artyDirection;
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 80, 1f), 0);
+                shellAimPosition += 2 * artyDirection;
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.fuseTimerXAxis = true;
                 hpbb.ignoreCollisions = true;
                 hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f,8f), -0.1f);
                 shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
                 shell.SetActive(true);
-                yield return new WaitForSeconds(0.1f);
+                yield return new WaitForSeconds(0.3f);
             }
-        }
-
-        public static IEnumerator StartInfusion()
-        {
-            
-            LoadAssets.sfxDictionary.TryGetValue("infusionsound.wav", out AudioClip ac);
-            AudioSource aud = infusionSoundGO.GetComponent<AudioSource>();
-            aud.PlayOneShot(ac);
-
-            GameCameras.instance.cameraShakeFSM.SendEvent("BigShake");
-
-            //Gives fancy effects to when you infuse yourself, should add a sound soon
-            Instantiate(sharpFlash, HeroController.instance.transform).SetActive(true);
-            Instantiate(focusBurstAnim, HeroController.instance.transform).SetActive(true);
-
-            //SpriteFlash knightFlash = HeroController.instance.GetAttr<SpriteFlash>("spriteFlash");
-            //knightFlash.flashBenchRest();
-
-            GameObject artChargeEffect = Instantiate(HeroController.instance.artChargedEffect, HeroController.instance.transform.position, Quaternion.identity);
-            artChargeEffect.SetActive(true);
-            artChargeEffect.transform.SetParent(HeroController.instance.transform);
-
-            GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform.position, Quaternion.identity);
-            artChargeFlash.SetActive(true);
-            artChargeFlash.transform.SetParent(HeroController.instance.transform);
-            Destroy(artChargeFlash, 0.5f);
-
-            GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform.position, Quaternion.identity);
-            dJumpFlash.SetActive(true);
-            dJumpFlash.transform.SetParent(HeroController.instance.transform);
-            Destroy(dJumpFlash, 0.5f);
-
-            yield return null;
         }
 
         void OnDestroy()

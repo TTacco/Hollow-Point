@@ -2,10 +2,8 @@
 using UnityEngine;
 using System;
 using static Modding.Logger;
-using Modding;
+using static UnityEngine.Random;
 using System.Collections.Generic;
-using Object = UnityEngine.Object;
-using static HollowPoint.HollowPointEnums;
 
 namespace HollowPoint
 {
@@ -32,7 +30,8 @@ namespace HollowPoint
             InfusionSFXGO,
             DiveDetonateSFXGO,
             MortarWhistleSFXGO,
-            MortarExplosionSFXGO
+            MortarExplosionSFXGO,
+            DrawAndHolsterGun
         }
 
         public void Awake()
@@ -62,7 +61,7 @@ namespace HollowPoint
                 LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
                 AudioSource audios = sfxGameObjectDictionary["ShootSFXGO"].GetComponent<AudioSource>();
                 audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
+                audios.pitch = Range(0.9f, 1.1f);
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
             catch (Exception e)
@@ -79,13 +78,13 @@ namespace HollowPoint
                 switch (hpst)
                 {
                     case HollowPointSoundType.EnemyHitSFXGO:
-                        soundName = "enemyhit" + UnityEngine.Random.Range(1, 6);
+                        soundName = "enemyhit" + Range(1, 6);
                         break;
                     case HollowPointSoundType.EnemyKillSFXGO:
-                        soundName = "enemydead" + UnityEngine.Random.Range(1, 3);
+                        soundName = "enemydead" + Range(1, 3);
                         break;
                     case HollowPointSoundType.TerrainHitSFXGO:
-                        soundName = "impact_0" + UnityEngine.Random.Range(1, 5);
+                        soundName = "impact_0" + Range(1, 5);
                         break;
                     case HollowPointSoundType.ClickSFXGO:
                         soundName = "cantfire";
@@ -111,7 +110,7 @@ namespace HollowPoint
                 AudioSource audios = sfxGameObjectDictionary[hpst.ToString()].GetComponent<AudioSource>();
 
                 audios.clip = ac;
-                if (alteredPitch) audios.pitch = UnityEngine.Random.Range(0.85f, 1.15f);
+                if (alteredPitch) audios.pitch = Range(0.85f, 1.15f);
                 else audios.pitch = 1;
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
@@ -119,6 +118,12 @@ namespace HollowPoint
             {
                 Log("HP_AudioHandler.cs, cannot find the SFX " + e);
             }
+        }
+
+        public void PlayDrawHolsterSound(string soundName)
+        {
+            LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
+            AudioSource audios = sfxGameObjectDictionary["DrawAndHolsterGun"].GetComponent<AudioSource>();
         }
     }
 }
