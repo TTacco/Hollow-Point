@@ -263,7 +263,8 @@ namespace HollowPoint
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(Stats.instance.current_soulGainedPerHit);
                 Stats.instance.IncreaseBloodRushEnergy();
-                Stats.instance.ExtendCartridgeDecayTime(false);
+                //TODO: change this audio source location to the sound handler
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.EnemyHitSFXGO);
             }
             // Trigger Enemy Kill
             if (targetHP.hp <= 0f)
@@ -283,17 +284,13 @@ namespace HollowPoint
             //if (stunControlFSM != null) stunControlFSM.SendEvent("STUN DAMAGE");
         }
 
-        public static void EnemyDeathEvent(HealthManager hm, float deathDirection, bool playCustomDeathSound)
+        public static void EnemyDeathEvent(HealthManager hm, float deathDirection, bool playDeathFromBulletSound)
         {
-            if (playCustomDeathSound)
-            {
-                LoadAssets.sfxDictionary.TryGetValue("enemydead" + rand.Next(1, 4) + ".wav", out AudioClip deadSound);
-                HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(deadSound);
-            }
+            if (playDeathFromBulletSound) AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.EnemyKillSFXGO);
+
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
             HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
             Stats.instance.IncreaseBloodRushEnergy();
-            Stats.instance.ExtendCartridgeDecayTime(true);
             //GameManager.instance.FreezeMoment(1);
             //Log("Spawning Weavers");
             //GameObject weaverPrefab = HollowPointPrefabs.prefabDictionary["Weaverling"];

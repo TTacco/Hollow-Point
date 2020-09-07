@@ -11,52 +11,59 @@ namespace HollowPoint
 {
     public class AudioHandler : MonoBehaviour
     {
+        public static AudioHandler instance;
+
+        /*
         static GameObject emptyGunSFX;
         static GameObject shootSFX;
         static GameObject enemyHitSFX;
         static GameObject terrainHitSFX;
         static GameObject infusionSFX;
+        */
+
+        Dictionary<string, GameObject> sfxGameObjectDictionary = new Dictionary<string, GameObject>();
+        public enum HollowPointSoundType
+        {
+            ShootSFXGO,
+            EnemyHitSFXGO,
+            EnemyKillSFXGO,
+            TerrainHitSFXGO,
+            ClickSFXGO,
+            InfusionSFXGO,
+            DiveDetonateSFXGO,
+            MortarWhistleSFXGO,
+            MortarExplosionSFXGO
+        }
 
         public void Awake()
         {
+            if (instance == null) instance = this;
+
             StartCoroutine(AudioHandlerInit());
         }
 
         public IEnumerator AudioHandlerInit()
         {
-            while (HeroController.instance == null)
+            foreach (HollowPointSoundType enumName in (HollowPointSoundType[])Enum.GetValues(typeof(HollowPointSoundType)))
             {
-                yield return null;
+                string goName = enumName.ToString();
+                GameObject sgo = new GameObject(goName, typeof(AudioSource));
+                sfxGameObjectDictionary.Add(goName, sgo);
+                DontDestroyOnLoad(sgo);
             }
-            emptyGunSFX = new GameObject("EmptySFX", typeof(AudioSource));
-            shootSFX = new GameObject("ShootSFX", typeof(AudioSource));
-            enemyHitSFX = new GameObject("EmptySFX", typeof(AudioSource));
-            terrainHitSFX = new GameObject("ShootSFX", typeof(AudioSource));
-            infusionSFX = new GameObject("ShootSFX", typeof(AudioSource));
 
-            DontDestroyOnLoad(emptyGunSFX);
-            DontDestroyOnLoad(shootSFX);
-            DontDestroyOnLoad(enemyHitSFX);
-            DontDestroyOnLoad(terrainHitSFX);
-            DontDestroyOnLoad(infusionSFX);
+            yield return null;
         }
 
-
-        public static void PlayGunSounds(string gunName)
+        public void PlayGunSoundEffect(string gunName)
         {
-
             try
             {
                 LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
-                AudioSource audios = shootSFX.GetComponent<AudioSource>();
+                AudioSource audios = sfxGameObjectDictionary["ShootSFXGO"].GetComponent<AudioSource>();
                 audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);    
+                audios.pitch = UnityEngine.Random.Range(0.9f, 1.1f);
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
-
-                //Play subsonic WOOOP whenever you fire
-                //LoadAssets.sfxDictionary.TryGetValue("subsonicsfx.wav", out ac);
-                //audios.PlayOneShot(ac);
-
             }
             catch (Exception e)
             {
@@ -64,65 +71,53 @@ namespace HollowPoint
             }
         }
 
-        public static void PlayGunSounds(string gunName, float pitch)
-        {
-
-            try
-            {
-                LoadAssets.sfxDictionary.TryGetValue("shoot_sfx_" + gunName.ToLower() + ".wav", out AudioClip ac);
-                AudioSource audios = shootSFX.GetComponent<AudioSource>();
-                audios.clip = ac;
-                audios.pitch = pitch;
-                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
-
-                //Play subsonic WOOOP whenever you fire
-                //LoadAssets.sfxDictionary.TryGetValue("subsonicsfx.wav", out ac);
-                //audios.PlayOneShot(ac);
-
-            }
-            catch (Exception e)
-            {
-                Log("HP_AudioHandler.cs, cannot find the SFX " + gunName + " " + e);
-            }
-        }
-
-        public static void PlaySoundsMisc(string soundName, float? pitch = null)
+        public void PlayMiscSoundEffect(HollowPointSoundType hpst, bool alteredPitch = true)
         {
             try
             {
-                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
+                string soundName = "";
+                switch (hpst)
+                {
+                    case HollowPointSoundType.EnemyHitSFXGO:
+                        soundName = "enemyhit" + UnityEngine.Random.Range(1, 6);
+                        break;
+                    case HollowPointSoundType.EnemyKillSFXGO:
+                        soundName = "enemydead" + UnityEngine.Random.Range(1, 3);
+                        break;
+                    case HollowPointSoundType.TerrainHitSFXGO:
+                        soundName = "impact_0" + UnityEngine.Random.Range(1, 5);
+                        break;
+                    case HollowPointSoundType.ClickSFXGO:
+                        soundName = "cantfire";
+                        break;
+                    case HollowPointSoundType.InfusionSFXGO:
+                        soundName = "infusionsound";
+                        break;
+                    case HollowPointSoundType.DiveDetonateSFXGO:
+                        soundName = "divedetonate";
+                        break;
+                    case HollowPointSoundType.MortarWhistleSFXGO:
+                        soundName = "mortarclose";
+                        break;
+                    case HollowPointSoundType.MortarExplosionSFXGO:
+                        soundName = "mortarexplosion";
+                        break;
+                    default:
+                        Log(hpst.ToString() + " Sound Enum Not Yet Implemented Please Fix This You Moron");
+                        break;
+                }
+
                 LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
-                AudioSource audios = emptyGunSFX.GetComponent<AudioSource>();
+                AudioSource audios = sfxGameObjectDictionary[hpst.ToString()].GetComponent<AudioSource>();
 
                 audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-                if (pitch != null) audios.pitch = (float)pitch;
-
+                if (alteredPitch) audios.pitch = UnityEngine.Random.Range(0.85f, 1.15f);
+                else audios.pitch = 1;
                 audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
             }
             catch (Exception e)
             {
-                Log("HP_AudioHandler.cs, cannot find the SFX " + soundName + " " + e);
-            }
-        }
-
-        public static void PlayInfusionSound(string soundName, float? pitch = null)
-        {
-            try
-            {
-                //HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(LoadAssets.enemyHurtSFX[soundRandom.Next(0, 2)]);
-                LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
-                AudioSource audios = infusionSFX.GetComponent<AudioSource>();
-
-                audios.clip = ac;
-                audios.pitch = UnityEngine.Random.Range(0.8f, 1.2f);
-                if (pitch != null) audios.pitch = (float)pitch;
-
-                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
-            }
-            catch (Exception e)
-            {
-                Log("HP_AudioHandler.cs, cannot find the SFX " + soundName + " " + e);
+                Log("HP_AudioHandler.cs, cannot find the SFX " + e);
             }
         }
     }

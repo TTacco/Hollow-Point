@@ -377,13 +377,6 @@ namespace HollowPoint
             bloodRushIcon?.Invoke(heal_Charges.ToString());
         }
 
-        public void ExtendCartridgeDecayTime(bool enemyKilled)
-        {
-            //Log("[Stats] Extending Decay Time");
-            heal_ChargesDecayTimer += (enemyKilled) ? 4: 2;
-            heal_ChargesDecayTimer = (heal_ChargesDecayTimer > 10) ? 10 : heal_ChargesDecayTimer;
-        }
-
         public void ConsumeBloodRushCharges(bool consumeAll = true)
         {
             //Log("[Stats] Consuming Cartridge");
@@ -482,12 +475,9 @@ namespace HollowPoint
                 Destroy(dJumpFlash, 0.5f);
 
                 Instantiate(SpellControlOverride.sharpFlash, HeroController.instance.transform).SetActive(true);
-                Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
+                //Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
                 GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
-                AudioHandler.PlayInfusionSound("infusionsound", pitch: 1);
-
-  
-
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.InfusionSFXGO, alteredPitch: false);
             }
             else
             {

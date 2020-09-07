@@ -86,7 +86,7 @@ namespace HollowPoint
                     }
                     else if(clickTimer <= 0)
                     {
-                        AudioHandler.PlaySoundsMisc("cantfire");
+                        AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.ClickSFXGO, alteredPitch: false);
                         clickTimer = 1f;
                     }
 
@@ -193,7 +193,7 @@ namespace HollowPoint
             hpbb.bulletDegreeDirection = direction;
             hpbb.size = Stats.instance.currentWeapon.bulletSize;
 
-            AudioHandler.PlayGunSounds(Stats.instance.currentWeapon.gunName.ToString());
+            AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentWeapon.gunName.ToString());
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
             HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
@@ -226,7 +226,7 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = direction;
                 hpbb.size = Stats.instance.currentWeapon.bulletSize;
 
-                AudioHandler.PlayGunSounds(Stats.instance.currentWeapon.gunName.ToString());
+                AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentWeapon.gunName.ToString());
                 HollowPointSprites.StartGunAnims();
                 HollowPointSprites.StartFlash();
                 HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
@@ -250,7 +250,7 @@ namespace HollowPoint
             HollowPointSprites.StartGunAnims();
             HollowPointSprites.StartFlash();
             HollowPointSprites.StartMuzzleFlash(OrientationHandler.finalDegreeDirection, 1);
-            AudioHandler.PlayGunSounds("Shotgun");
+            AudioHandler.instance.PlayGunSoundEffect("Shotgun");
 
             float direction = OrientationHandler.finalDegreeDirection; //90 degrees
             DirectionalOrientation orientation = OrientationHandler.directionOrientation; 
@@ -291,7 +291,7 @@ namespace HollowPoint
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
 
-            AudioHandler.PlayGunSounds("gatlinggun", 1f);
+            AudioHandler.instance.PlayGunSoundEffect("gatlinggun");
             for (int b = 0; b < 14; b++)
             {
                 GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);

@@ -308,7 +308,7 @@ namespace HollowPoint
         {
             Log("Spawning Gas Pulse");
             float addedDegree = 180 / (explosionAmount + 1);
-            AudioHandler.PlaySoundsMisc("divedetonate");
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.DiveDetonateSFXGO);
             GameObject dungCloud;
             for (int pulse = 0; pulse < 1; pulse++)
             {
@@ -505,7 +505,7 @@ namespace HollowPoint
             float direction = OrientationHandler.finalDegreeDirection;
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
 
-            AudioHandler.PlayGunSounds("gatlinggun", 1f);
+            AudioHandler.instance.PlayGunSoundEffect("gatlinggun");
             for (int b = 0; b < rounds; b++)
             {
                 GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(direction, orientation);
@@ -573,16 +573,16 @@ namespace HollowPoint
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             for (int shells = 0; shells < totalShells; shells++)
             {
-                AudioHandler.PlaySoundsMisc("mortarclose", 1);
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO);
                 yield return new WaitForSeconds(0.65f);
                 //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
                 GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 60, -0.1f), 0);
                 shellAimPosition += 3 * artyDirection;
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
-                hpbb.artilleryShell = true;
+                hpbb.fuseTimerXAxis = true;
                 hpbb.ignoreCollisions = true;
                 hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f,8f), -0.1f);
-                shell.AddComponent<BulletIsExplosive>().artilleryShell = true;
+                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
                 shell.SetActive(true);
                 yield return new WaitForSeconds(0.1f);
             }
@@ -619,21 +619,6 @@ namespace HollowPoint
             Destroy(dJumpFlash, 0.5f);
 
             yield return null;
-        }
-
-
-
-        public static void PlayAudio(string audioName, bool addPitch)
-        {
-            LoadAssets.sfxDictionary.TryGetValue(audioName.ToLower() + ".wav", out AudioClip ac);
-            AudioSource audios = HeroController.instance.spellControl.GetComponent<AudioSource>();
-            audios.clip = ac;
-            audios.pitch = 1;
-            //HP_Sprites.gunSpriteGO.GetComponent<AudioSource>().PlayOneShot(ac);
-            if (addPitch)
-                audios.pitch = Range(0.8f, 1.5f);
-
-            audios.PlayOneShot(audios.clip);
         }
 
         void OnDestroy()

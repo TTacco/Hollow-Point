@@ -29,7 +29,9 @@ namespace HollowPoint
         public bool hasSporeCloud = true;
 
         //Fire Support Attribs
-        public bool artilleryShell = false;
+        //This means that the bullet will detonate with the afformentioned destination in the X plane, this is done for artillery strikes
+        public bool fuseTimerXAxis = false;
+        public Vector3 targetDestination;
 
         public bool noDeviation = false;
         public bool useDefaultParticles = true;
@@ -39,7 +41,6 @@ namespace HollowPoint
         static float bulletPivot = 0;
 
         public Vector3 bulletOriginPosition;
-        public Vector3 targetDestination;
         public Vector3 gameObjectScale = new Vector3(1.2f, 1.2f, 0);
         public Vector3 size = new Vector3(1.2f, 1.2f, 0.90f);
 
@@ -80,7 +81,7 @@ namespace HollowPoint
             bc2d.size = size;//Collider size
 
             // +---| Air Strike Bullet Modifier |---+
-            if (artilleryShell)
+            if (fuseTimerXAxis)
             {
                 HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
                 bulletSprite.sprite = fireSupportBulletSprite;
@@ -131,7 +132,7 @@ namespace HollowPoint
         //Destroy the artillery shell when it hits the destination
         void FixedUpdate()
         {
-            if (artilleryShell)
+            if (fuseTimerXAxis)
             {
                 if (gameObject.transform.position.y < targetDestination.y)
                 {
@@ -166,11 +167,7 @@ namespace HollowPoint
                     bulletDummyHitInstance.Direction = 270f;
                     br.Hit(bulletDummyHitInstance);
                 }
-                //TODO: change this audio source location to the sound handler
-                LoadAssets.sfxDictionary.TryGetValue("impact_0" + rand.Next(1, 6) + ".wav", out AudioClip ac);
-                //if (gameObject.GetComponent<AudioSource>() == null) Modding.Logger.Log("No Audio Source");
-                HeroController.instance.GetComponent<AudioSource>().PlayOneShot(ac);
-                //Mark target for fire support
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.TerrainHitSFXGO);
                 Destroy(gameObject, 0.04f);
             }
         }
@@ -356,6 +353,7 @@ namespace HollowPoint
             GasExplosion,
             DungExplosion,
             DungExplosionSmall,
+            ArtilleryShell,
         }
 
         public void OnDestroy()
@@ -382,16 +380,16 @@ namespace HollowPoint
             }
 
             //If its from a grenade launch or a offensive fire support projectile, make it explode
-            else if (explosionType == ExplosionType.GasExplosion || artilleryShell)
+            else if (explosionType == ExplosionType.GasExplosion || explosionType == ExplosionType.ArtilleryShell)
             {
                 Log("ARTILLERY!");
                 GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 explosionClone.name += " KnightMadeExplosion";
 
                 //Shrinks the explosion when its not a fire support bullet or its not an upgraded vengeful, as a nerf/downgrade
-                if (artilleryShell)
+                if (explosionType == ExplosionType.ArtilleryShell)
                 {
-                    SpellControlOverride.PlayAudio("mortarexplosion", true);
+                    AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarExplosionSFXGO);
                     //StartCoroutine(SpawnCluster());
                     for (int shrapnel = 0; shrapnel < 6; shrapnel++)
                     {
