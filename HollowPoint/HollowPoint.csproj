@@ -106,7 +106,7 @@
     <Compile Include="WavUtility.cs" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\Weapon_RifleSprite.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_rifle.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\glow.png" />
@@ -273,6 +273,25 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_carbine.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_lmg.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\shoot_sfx_dmr.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_sniper.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_rifle_nohands.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_lmg.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_lmg_nohands.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_sniper_nohands.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

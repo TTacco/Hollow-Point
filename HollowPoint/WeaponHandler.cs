@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using GlobalEnums;
 using static HollowPoint.HollowPointEnums;
+using static Modding.Logger;
 using ModCommon.Util;
 
 
@@ -17,9 +19,10 @@ namespace HollowPoint
         public static WeaponSwapAndStatHandler instance = null;
 
         public WeaponType currentWeapon = WeaponType.Melee;
-        public GunType currentGun = GunType.Primary;
+        public Gun currentEquippedGun;
+        SpriteRenderer gunSpriteRenderer = null;
 
-        public Dictionary<WeaponModifierName, WeaponModifier> weaponModifierDictionary = new Dictionary<WeaponModifierName, WeaponModifier>();
+        public Dictionary<WeaponModifierName, Gun> weaponModifierDictionary = new Dictionary<WeaponModifierName, Gun>();
 
         const float DEFAULT_ATTACK_SPEED = 0.41f;
         const float DEFAULT_ATTACK_SPEED_CH = 0.25f;
@@ -45,12 +48,54 @@ namespace HollowPoint
 
             CreateGuns();
             currentWeapon = WeaponType.Melee;
-            currentGun = GunType.Primary;
         }
 
         public void Update()
         {
             return;
+        }
+
+        public Gun EquipWeapon()
+        {
+            //List of charms with conversion kits attached to them
+            List<int> conversionCharms = new List<int>(){ 11, 13, 15, 18, 20, 32 };
+            List<int> equippedCharms = PlayerData.instance.equippedCharms;
+
+            //Check the list of intersecting charms, if theres more than 2 then the player is not allowed to fire
+            List<int> equippedConversionCharms = conversionCharms.Intersect(equippedCharms).ToList();
+            int intersectedCharmsCount = equippedConversionCharms.Count();
+            bool incompatibleCharmCombination = (intersectedCharmsCount >= 2)? true : false;
+
+            if (incompatibleCharmCombination)
+            {
+                //If the player has equipped one or more conversion kit, disable the gun from firing until they swap out, bumping soul cost is enough for this
+                currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.RIFLE];
+                currentEquippedGun.soulCostPerShot = 999;
+                ChangeWeaponSprite(currentWeapon);
+            }
+            else
+            {
+                //Ensures first that the list contains intersected charms, otherwise [0] will throw an out of bounds exception
+                //having 0 count also means that the player has no conversion kits equipped, thus will retain the base Rifle gun
+                int charmEquipped = (intersectedCharmsCount > 0)? equippedConversionCharms[0] : 0;
+
+                switch (charmEquipped)
+                {
+                    case 13:
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SNIPER];
+                        break;
+                    case 32:
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.LMG];
+                        break;
+                    default:
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.RIFLE];
+                        break;
+                }
+
+                ChangeWeaponSprite(currentWeapon);
+            }
+
+            return currentEquippedGun;
         }
 
         public void SwapWeapons()
@@ -60,6 +105,7 @@ namespace HollowPoint
 
             HeroController.instance.spellControl.SetState("Inactive");
             Modding.Logger.Log("Swaping weapons");
+
             if (instance.currentWeapon == WeaponType.Ranged)
             {
                 //Holster gun
@@ -81,13 +127,23 @@ namespace HollowPoint
             HeroController.instance.spellControl.SetState("Inactive");
         }
 
-        //Swap inbetween primary and secondary guns
-        void SwapBetweenGun()
+        void ChangeWeaponSprite(WeaponType wt)
         {
-            GunType prevGun = currentGun;
-            currentGun = (currentGun == GunType.Primary) ? GunType.Secondary : GunType.Primary;
+            string spriteName = "";
+            try
+            {
+                if (gunSpriteRenderer == null) gunSpriteRenderer = HollowPointSprites.gunSpriteGO.GetComponent<SpriteRenderer>();
 
-            Modding.Logger.Log(String.Format("Changing guns from {0} to {1}", prevGun, currentGun));
+                string gunNameLowerCaps = currentEquippedGun.gunName.ToString().ToLower();
+                spriteName = "weapon_sprite_" + gunNameLowerCaps;
+                spriteName += (wt == WeaponType.Ranged) ? ".png" : "_nohands.png";
+
+                gunSpriteRenderer.sprite = GunSpriteRenderer.weaponSpriteDictionary[spriteName];
+            }
+            catch(Exception e)
+            {
+                Log("[WeaponHandler] Cannot find texture of the name " + spriteName);
+            }
         }
 
         //Swap between guns or nail
@@ -95,6 +151,7 @@ namespace HollowPoint
         {
             WeaponType prevWep = currentWeapon;
             currentWeapon = (currentWeapon == WeaponType.Melee) ? WeaponType.Ranged : WeaponType.Melee;
+            ChangeWeaponSprite(currentWeapon);
 
             Modding.Logger.Log(String.Format("Changing weapons from {0} to {1}", prevWep, currentWeapon));
 
@@ -141,123 +198,123 @@ namespace HollowPoint
         {
             Modding.Logger.Log("[WeaponHandler] Creating Gun Structs");
 
-            weaponModifierDictionary.Add(WeaponModifierName.SHOTGUN, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.SHOTGUN, new Gun
             {
-                boostMultiplier = 5,
-                bulletLifetime = 0.24f,
-                bulletSize = new Vector3(1.2f, 0.8f, 0),
-                bulletVelocity = 60f,
-                damageBase = 6,
-                damageScale = 4,
+                boostMultiplier = 12,
+                bulletLifetime = 0.17f,
+                bulletSize = new Vector3(0.62f, 0.59f, 0),
+                bulletVelocity = 45f,
+                damageBase = 2,
+                damageScale = 1,
                 fireRate = 0.18f,
                 heatPerShot = 20,
                 gunName = WeaponModifierName.SHOTGUN,
-                soulCostPerShot = 8,
-                soulGainOnHit = 4,
-                soulGainOnKill = 8,
+                soulCostPerShot = 21,
+                soulGainOnHit = 0,
+                soulGainOnKill = 22,
                 soulRegenSpeed = 0.06f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.SMG, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.SMG, new Gun
             {
                 boostMultiplier = 9,
-                bulletLifetime = 0.21f,
-                bulletSize = new Vector3(0.9f, 0.7f, 0),
-                bulletVelocity = 24f,
+                bulletLifetime = 0.19f,
+                bulletSize = new Vector3(0.65f, 0.7f, 0),
+                bulletVelocity = 30f,
                 damageBase = 2,
                 damageScale = 2,
-                fireRate = 0.08f,
-                heatPerShot = 15,
-                gunName = WeaponModifierName.RIFLE,
-                soulCostPerShot = 10,
-                soulGainOnHit = 2,
-                soulGainOnKill = 7,
-                soulRegenSpeed = 0.02f,
+                fireRate = 0.09f,
+                heatPerShot = 11,
+                gunName = WeaponModifierName.SMG,
+                soulCostPerShot = 5,
+                soulGainOnHit = 4,
+                soulGainOnKill = 15,
+                soulRegenSpeed = 0.045f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.CARBINE, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.CARBINE, new Gun
             {
                 boostMultiplier = 15,
-                bulletLifetime = 0.24f,
-                bulletSize = new Vector3(1f, 0.7f, 0),
-                bulletVelocity = 28f,
-                damageBase = 4,
-                damageScale = 3,
+                bulletLifetime = 0.22f,
+                bulletSize = new Vector3(0.7f, 0.7f, 0),
+                bulletVelocity = 35f,
+                damageBase = 3,
+                damageScale = 2,
                 fireRate = 0.40f,
-                heatPerShot = 33,
+                heatPerShot = 10,
                 gunName = WeaponModifierName.CARBINE,
-                soulCostPerShot = 21,
+                soulCostPerShot = 33,
                 soulGainOnHit = 2,
                 soulGainOnKill = 24,
-                soulRegenSpeed = 0.024f,
+                soulRegenSpeed = 0.011f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.RIFLE, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.RIFLE, new Gun
             {
-                boostMultiplier = 6,
-                bulletLifetime = 0.3f,
-                bulletSize = new Vector3(1.2f, 0.7f, 0),
-                bulletVelocity = 32f,
-                damageBase = 4,
+                boostMultiplier = 5,
+                bulletLifetime = 0.22f,
+                bulletSize = new Vector3(0.8f, 0.7f, 0),
+                bulletVelocity = 40f,
+                damageBase = 3,
                 damageScale = 3,
                 fireRate = 0.15f,
                 heatPerShot = 10,
                 gunName = WeaponModifierName.RIFLE,
-                soulCostPerShot = 6,
-                soulGainOnHit = 3,
-                soulGainOnKill = 6,
-                soulRegenSpeed = 0.06f,
+                soulCostPerShot = 5,
+                soulGainOnHit = 0,
+                soulGainOnKill = 0,
+                soulRegenSpeed = 0.05f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.LMG, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.LMG, new Gun
             {
-                boostMultiplier = 5,
-                bulletLifetime = 0.22f,
-                bulletSize = new Vector3(1.2f, 0.8f, 0),
-                bulletVelocity = 60f,
-                damageBase = 6,
-                damageScale = 4,
-                fireRate = 0.18f,
-                heatPerShot = 20,
+                boostMultiplier = 1,
+                bulletLifetime = 0.37f,
+                bulletSize = new Vector3(0.8f, 0.8f, 0),
+                bulletVelocity = 34f,
+                damageBase = 4,
+                damageScale = 3,
+                fireRate = 0.09f,
+                heatPerShot = 14,
                 gunName = WeaponModifierName.LMG,
-                soulCostPerShot = 8,
-                soulGainOnHit = 4,
-                soulGainOnKill = 8,
-                soulRegenSpeed = 0.06f,
+                soulCostPerShot = 3,
+                soulGainOnHit = 2,
+                soulGainOnKill = 9,
+                soulRegenSpeed = 0.12f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.DMR, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.DMR, new Gun
             {
                 boostMultiplier = 5,
-                bulletLifetime = 0.24f,
+                bulletLifetime = 0.28f,
                 bulletSize = new Vector3(1.2f, 0.8f, 0),
-                bulletVelocity = 60f,
-                damageBase = 6,
-                damageScale = 4,
-                fireRate = 0.18f,
-                heatPerShot = 20,
+                bulletVelocity = 55f,
+                damageBase = 8,
+                damageScale = 5,
+                fireRate = 0.25f,
+                heatPerShot = 6,
                 gunName = WeaponModifierName.DMR,
-                soulCostPerShot = 8,
-                soulGainOnHit = 4,
-                soulGainOnKill = 8,
+                soulCostPerShot = 15,
+                soulGainOnHit = 15,
+                soulGainOnKill = 20,
                 soulRegenSpeed = 0.06f,
             });
 
-            weaponModifierDictionary.Add(WeaponModifierName.SNIPER, new WeaponModifier
+            weaponModifierDictionary.Add(WeaponModifierName.SNIPER, new Gun
             {
                 boostMultiplier = 5,
-                bulletLifetime = 0.24f,
-                bulletSize = new Vector3(1.2f, 0.8f, 0),
-                bulletVelocity = 60f,
-                damageBase = 6,
-                damageScale = 4,
-                fireRate = 0.18f,
-                heatPerShot = 20,
+                bulletLifetime = 0.33f,
+                bulletSize = new Vector3(1.4f, 0.8f, 0),
+                bulletVelocity = 70f,
+                damageBase = 10,
+                damageScale = 7,
+                fireRate = 1f,
+                heatPerShot = 0,
                 gunName = WeaponModifierName.SNIPER,
-                soulCostPerShot = 8,
-                soulGainOnHit = 4,
-                soulGainOnKill = 8,
-                soulRegenSpeed = 0.06f,
+                soulCostPerShot = 33,
+                soulGainOnHit = 33,
+                soulGainOnKill = 50,
+                soulRegenSpeed = 0.15f,
             });
 
 
@@ -287,7 +344,7 @@ namespace HollowPoint
         SNIPER    
     }
 
-    public struct WeaponModifier
+    public struct Gun
     {
         public WeaponModifierName gunName;
         public int soulCostPerShot;
@@ -302,34 +359,5 @@ namespace HollowPoint
         public float heatPerShot;
         public float boostMultiplier;
         public Vector3 bulletSize;
-    }
-
-    //===========================================================
-    //Static Utilities
-    //===========================================================
-
-    public class SpreadDeviationControl
-    {
-        public static int ExtraDeviation()
-        {
-            
-
-            if (HeroController.instance.hero_state == GlobalEnums.ActorStates.airborne)
-            {
-                return 0;
-            }
-
-            if (HeroController.instance.hero_state == GlobalEnums.ActorStates.running)
-            {
-                return 0;
-            }
-
-            if (HeroController.instance.hero_state == GlobalEnums.ActorStates.wall_sliding)
-            {
-                return 0;
-            }
-
-            return 1;
-        }
     }
 }

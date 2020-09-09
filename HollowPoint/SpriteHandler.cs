@@ -74,7 +74,7 @@ namespace HollowPoint
             {
                 prevFaceRightVal = HeroController.instance.cState.facingRight;
 
-                gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(HP_GunSpriteRenderer), typeof(AudioSource));
+                gunSpriteGO = new GameObject("HollowPointGunSprite", typeof(SpriteRenderer), typeof(GunSpriteRenderer), typeof(AudioSource));
                 gunSpriteGO.transform.position = HeroController.instance.transform.position;
                 gunSpriteGO.transform.localPosition = new Vector3(0, 0, 0);
                 gunSpriteGO.SetActive(true);
@@ -467,10 +467,10 @@ namespace HollowPoint
 
     }
 
-    class HP_GunSpriteRenderer : MonoBehaviour
+    class GunSpriteRenderer : MonoBehaviour
     {
         public static SpriteRenderer gunRenderer;
-        public static Dictionary<String, Sprite> weaponSpriteDicitionary = new Dictionary<String, Sprite>();
+        public static Dictionary<String, Sprite> weaponSpriteDictionary = new Dictionary<String, Sprite>();
 
         private const int PIXELS_PER_UNIT = 180;
         private tk2dSpriteAnimator tk2d = null; 
@@ -480,21 +480,21 @@ namespace HollowPoint
             gunRenderer = gameObject.GetComponent<SpriteRenderer>();
         
 
-            LoadAssets.spriteDictionary.TryGetValue("Weapon_RifleSprite.png", out Texture2D rifleTextureInit);
+            LoadAssets.spriteDictionary.TryGetValue("weapon_sprite_rifle.png", out Texture2D rifleTextureInit);
             gunRenderer.sprite = Sprite.Create(rifleTextureInit,
                 new Rect(0, 0, rifleTextureInit.width, rifleTextureInit.height),
                 new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
 
             foreach (KeyValuePair<String, Texture2D> wepTexture in LoadAssets.spriteDictionary)
             {
-                if (wepTexture.Key.Contains("Weapon"))
+                if (wepTexture.Key.Contains("weapon"))
                 {
                    Texture2D texture = wepTexture.Value;
                    Sprite s = Sprite.Create(texture,
                         new Rect(0, 0, texture.width, texture.height),
                         new Vector2(0.5f, 0.5f), PIXELS_PER_UNIT);
 
-                    weaponSpriteDicitionary.Add(wepTexture.Key, s);
+                    weaponSpriteDictionary.Add(wepTexture.Key, s);
                 }
             }
 
@@ -530,6 +530,7 @@ namespace HollowPoint
             }
         }
 
+        string previousAnim = "h";
         bool MakeGunInvisibleCheck()
         {
             /*I am gonna say it now, this is probably singlehandedly one of the worst thing ive ever written in this mod, i have no idea where to
@@ -543,7 +544,7 @@ namespace HollowPoint
             }
 
             string animName = tk2d.CurrentClip.name;
-
+ 
             return !HeroController.instance.CanInput() &&
             !HeroController.instance.cState.transitioning &&
             !animName.Contains("Enter") &&
@@ -565,7 +566,7 @@ namespace HollowPoint
             if (weaponName.Equals("Nail")) return;
             try
             {
-                weaponSpriteDicitionary.TryGetValue(weaponName, out Sprite swapTheCurrentGunSpriteWithThisOne);
+                weaponSpriteDictionary.TryGetValue(weaponName, out Sprite swapTheCurrentGunSpriteWithThisOne);
                 gunRenderer.sprite = swapTheCurrentGunSpriteWithThisOne;
             }
             catch(Exception e)
@@ -577,7 +578,7 @@ namespace HollowPoint
         public void OnDestroy()
         {
             Destroy(gunRenderer);
-            Destroy(gameObject.GetComponent<HP_GunSpriteRenderer>());
+            Destroy(gameObject.GetComponent<GunSpriteRenderer>());
         }
     }
 

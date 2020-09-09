@@ -122,8 +122,10 @@ namespace HollowPoint
 
         public void PlayDrawHolsterSound(string soundName)
         {
-            LoadAssets.sfxDictionary.TryGetValue(soundName + ".wav", out AudioClip ac);
+            LoadAssets.sfxDictionary.TryGetValue("weapon_" + soundName + ".wav", out AudioClip ac);
             AudioSource audios = sfxGameObjectDictionary["DrawAndHolsterGun"].GetComponent<AudioSource>();
+            audios.clip = ac;
+            audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
         }
     }
 }

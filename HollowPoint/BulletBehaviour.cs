@@ -111,7 +111,7 @@ namespace HollowPoint
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the max/min deviation, shrinking the cone of fire
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * rand.Next(10, 13); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(13, 16); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
             float radian = (float)(degree * Math.PI / 180);
 
@@ -147,7 +147,7 @@ namespace HollowPoint
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
                 if (pierce) return;
-                Destroy(gameObject, 0.056f);
+                Destroy(gameObject, 0.03f);
                 return;
             }
 

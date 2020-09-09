@@ -80,7 +80,7 @@ namespace HollowPoint
         float infusionTimer = 0;
         bool infusionActivated = false;
 
-        public WeaponModifier currentWeapon;
+        public Gun currentEquippedGun;
 
         public void Awake()
         {
@@ -198,19 +198,19 @@ namespace HollowPoint
 
             Log("Charm Update Called");
             //Initialise stats
-            currentWeapon = WeaponSwapAndStatHandler.instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
+            currentEquippedGun = WeaponSwapAndStatHandler.instance.EquipWeapon();
 
-            current_damagePerShot = currentWeapon.damageBase;
-            current_damagePerLevel = currentWeapon.damageScale;
-            current_bulletLifetime = currentWeapon.bulletLifetime;
-            current_boostMultiplier = currentWeapon.boostMultiplier;
-            current_bulletVelocity = currentWeapon.bulletVelocity; //SMG 24f
-            current_fireRateCooldown = currentWeapon.fireRate; //0.06 SMG22f
-            current_soulCostPerShot = currentWeapon.soulCostPerShot;
-            current_heatPerShot = currentWeapon.heatPerShot;
-            current_soulGainedPerHit = currentWeapon.soulGainOnHit;
-            current_soulGainedPerKill = currentWeapon.soulGainOnHit;
-            current_soulRegenSpeed = currentWeapon.soulRegenSpeed;
+            current_damagePerShot = currentEquippedGun.damageBase;
+            current_damagePerLevel = currentEquippedGun.damageScale;
+            current_bulletLifetime = currentEquippedGun.bulletLifetime;
+            current_boostMultiplier = currentEquippedGun.boostMultiplier;
+            current_bulletVelocity = currentEquippedGun.bulletVelocity; 
+            current_fireRateCooldown = currentEquippedGun.fireRate; 
+            current_soulCostPerShot = currentEquippedGun.soulCostPerShot;
+            current_heatPerShot = currentEquippedGun.heatPerShot;
+            current_soulGainedPerHit = currentEquippedGun.soulGainOnHit;
+            current_soulGainedPerKill = currentEquippedGun.soulGainOnHit;
+            current_soulRegenSpeed = currentEquippedGun.soulRegenSpeed;
             current_walkSpeed = 3f;
 
             recentlyKilledTimer = 0;
@@ -453,6 +453,8 @@ namespace HollowPoint
                 //Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
                 GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
                 AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.InfusionSFXGO, alteredPitch: false);
+
+
             }
             else
             {
@@ -462,6 +464,16 @@ namespace HollowPoint
                 furyBurst.SetActive(false);
 
             }
+        }
+
+        public void EnableBuffs()
+        {
+
+        }
+
+        public void DisableBuffs()
+        {
+
         }
 
         void OnDestroy()
