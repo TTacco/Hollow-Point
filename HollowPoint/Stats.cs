@@ -140,7 +140,7 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 11;
+            return 4;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)

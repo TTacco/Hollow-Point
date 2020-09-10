@@ -17,7 +17,7 @@ namespace HollowPoint
         public float bulletSpeed = 25;
 
         public string specialAttrib;
-        public bool pierce = false;
+        public bool piercing = false;
 
         public int bulletDamage = 5;
         public int bulletDamageScale = 5;
@@ -45,7 +45,7 @@ namespace HollowPoint
         public Vector3 size = new Vector3(1.2f, 1.2f, 0.90f);
 
         //TODO: Clean this up, and the bullet types too with structs instead
-        public WeaponModifierName weaponUsed;
+        public Gun gunUsed;
 
         static System.Random rand = new System.Random();
 
@@ -111,7 +111,7 @@ namespace HollowPoint
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the max/min deviation, shrinking the cone of fire
             float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * rand.Next(13, 16); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(gunUsed.minWeaponSpreadFactor, gunUsed.minWeaponSpreadFactor + 4); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
             float radian = (float)(degree * Math.PI / 180);
 
@@ -146,7 +146,7 @@ namespace HollowPoint
             {
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-                if (pierce) return;
+                if (piercing) return;
                 Destroy(gameObject, 0.03f);
                 return;
             }

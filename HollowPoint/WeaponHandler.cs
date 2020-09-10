@@ -76,15 +76,33 @@ namespace HollowPoint
             else
             {
                 //Ensures first that the list contains intersected charms, otherwise [0] will throw an out of bounds exception
-                //having 0 count also means that the player has no conversion kits equipped, thus will retain the base Rifle gun
+                //having 0 count also means that the player has no conversion kits equipped, thus will retain the base "Rifle" gun
                 int charmEquipped = (intersectedCharmsCount > 0)? equippedConversionCharms[0] : 0;
 
                 switch (charmEquipped)
                 {
+                    case 11:
+                        //Fluke
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SHOTGUN];
+                        break;
                     case 13:
+                        //Mark Of Pride
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.DMR];
+                        break;
+                    case 15:
+                        //Heavy Blow
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
+                        break;
+                    case 18:
+                        //Long Nail
                         currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SNIPER];
                         break;
+                    case 20:
+                        //Soul Catcher
+                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SMG];
+                        break;
                     case 32:
+                        //Quick Slash
                         currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.LMG];
                         break;
                     default:
@@ -206,9 +224,10 @@ namespace HollowPoint
                 bulletVelocity = 45f,
                 damageBase = 2,
                 damageScale = 1,
-                fireRate = 0.18f,
+                fireRate = 0.65f,
                 heatPerShot = 20,
                 gunName = WeaponModifierName.SHOTGUN,
+                minWeaponSpreadFactor = 1,
                 soulCostPerShot = 21,
                 soulGainOnHit = 0,
                 soulGainOnKill = 22,
@@ -226,6 +245,7 @@ namespace HollowPoint
                 fireRate = 0.09f,
                 heatPerShot = 11,
                 gunName = WeaponModifierName.SMG,
+                minWeaponSpreadFactor = 10,
                 soulCostPerShot = 5,
                 soulGainOnHit = 4,
                 soulGainOnKill = 15,
@@ -243,6 +263,7 @@ namespace HollowPoint
                 fireRate = 0.40f,
                 heatPerShot = 10,
                 gunName = WeaponModifierName.CARBINE,
+                minWeaponSpreadFactor = 8,
                 soulCostPerShot = 33,
                 soulGainOnHit = 2,
                 soulGainOnKill = 24,
@@ -257,13 +278,14 @@ namespace HollowPoint
                 bulletVelocity = 40f,
                 damageBase = 3,
                 damageScale = 3,
-                fireRate = 0.15f,
-                heatPerShot = 10,
+                fireRate = 0.14f,
+                heatPerShot = 14,
                 gunName = WeaponModifierName.RIFLE,
-                soulCostPerShot = 5,
+                minWeaponSpreadFactor = 3,
+                soulCostPerShot = 8,
                 soulGainOnHit = 0,
                 soulGainOnKill = 0,
-                soulRegenSpeed = 0.05f,
+                soulRegenSpeed = 0.020f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.LMG, new Gun
@@ -272,15 +294,16 @@ namespace HollowPoint
                 bulletLifetime = 0.37f,
                 bulletSize = new Vector3(0.8f, 0.8f, 0),
                 bulletVelocity = 34f,
-                damageBase = 4,
+                damageBase = 3,
                 damageScale = 3,
-                fireRate = 0.09f,
-                heatPerShot = 14,
+                fireRate = 0.10f,
+                heatPerShot = 10,
                 gunName = WeaponModifierName.LMG,
+                minWeaponSpreadFactor = 5,
                 soulCostPerShot = 3,
                 soulGainOnHit = 2,
                 soulGainOnKill = 9,
-                soulRegenSpeed = 0.12f,
+                soulRegenSpeed = 0.24f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.DMR, new Gun
@@ -294,6 +317,7 @@ namespace HollowPoint
                 fireRate = 0.25f,
                 heatPerShot = 6,
                 gunName = WeaponModifierName.DMR,
+                minWeaponSpreadFactor = 12,
                 soulCostPerShot = 15,
                 soulGainOnHit = 15,
                 soulGainOnKill = 20,
@@ -311,6 +335,7 @@ namespace HollowPoint
                 fireRate = 1f,
                 heatPerShot = 0,
                 gunName = WeaponModifierName.SNIPER,
+                minWeaponSpreadFactor = 1,
                 soulCostPerShot = 33,
                 soulGainOnHit = 33,
                 soulGainOnKill = 50,
@@ -346,18 +371,19 @@ namespace HollowPoint
 
     public struct Gun
     {
+        public float boostMultiplier;
+        public float bulletLifetime;
+        public Vector3 bulletSize;
+        public float bulletVelocity;
+        public int damageBase;
+        public int damageScale;
+        public float fireRate;
+        public float heatPerShot;
         public WeaponModifierName gunName;
+        public int minWeaponSpreadFactor;
         public int soulCostPerShot;
         public int soulGainOnHit;
         public int soulGainOnKill;
         public float soulRegenSpeed;
-        public int damageBase;
-        public int damageScale;
-        public float fireRate;
-        public float bulletVelocity;
-        public float bulletLifetime;
-        public float heatPerShot;
-        public float boostMultiplier;
-        public Vector3 bulletSize;
     }
 }

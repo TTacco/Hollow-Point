@@ -10,14 +10,8 @@ namespace HollowPoint
     public class AudioHandler : MonoBehaviour
     {
         public static AudioHandler instance;
-
-        /*
-        static GameObject emptyGunSFX;
-        static GameObject shootSFX;
-        static GameObject enemyHitSFX;
-        static GameObject terrainHitSFX;
-        static GameObject infusionSFX;
-        */
+        bool canPlayKillSound = true;
+        float canPlayKillSoundTimer = 0.02f;
 
         Dictionary<string, GameObject> sfxGameObjectDictionary = new Dictionary<string, GameObject>();
         public enum HollowPointSoundType
@@ -39,6 +33,18 @@ namespace HollowPoint
             if (instance == null) instance = this;
 
             StartCoroutine(AudioHandlerInit());
+        }
+
+        public void Update()
+        {
+            if(canPlayKillSoundTimer > 0 && !canPlayKillSound)
+            {
+                canPlayKillSoundTimer -= Time.deltaTime * 1;
+                if(canPlayKillSoundTimer <= 0)
+                {
+                    canPlayKillSound = true;
+                }
+            }
         }
 
         public IEnumerator AudioHandlerInit()
@@ -75,13 +81,18 @@ namespace HollowPoint
             try
             {
                 string soundName = "";
+                float volume = GameManager.instance.GetImplicitCinematicVolume();
                 switch (hpst)
                 {
                     case HollowPointSoundType.EnemyHitSFXGO:
                         soundName = "enemyhit" + Range(1, 6);
                         break;
                     case HollowPointSoundType.EnemyKillSFXGO:
+                        if (!canPlayKillSound) return;
+
                         soundName = "enemydead" + Range(1, 3);
+                        canPlayKillSound = false;
+                        canPlayKillSoundTimer = 0.02f;
                         break;
                     case HollowPointSoundType.TerrainHitSFXGO:
                         soundName = "impact_0" + Range(1, 5);
@@ -112,7 +123,7 @@ namespace HollowPoint
                 audios.clip = ac;
                 if (alteredPitch) audios.pitch = Range(0.85f, 1.15f);
                 else audios.pitch = 1;
-                audios.PlayOneShot(audios.clip, GameManager.instance.GetImplicitCinematicVolume());
+                audios.PlayOneShot(audios.clip, volume);
             }
             catch (Exception e)
             {

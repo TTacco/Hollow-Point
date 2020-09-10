@@ -139,12 +139,20 @@ namespace HollowPoint
             if (isWallClimbing) directionMultiplier *= -1;
 
             //fuck your standard naming conventions, if it works, it fucking works
-            float howFarTheGunIsAwayFromTheKnightsBody = (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
-            float howHighTheGunIsAwayFromTheKnightsBody = (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
+            bool usingMelee = WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee;
+            float howFarTheGunIsAwayFromTheKnightsBody = (usingMelee) ? 0.20f : 0.35f; //|| HP_HeatHandler.overheat
+            float howHighTheGunIsAwayFromTheKnightsBody = (usingMelee) ? -0.9f : -1.1f; // || HP_HeatHandler.overheat
+
+
+            if (tk2d.CurrentClip.name.Contains("Sit")) 
+            {
+                howFarTheGunIsAwayFromTheKnightsBody = 0;
+                howHighTheGunIsAwayFromTheKnightsBody = (usingMelee)? -0.70f : -0.84f;
+            }
 
             ts.transform.position = HeroController.instance.transform.position + new Vector3(howFarTheGunIsAwayFromTheKnightsBody * directionMultiplier, howHighTheGunIsAwayFromTheKnightsBody, -0.001f); ;
             //gunSpriteGO.transform.position = HeroController.instance.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
-            
+
 
             //:TODO: Tentative changes
             // gunSpriteGO.transform.localPosition = gunSpriteGO.transform.position + new Vector3(0.2f * directionMultiplier, -1f, -0.001f);
@@ -236,7 +244,6 @@ namespace HollowPoint
                 }
             }
             //Idle animation/ Knight standing still
-
             else if (!isFiring)
             {
                 isSprinting = false;
@@ -244,7 +251,7 @@ namespace HollowPoint
                 StopCoroutine("SprintingShakeRotation");
                 //gunSpriteGO.transform.localPosition = defaultWeaponPos;
 
-                float lowerGunThreshold = (BadStareDown()) ? 50 : 32;
+                float lowerGunThreshold = (BadStareDown()) ? 50 : 43;
                 currentDegree = Mathf.Lerp(currentDegree, lowerGunThreshold, Time.deltaTime * 28);
                 gunSpriteGO.transform.SetRotationZ(currentDegree);
                 gunSpriteGO.transform.localPosition = new Vector3(gunSpriteGO.transform.localPosition.x, 0, -0.001f);
@@ -260,13 +267,13 @@ namespace HollowPoint
 
             else if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee) //HP_HeatHandler.overheat
             {
-                gunSpriteGO.transform.SetRotationZ(-34); //-23 
-                gunSpriteGO.transform.SetPositionZ(0.01f);
-                //gunSpriteGO.transform.localPosition = new Vector3(-0.01f, -0.84f, 0.0001f); 
+                Transform transform = gunSpriteGO.transform;
+                transform.SetRotationZ(-45); //-23 
+                transform.SetPositionZ(0.01f);
 
                 if (HeroController.instance.hero_state == ActorStates.running )
                 {
-                    gunSpriteGO.transform.SetRotationZ(-28); //-17
+                    gunSpriteGO.transform.SetRotationZ(-34); //-17
                 }
             }
             else
@@ -381,12 +388,12 @@ namespace HollowPoint
 
         public static void StartGunAnims()
         {
-            if (lowerGunTimer > 0.28) return;
+            if (lowerGunTimer > 0.51) return;
                
             startFiringAnim = true;
             isFiring = false;
             isFiring = true;
-            lowerGunTimer = 0.32f;
+            lowerGunTimer = 0.55f;
         }
 
         public static void StartFlash()
@@ -513,25 +520,20 @@ namespace HollowPoint
 
         public void Update()
         {
+            /*
             try
             {
-                if (MakeGunInvisibleCheck())
-                {
-                    gunRenderer.enabled = false;
-                }
-                else
-                {
-                    gunRenderer.enabled = true;
-                }
+                //gunRenderer.enabled = MakeGunVisibleCheck();
             }
             catch (Exception e)
             {
                 Log(e);
             }
+            */
         }
 
-        string previousAnim = "h";
-        bool MakeGunInvisibleCheck()
+        string prevAnim = "";
+        bool MakeGunVisibleCheck()
         {
             /*I am gonna say it now, this is probably singlehandedly one of the worst thing ive ever written in this mod, i have no idea where to
               find anim that handles getting new abilities and i am not gonna bother because its probably tucked into a hundred individual FSMs
@@ -544,21 +546,28 @@ namespace HollowPoint
             }
 
             string animName = tk2d.CurrentClip.name;
- 
-            return !HeroController.instance.CanInput() &&
-            !HeroController.instance.cState.transitioning &&
-            !animName.Contains("Enter") &&
-            !animName.Contains("Challenge") &&
-            !animName.Contains("Prostrate") && 
-            !animName.Contains("Collect Normal") && 
-            !animName.Contains("RoarLock") &&
-            !animName.Contains("Super Hard Land") &&
-            !animName.Contains("Wake Up") &&
-            !animName.Contains("Sit") &&
-            !animName.Contains("SD") &&
-            !animName.Contains("Get Off") &&
-            !animName.Contains("DN") &&
-            !HeroController.instance.cState.isPaused;
+
+            //if (HeroController.instance.CanInput() || HeroController.instance.cState.transitioning) return true;
+
+            bool makeGunVisible = !animName.Contains("Sit");
+
+            return makeGunVisible;
+
+            /*
+            return
+            animName.Contains("Enter") ||
+            animName.Contains("Challenge") ||
+            animName.Contains("Prostrate") ||
+            animName.Contains("Collect Normal") ||
+            animName.Contains("RoarLock") ||
+            animName.Contains("Super Hard Land") ||
+            animName.Contains("Wake Up") ||
+            animName.Contains("Sit") ||
+            animName.Contains("SD") ||
+            animName.Contains("Get Off") ||
+            animName.Contains("DN") ||
+            HeroController.instance.cState.isPaused;
+            */
         }
 
         public static void SwapWeapon(String weaponName)

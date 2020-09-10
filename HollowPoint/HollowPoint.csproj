@@ -293,6 +293,22 @@
   <ItemGroup>
     <EmbeddedResource Include="assets\weapon_sprite_sniper_nohands.png" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_dmr.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_dmr_nohands.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_shotgun.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_shotgun_nohands.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_carbine.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_carbine_nohands.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\weapon_sprite_smg.png" />
+    <EmbeddedResource Include="assets\weapon_sprite_smg_nohands.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>xcopy "C:\Users\Personal\source\repos\HollowPoint\HollowPoint\bin\Debug\HollowPoint.dll" "C:\Games\Steam\SteamApps\common\Hollow Knight\hollow_knight_Data\Managed\Mods" /Y</PostBuildEvent>

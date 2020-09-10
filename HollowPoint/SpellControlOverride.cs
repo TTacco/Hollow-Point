@@ -371,9 +371,9 @@ namespace HollowPoint
             {
                 GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Horizontal);
                 BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
-                hpbb.weaponUsed = Stats.instance.currentEquippedGun.gunName;
+                hpbb.gunUsed = Stats.instance.currentEquippedGun;
                 hpbb.noDeviation = true;
-                hpbb.pierce = true;
+                hpbb.piercing = true;
                 hpbb.bulletOriginPosition = knife.transform.position;
                 hpbb.bulletSpeed = 40f;
                 hpbb.bulletDegreeDirection = startingDegree;
