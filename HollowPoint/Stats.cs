@@ -126,7 +126,7 @@ namespace HollowPoint
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
-            if (heal_Charges < 0) return false; //If your soul charges are less than 1, you cant heal bud
+            if (heal_Charges < 2) return false; //If your soul charges are less than 1, you cant heal bud
 
             return orig(self);
         }

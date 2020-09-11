@@ -28,6 +28,8 @@ namespace HollowPoint
         public bool ignoreCollisions = false;
         public bool hasSporeCloud = true;
 
+        public bool isDagger;
+
         //Fire Support Attribs
         //This means that the bullet will detonate with the afformentioned destination in the X plane, this is done for artillery strikes
         public bool fuseTimerXAxis = false;
@@ -86,6 +88,12 @@ namespace HollowPoint
                 HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
                 bulletSprite.sprite = fireSupportBulletSprite;
                 bulletSpeed = 120;
+            }
+            else if (isDagger)
+            { 
+                //HollowPointPrefabs.projectileSprites.TryGetValue("daggerSprite.png", out Sprite fireSupportBulletSprite);
+                //bulletSprite.sprite = fireSupportBulletSprite;
+                bulletSprite.sprite = HollowPointPrefabs.projectileSprites["daggerSprite.png"];
             }
 
             //Particle Effects

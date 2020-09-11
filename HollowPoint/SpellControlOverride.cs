@@ -249,6 +249,7 @@ namespace HollowPoint
 
                 nailArtFSM.GetAction<ActivateGameObject>("G Slash", 2).activate = false;
 
+                //For Fan of Knives
                 nailArtFSM.AddAction("G Slash", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
@@ -258,6 +259,27 @@ namespace HollowPoint
                 }
                 );
 
+                //Dagger Rain
+                nailArtFSM.AddAction("Cyclone Spin", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "State_CycloneSpin",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                );
+
+                //Assassinate
+
+                nailArtFSM.GetAction<ActivateGameObject>("Dash Slash", 0).activate = false; //Disable DSlash
+                nailArtFSM.AddAction("Dash Slash", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "State_DashSlash",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                );
             }
             catch (Exception e)
             {
@@ -365,23 +387,67 @@ namespace HollowPoint
         //State GSlash is called whenever the player is about to perform a great slash, use this to spawn the knives
         public void State_GSlash()
         {
-            float startingDegree = HeroController.instance.cState.facingRight ? -25 : 155; 
-
-            for(int k = 0; k < 5; k++)
+            float startingDegree = HeroController.instance.cState.facingRight ? -25 : 155;
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.ThrowDaggerSFXGO);
+            for (int k = 0; k < 5; k++)
             {
                 GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Horizontal);
                 BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
+                hpbb.bulletDamage = 3;
+                hpbb.bulletDamageScale = 3;
                 hpbb.noDeviation = true;
-                hpbb.piercing = true;
+                hpbb.bulletOriginPosition = knife.transform.position;
+                hpbb.bulletSpeed = 30f;
+                hpbb.bulletDegreeDirection = startingDegree;
+                //hpbb.appliesDamageOvertime = true;
+                hpbb.isDagger = true;
+                startingDegree += 10;
+                hpbb.size = new Vector3(1.2f, 0.65f, 1);
+                Destroy(knife, 0.45f);
+            }
+        }
+
+        public void State_CycloneSpin()
+        {
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.ThrowDaggerSFXGO);
+            for (int k = 0; k < 10; k++)
+            {
+                GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Vertical);
+                BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
+                hpbb.gunUsed = Stats.instance.currentEquippedGun;
+                hpbb.bulletDamage = 3;
+                hpbb.bulletDamageScale = 4;
+                hpbb.noDeviation = true;
                 hpbb.bulletOriginPosition = knife.transform.position;
                 hpbb.bulletSpeed = 40f;
-                hpbb.bulletDegreeDirection = startingDegree;
-                hpbb.appliesDamageOvertime = true;
-                startingDegree += 10;
-                hpbb.size = new Vector3(1.2f, 0.55f, 1);
-                Destroy(knife, 1f);
+
+                hpbb.bulletDegreeDirection = Range(0, HeroController.instance.cState.onGround? 180 : 360);
+                //hpbb.appliesDamageOvertime = true;
+                hpbb.isDagger = true;
+                hpbb.size = new Vector3(1.2f, 0.65f, 1);
+                Destroy(knife, 0.5f);
             }
+        }
+
+        public void State_DashSlash()
+        {
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.ThrowDaggerSFXGO);
+            float startingDegree = HeroController.instance.cState.facingRight ? 0 : 180;
+            GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Horizontal);
+            BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
+            hpbb.gunUsed = Stats.instance.currentEquippedGun;
+            hpbb.bulletDamage = 25;
+            hpbb.bulletDamageScale = 5;
+            hpbb.noDeviation = true;
+            hpbb.bulletOriginPosition = knife.transform.position;
+            hpbb.bulletSpeed = 40f;
+            hpbb.bulletDegreeDirection = startingDegree;
+            //hpbb.appliesDamageOvertime = true;
+            hpbb.isDagger = true;
+            hpbb.size = new Vector3(1.4f, 1f, 1);
+            Destroy(knife, 1f);
+
         }
 
         //Called once the Scream/Shriek has ended, used to call in an airstrike

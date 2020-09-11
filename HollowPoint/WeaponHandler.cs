@@ -242,32 +242,32 @@ namespace HollowPoint
                 bulletVelocity = 30f,
                 damageBase = 2,
                 damageScale = 2,
-                fireRate = 0.09f,
-                heatPerShot = 11,
+                fireRate = 0.51f,
+                heatPerShot = 10,
                 gunName = WeaponModifierName.SMG,
-                minWeaponSpreadFactor = 10,
-                soulCostPerShot = 5,
-                soulGainOnHit = 4,
-                soulGainOnKill = 15,
-                soulRegenSpeed = 0.045f,
+                minWeaponSpreadFactor = 5,
+                soulCostPerShot = 33,
+                soulGainOnHit = 0,
+                soulGainOnKill = 0,
+                soulRegenSpeed = 0.012f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.CARBINE, new Gun
             {
                 boostMultiplier = 15,
-                bulletLifetime = 0.22f,
+                bulletLifetime = 0.17f,
                 bulletSize = new Vector3(0.7f, 0.7f, 0),
                 bulletVelocity = 35f,
                 damageBase = 3,
                 damageScale = 2,
-                fireRate = 0.40f,
-                heatPerShot = 10,
+                fireRate = 0.10f,
+                heatPerShot = 15,
                 gunName = WeaponModifierName.CARBINE,
-                minWeaponSpreadFactor = 8,
-                soulCostPerShot = 33,
+                minWeaponSpreadFactor = 5,
+                soulCostPerShot = 9,
                 soulGainOnHit = 2,
                 soulGainOnKill = 24,
-                soulRegenSpeed = 0.011f,
+                soulRegenSpeed = 0.016f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.RIFLE, new Gun
@@ -276,16 +276,16 @@ namespace HollowPoint
                 bulletLifetime = 0.22f,
                 bulletSize = new Vector3(0.8f, 0.7f, 0),
                 bulletVelocity = 40f,
-                damageBase = 3,
+                damageBase = 4,
                 damageScale = 3,
-                fireRate = 0.14f,
-                heatPerShot = 14,
+                fireRate = 0.17f,
+                heatPerShot = 5,
                 gunName = WeaponModifierName.RIFLE,
-                minWeaponSpreadFactor = 3,
-                soulCostPerShot = 8,
+                minWeaponSpreadFactor = 2,
+                soulCostPerShot = 7,
                 soulGainOnHit = 0,
                 soulGainOnKill = 0,
-                soulRegenSpeed = 0.020f,
+                soulRegenSpeed = 0.033f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.LMG, new Gun
@@ -300,10 +300,10 @@ namespace HollowPoint
                 heatPerShot = 10,
                 gunName = WeaponModifierName.LMG,
                 minWeaponSpreadFactor = 5,
-                soulCostPerShot = 3,
+                soulCostPerShot = 2,
                 soulGainOnHit = 2,
                 soulGainOnKill = 9,
-                soulRegenSpeed = 0.24f,
+                soulRegenSpeed = 0.040f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.DMR, new Gun

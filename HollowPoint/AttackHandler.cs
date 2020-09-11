@@ -154,7 +154,7 @@ namespace HollowPoint
             isFiring = true;
             Stats.instance.StartBothCooldown();
 
-            if (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.CARBINE)
+            if (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SMG)
             {
                 StartCoroutine(BurstShot(4));
             }
@@ -271,7 +271,7 @@ namespace HollowPoint
                 hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
                 hpbb.bulletDegreeDirection = direction + UnityEngine.Random.Range(-15f, 15f);
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
-                hpbb.piercing = true;
+                hpbb.piercing = false;
 
                 Destroy(bullet, Stats.instance.current_bulletLifetime + UnityEngine.Random.Range(-0.03f, 0.03f));
             }

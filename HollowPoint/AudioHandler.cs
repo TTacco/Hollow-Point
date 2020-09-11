@@ -25,6 +25,7 @@ namespace HollowPoint
             DiveDetonateSFXGO,
             MortarWhistleSFXGO,
             MortarExplosionSFXGO,
+            ThrowDaggerSFXGO,
             DrawAndHolsterGun
         }
 
@@ -96,6 +97,9 @@ namespace HollowPoint
                         break;
                     case HollowPointSoundType.TerrainHitSFXGO:
                         soundName = "impact_0" + Range(1, 5);
+                        break;
+                    case HollowPointSoundType.ThrowDaggerSFXGO:
+                        soundName = "sfx_daggerthrow_0" + Range(1, 3);
                         break;
                     case HollowPointSoundType.ClickSFXGO:
                         soundName = "cantfire";
