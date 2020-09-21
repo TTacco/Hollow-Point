@@ -280,16 +280,23 @@ namespace HollowPoint
         
             //If the player is aiming upwards, change the bullet offset of where it will spawn
             //Otherwise the bullet will spawn too high or inbetween the knight
-            bool dirOffSetBool = (dirOrientation == DirectionalOrientation.Vertical || dirOrientation == DirectionalOrientation.Diagonal);
-            bool posYQuadrant = (bulletDegreeDirection > 0 && bulletDegreeDirection < 180);
-            if (dirOffSetBool && posYQuadrant) directionOffsetY = 0.8f;
-            else if(dirOffSetBool && !posYQuadrant) directionOffsetY = -1.1f;
-   
+            bool directionalOffSetBool = (dirOrientation == DirectionalOrientation.Vertical || dirOrientation == DirectionalOrientation.Diagonal);
+            bool firingUpwards = (bulletDegreeDirection > 0 && bulletDegreeDirection < 180);
+            if (directionalOffSetBool && firingUpwards) directionOffsetY = 0.8f;
+            else if(directionalOffSetBool && !firingUpwards) directionOffsetY = -1.1f;
+  
             float directionMultiplierX = (HeroController.instance.cState.facingRight) ? 1f : -1f;
             float wallClimbMultiplier = (HeroController.instance.cState.wallSliding) ? -1f : 1f;
+
             //Checks if the player is firing upwards/downwards, and enables the x offset so the bullets spawns directly ontop of the knight
             //from the gun's barrel instead of spawning to the upper right/left of them 
-            if (dirOrientation == DirectionalOrientation.Vertical)directionMultiplierX = 0.2f * directionMultiplierX;
+            if (dirOrientation == DirectionalOrientation.Vertical) directionMultiplierX = 0.2f * directionMultiplierX;
+
+            if(dirOrientation == DirectionalOrientation.Center)
+            {
+                directionMultiplierX = 0f;
+                directionOffsetY = 0f;
+            } 
 
             directionMultiplierX *= wallClimbMultiplier;
                 

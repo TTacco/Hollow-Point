@@ -36,6 +36,7 @@
             Vertical,
             Horizontal,
             Diagonal,
+            Center,
         }
 
 

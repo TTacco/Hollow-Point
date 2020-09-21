@@ -37,8 +37,8 @@ namespace HollowPoint
             //Modding.Logger.Log("did pepega");
 
             //you may change the name -----|                     
-            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(2.2f, 11.4f));
-            adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3.8f, 11.4f));
+            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(5f, 11.4f));
+            adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3f, 11.4f));
 
             Stats.FireModeIcon += UpdateFireModeIcon;
             Stats.bloodRushIcon += UpdateAdrenalineIcon;

@@ -20,6 +20,7 @@ namespace HollowPoint
 
         public static event Action<string> FireModeIcon;
         public static event Action<string> bloodRushIcon;
+        public static event Action<string> nailArtIcon;
 
         const int DEFAULT_SINGLE_COST = 3;
         const int DEFAULT_BURST_COST = 1;
@@ -111,11 +112,11 @@ namespace HollowPoint
             */
             //Log(am_instance.GetAttr<float>("Volume"));
 
-            //On.BuildEquippedCharms.BuildCharmList += BuildCharm;
-
             ModHooks.Instance.CharmUpdateHook += CharmUpdate;
             ModHooks.Instance.LanguageGetHook += LanguageHook;
             ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
+            ModHooks.Instance.OnEnableEnemyHook += Instance_OnEnableEnemyHook;
+            ModHooks.Instance.SceneChanged += Instance_SceneChanged;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
             On.HeroController.CanDreamNail += HeroController_CanDreamNail;
             On.HeroController.CanFocus += HeroController_CanFocus;
@@ -123,6 +124,27 @@ namespace HollowPoint
             //On.HeroController.AddGeo += HeroController_AddGeo;
         }
 
+        private void Instance_SceneChanged(string targetScene)
+        {
+            enemyList.RemoveAll(enemy => enemy == null);
+        }
+
+        public List<GameObject> enemyList = new List<GameObject>();
+
+        private bool Instance_OnEnableEnemyHook(GameObject enemy, bool isAlreadyDead)
+        {
+            HealthManager hm = enemy.GetComponent<HealthManager>();
+            if (hm == null) return false;
+
+
+            if (!isAlreadyDead)
+            {
+                enemyList.Add(enemy);
+                Log("[HOLLOW POINT] adding " + enemy.name + " to the list");
+            }
+
+            return false;
+        }
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
@@ -315,19 +337,18 @@ namespace HollowPoint
         {
             //If the player is on cooldown, disable soul gain
             if (heal_OnCooldown) return;
-            if (heal_Charges == 0) 
-            {
-                ChangeBloodRushCharges(increase: true);
-                soulC_Energy = 0;
-                return;
-            } 
 
-
-            int energyIncrease = 8; //Alter this value later
+            int energyIncrease = 15; //Alter this value later
             //Log("Increasing Energy, current is " + soulC_Energy);
             soulC_Energy += energyIncrease;
             if (soulC_Energy > 100)
             {
+                GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
+                focusBurstAnim.SetActive(true);
+                Destroy(focusBurstAnim, 3f);
+
+                HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
+
                 ChangeBloodRushCharges(increase: true);
                 soulC_Energy = 0;
             }
@@ -343,7 +364,7 @@ namespace HollowPoint
          */
         void ChangeBloodRushCharges(bool increase)
         {
-            heal_Charges += (increase && heal_Charges < 4) ? 1 : (!increase)? -1 : 0;
+            heal_Charges += (increase && heal_Charges < 3) ? 1 : (!increase)? -1 : 0;
             //if(heal_Charges > 0) heal_ChargesDecayTimer = 10;
 
             //Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);

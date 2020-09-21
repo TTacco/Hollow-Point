@@ -98,7 +98,7 @@ namespace HollowPoint
                 return;
             }
 
-            if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
+            //if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
 
             orig(self, go, damageSide, damageAmount, hazardType);
         }

@@ -362,7 +362,7 @@ namespace HollowPoint
 
             gunSpriteGO.transform.localPosition = new Vector3(-0.2f*face, gunSpriteGO.transform.localPosition.y, gunSpriteGO.transform.localPosition.z);
             //gunSpriteGO.transform.SetRotationZ(gunSpriteGO.transform.rotation.z + rand.Next(-7,8)); //-7 , 8
-            yield return new WaitForSeconds(0.15f);
+            yield return new WaitForSeconds(0.12f);
 
             // float faceX = (HeroController.instance.cState.facingRight) ? 0.1f : -0.1f;
             //float faceX = (degreeDirection >= 45 && degreeDirection <= 135)? 0.2f : 0f;

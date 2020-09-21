@@ -351,6 +351,8 @@ namespace HollowPoint
         static UnityEngine.Random rand = new UnityEngine.Random();
         public enum ExplosionType
         {
+            SporeGas,
+            DungGas,
             GasExplosion,
             DungExplosion,
             DungExplosionSmall,
@@ -359,12 +361,13 @@ namespace HollowPoint
 
         public void OnDestroy()
         {
-            //TODO: Convert this into a component
-            if (explosionType == ExplosionType.GasExplosion && PlayerData.instance.equippedCharm_17)
+            if (explosionType == ExplosionType.DungGas)
             {
-                //HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Spore Cloud", out GameObject sporeCloud);
-                //GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
-                //sporeCloudGO.SetActive(true);
+                HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Dung Cloud", out GameObject sporeCloud);
+                GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                sporeCloudGO.SetActive(true);
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.DiveDetonateSFXGO);
+
             }
 
             if (explosionType == ExplosionType.DungExplosion || explosionType == ExplosionType.DungExplosionSmall)

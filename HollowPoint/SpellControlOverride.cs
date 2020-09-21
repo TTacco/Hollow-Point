@@ -1,6 +1,7 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 using ModCommon.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
@@ -137,7 +138,8 @@ namespace HollowPoint
 
                 spellControlFSM.RemoveAction("Level Check 2", 0); //removes the action that takes your soul when you slam
 
-                spellControlFSM.RemoveAction("Quake1 Land", 9); // Removes slam effect
+
+                spellControlFSM.RemoveAction("Quake1 Land", 9);
                 spellControlFSM.RemoveAction("Quake1 Land", 11); // removes pillars
 
                 spellControlFSM.RemoveAction("Q2 Land", 11); //slam effects
@@ -171,6 +173,15 @@ namespace HollowPoint
                     everyFrame = false
                 }
                 , 3);
+
+                spellControlFSM.AddAction("Quake1 Land", new CallMethod
+                {
+                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
+                    methodName = "State_QuakeLand",
+                    parameters = new FsmVar[0],
+                    everyFrame = false
+                }
+                );
 
                 spellControlFSM.AddAction("Q2 Land", new CallMethod
                 {
@@ -272,14 +283,14 @@ namespace HollowPoint
                 //Assassinate
 
                 nailArtFSM.GetAction<ActivateGameObject>("Dash Slash", 0).activate = false; //Disable DSlash
-                nailArtFSM.AddAction("Dash Slash", new CallMethod
+                nailArtFSM.InsertAction("Dash Slash", new CallMethod
                 {
                     behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
                     methodName = "State_DashSlash",
                     parameters = new FsmVar[0],
                     everyFrame = false
-                }
-                );
+                },
+                0);
             }
             catch (Exception e)
             {
@@ -288,22 +299,8 @@ namespace HollowPoint
 
         }
 
-        IEnumerator SpawnGasPulse(Vector3 spawnPos, float explosionAmount)
-        {
-            Log("Spawning Gas Pulse");
-            float addedDegree = 180 / (explosionAmount + 1);
-            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.DiveDetonateSFXGO);
-            GameObject dungCloud;
-            for (int pulse = 0; pulse < 1; pulse++)
-            {
-                dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
-                dungCloud.transform.localScale = new Vector3(2f, 2f, 0);
-                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.10f); //DEFAULT: 0.15
-            }
-            yield break;
-        }
+        //STATES 
 
-        //Checks whether the player can cast or not, in this case we use this to swap between the guns
         public void State_CanCast()
         {
             string animName = HeroController.instance.GetComponent<tk2dSpriteAnimator>().CurrentClip.name;
@@ -365,6 +362,14 @@ namespace HollowPoint
             }
         }
 
+
+        public void State_QuakeLand()
+        {
+            //GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", HeroController.instance.transform.position, Quaternion.identity);
+            //explosionClone.transform.localScale = new Vector3(1.25f, 1.25f, -1f);
+            StartCoroutine(BulletSpray());
+        }
+
         public void SpawnFireball()
         {
             HeroController.instance.spellControl.SetState("Inactive");
@@ -394,14 +399,15 @@ namespace HollowPoint
                 GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Horizontal);
                 BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
-                hpbb.bulletDamage = 3;
-                hpbb.bulletDamageScale = 3;
+                hpbb.bulletDamage = 2;
+                hpbb.bulletDamageScale = 2;
                 hpbb.noDeviation = true;
                 hpbb.bulletOriginPosition = knife.transform.position;
                 hpbb.bulletSpeed = 30f;
                 hpbb.bulletDegreeDirection = startingDegree;
                 //hpbb.appliesDamageOvertime = true;
                 hpbb.isDagger = true;
+                hpbb.piercing = true;
                 startingDegree += 10;
                 hpbb.size = new Vector3(1.2f, 0.65f, 1);
                 Destroy(knife, 0.45f);
@@ -410,9 +416,16 @@ namespace HollowPoint
 
         public void State_CycloneSpin()
         {
-            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.ThrowDaggerSFXGO);
-            for (int k = 0; k < 10; k++)
+            Stats.instance.enemyList.RemoveAll(enemy => enemy == null);
+            Log("Enemy Count " + Stats.instance.enemyList.Count);
+            //Array.ForEach<GameObject>(Stats.instance.enemyList.ToArray(), g => Log("GameObject Name Is " + g.name));
+
+            foreach(GameObject enemy in Stats.instance.enemyList)
             {
+                Vector2 knightPos = HeroController.instance.transform.position;
+                Vector2 enemyPos = enemy.transform.position;
+                double angle = Math.Atan2(enemyPos.y - knightPos.y, enemyPos.x - knightPos.x) * 180 / Math.PI;
+                Log("Throwing at " + angle);
                 GameObject knife = HollowPointPrefabs.SpawnBulletFromKnight(120, DirectionalOrientation.Vertical);
                 BulletBehaviour hpbb = knife.GetComponent<BulletBehaviour>();
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
@@ -420,14 +433,30 @@ namespace HollowPoint
                 hpbb.bulletDamageScale = 4;
                 hpbb.noDeviation = true;
                 hpbb.bulletOriginPosition = knife.transform.position;
-                hpbb.bulletSpeed = 40f;
-
-                hpbb.bulletDegreeDirection = Range(0, HeroController.instance.cState.onGround? 180 : 360);
+                hpbb.bulletSpeed = 45f;
+                hpbb.bulletDegreeDirection = (float)angle;//Range(0, HeroController.instance.cState.onGround ? 180 : 360);
                 //hpbb.appliesDamageOvertime = true;
                 hpbb.isDagger = true;
-                hpbb.size = new Vector3(1.2f, 0.65f, 1);
-                Destroy(knife, 0.5f);
+                hpbb.size = new Vector3(1.2f, 1f, 1);
+
+
+                TrailRenderer knifeTR = knife.AddComponent<TrailRenderer>();
+                knifeTR.material = new Material(Shader.Find("Diffuse"));
+                //knifeTR.material = new Material(Shader.Find("Particles/Additive"));	
+                //knifeTR.widthMultiplier = 0.05f;	
+                knifeTR.startWidth = 0.2f;
+                knifeTR.endWidth = 0.04f;
+                knifeTR.numCornerVertices = 50;
+                knifeTR.numCapVertices = 30;
+                knifeTR.enabled = true;
+                knifeTR.time = 0.10f;
+                knifeTR.startColor = new Color(102, 178, 255);
+                knifeTR.endColor = new Color(204, 229, 255);
+
+                Destroy(knife, 60f);
+
             }
+
         }
 
         public void State_DashSlash()
@@ -441,11 +470,11 @@ namespace HollowPoint
             hpbb.bulletDamageScale = 5;
             hpbb.noDeviation = true;
             hpbb.bulletOriginPosition = knife.transform.position;
-            hpbb.bulletSpeed = 40f;
+            hpbb.bulletSpeed = 45f;
             hpbb.bulletDegreeDirection = startingDegree;
             //hpbb.appliesDamageOvertime = true;
             hpbb.isDagger = true;
-            hpbb.size = new Vector3(1.4f, 1f, 1);
+            hpbb.size = new Vector3(1.6f, 1f, 1);
             Destroy(knife, 1f);
 
         }
@@ -453,8 +482,10 @@ namespace HollowPoint
         //Called once the Scream/Shriek has ended, used to call in an airstrike
         public void ScreamEnd()
         {
-            HeroController.instance.TakeMP(99);
-            StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
+            //HeroController.instance.TakeMP(99);
+            //StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
+            StartCoroutine(ScreamAbility_GasArtillery());
+            //StartCoroutine(SparkingBullets());
         }
 
         //Triggers from both Heal 1 and Heal 2 states, this state is accessed when the knight successfully heals
@@ -471,7 +502,9 @@ namespace HollowPoint
             {
                 typhoonTimer = -1;
                 int pelletAmnt = (PlayerData.instance.quakeLevel == 2) ? 8 : 6;
-                StartCoroutine(SpawnGasPulse(HeroController.instance.transform.position, pelletAmnt));
+                GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", HeroController.instance.transform.position, Quaternion.identity);
+                explosionClone.transform.localScale = new Vector3(1.5f, 1.5f, 1);
+                //StartCoroutine(SpawnGasPulse(HeroController.instance.transform.position, pelletAmnt));
             }
         }
 
@@ -486,6 +519,65 @@ namespace HollowPoint
 
 
         //========================================SECONDARY FIRE METHODS====================================
+
+        public IEnumerator SparkingBullets()
+        {
+            int sparkAmount = 60;
+            GameObject closestEnemy = null;
+            while (sparkAmount > 0)
+            {
+                yield return new WaitForSeconds(0.12f);
+                Stats.instance.enemyList.RemoveAll(enemy => enemy == null);
+
+                //Create a list of valid targets from the enemy list, meaning anyone closer than 10 units
+                List<GameObject> validTargets = new List<GameObject>();
+                while (Stats.instance.enemyList.Count <= 0 || HeroController.instance.cState.transitioning) yield return null;
+                foreach (GameObject enemy in Stats.instance.enemyList)
+                {
+                    Vector2 knightPos = HeroController.instance.transform.position;
+                    Vector2 enemyPos = enemy.transform.position;
+                    float enemyDistanceFromKnight = Vector3.Distance(knightPos, enemyPos);
+                    if (enemyDistanceFromKnight < 10) validTargets.Add(enemy);   
+                }
+
+                if (validTargets.Count <= 0) continue; //If there is no valid tagets, start all over again;
+
+                //For each of the valid enemies, find the closest one to the knight
+                closestEnemy = null;
+                float closetEnemyDistance = float.MaxValue;
+                foreach (GameObject validTarget in validTargets)
+                {
+                    Vector2 knightPos = HeroController.instance.transform.position;
+                    Vector2 enemyPos = validTarget.transform.position;
+                    float enemyDistance = Vector3.Distance(knightPos, enemyPos);
+                    if (Vector3.Distance(knightPos, enemyPos) < closetEnemyDistance)
+                    {
+                        closestEnemy = validTarget;
+                        closetEnemyDistance = enemyDistance;
+                    }
+                }
+
+                Vector2 knightPos2 = HeroController.instance.transform.position;
+                Vector2 enemyPos2 = closestEnemy.transform.position;
+                double fireBulletAtAngle = Math.Atan2(enemyPos2.y - knightPos2.y, enemyPos2.x - knightPos2.x) * 180 / Math.PI;
+
+                AudioHandler.instance.PlayGunSoundEffect("lmg");
+                GameObject spark = HollowPointPrefabs.SpawnBulletFromKnight((float)fireBulletAtAngle, DirectionalOrientation.Center);
+                BulletBehaviour hpbb = spark.GetComponent<BulletBehaviour>();
+                hpbb.gunUsed = Stats.instance.currentEquippedGun;
+                hpbb.bulletDamage = 2;
+                hpbb.bulletDamageScale = 2;
+                hpbb.noDeviation = true;
+                hpbb.bulletOriginPosition = spark.transform.position;
+                hpbb.bulletSpeed = 40f;
+                hpbb.bulletDegreeDirection = (float)fireBulletAtAngle + Range(-3,3);
+                hpbb.size = new Vector3(0.8f, 0.8f, 1);
+                Destroy(spark, 1);
+                sparkAmount -= 1;
+            }
+            yield return null;
+        }
+        
 
         public IEnumerator FireGAU(int rounds)
         {
@@ -531,7 +623,32 @@ namespace HollowPoint
         //========================================FIRE SUPPORT SPAWN METHODS====================================
 
         //Regular steel rain (non tracking)
-        public static IEnumerator StartSteelRainNoTrack(Vector3 targetCoordinates, int totalShells)
+        public static IEnumerator ScreamAbility_GasArtillery()
+        {
+            int burstAmount = 5;
+            int shellsPerBurst = 6;
+            for (int burst = 0; burst < burstAmount; burst++)
+            {
+                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
+                for (int shells = 0; shells < shellsPerBurst; shells++)
+                {
+                    Vector3 knightPos = HeroController.instance.transform.position;
+                    //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                    GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, knightPos + new Vector3(Range(-15, 15), 120, 1f), 0);
+                    BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
+                    hpbb.fuseTimerXAxis = true;
+                    hpbb.ignoreCollisions = true;
+                    hpbb.targetDestination = knightPos + new Vector3(0, Range(-1f, 12f), -0.1f);
+                    //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
+                    shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungGas;
+                    shell.SetActive(true);
+                    yield return new WaitForSeconds(0.14f);
+                }
+                yield return new WaitForSeconds(1.3f);
+            }
+        }
+
+        public static IEnumerator ScreamAbility_CreepingBarrage(Vector3 targetCoordinates, int totalShells)
         {
             int artyDirection = (HeroController.instance.cState.facingRight) ? 1 : -1;
             Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
@@ -546,11 +663,56 @@ namespace HollowPoint
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.fuseTimerXAxis = true;
                 hpbb.ignoreCollisions = true;
-                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f,8f), -0.1f);
-                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f, 8f), -0.1f);
+                //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
+                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.GasExplosion;
                 shell.SetActive(true);
                 yield return new WaitForSeconds(0.3f);
             }
+        }
+
+        IEnumerator SpawnGasPulse(Vector3 spawnPos, float explosionAmount)
+        {
+            Log("Spawning Gas Pulse");
+            float addedDegree = 180 / (explosionAmount + 1);
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.DiveDetonateSFXGO);
+            GameObject dungCloud;
+            for (int pulse = 0; pulse < 1; pulse++)
+            {
+                dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
+                dungCloud.transform.localScale = new Vector3(2f, 2f, 0);
+                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.10f); //DEFAULT: 0.15
+            }
+            yield break;
+        }
+
+        public IEnumerator BulletSpray()
+        {
+            for (int i = 0; i < 30; i++)
+            {
+                float degreeDeviation = Range(0, 180);
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(Range(0, 180), DirectionalOrientation.Center);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.gunUsed = Stats.instance.currentEquippedGun;
+                hpbb.bulletDamage = 4;
+                hpbb.bulletDamageScale = 3;
+                hpbb.noDeviation = true;
+                hpbb.bulletOriginPosition = bullet.transform.position;
+                hpbb.bulletSpeed = 30f;
+                hpbb.bulletDegreeDirection = degreeDeviation;
+                hpbb.piercing = true;
+                hpbb.size = new Vector3(0.6f, 0.65f, 1);
+                Destroy(bullet, 0.45f);
+
+                yield return new WaitForSeconds(0.05f);
+            }
+        }
+
+        public IEnumerator StrafingRun(GameObject enemyTarget)
+        {
+            yield return null;
+
+
         }
 
         void OnDestroy()
