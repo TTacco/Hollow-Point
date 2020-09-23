@@ -362,20 +362,12 @@ namespace HollowPoint
             }
         }
 
-
-        public void State_QuakeLand()
-        {
-            //GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", HeroController.instance.transform.position, Quaternion.identity);
-            //explosionClone.transform.localScale = new Vector3(1.25f, 1.25f, -1f);
-            StartCoroutine(BulletSpray());
-        }
-
         public void SpawnFireball()
         {
             HeroController.instance.spellControl.SetState("Inactive");
 
 
-            if (PlayerData.instance.fireballLevel == 0 || Stats.instance.heal_Charges <= 0)
+            if (PlayerData.instance.fireballLevel == 0 || Stats.instance.adrenalineCharges <= 0)
             {
                 HeroController.instance.spellControl.SetState("Inactive");
                 return;
@@ -384,7 +376,7 @@ namespace HollowPoint
             //HeroController.instance.TakeMP(33);
 
             Stats.instance.ActivateInfusionBuff(true);
-            Stats.instance.ConsumeBloodRushCharges();
+            Stats.instance.ConsumeAdrenalineCharges();
 
             HeroController.instance.spellControl.SetState("Spell End");
         }
@@ -407,11 +399,13 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = startingDegree;
                 //hpbb.appliesDamageOvertime = true;
                 hpbb.isDagger = true;
-                hpbb.piercing = true;
+                hpbb.piercesEnemy = true;
                 startingDegree += 10;
                 hpbb.size = new Vector3(1.2f, 0.65f, 1);
                 Destroy(knife, 0.45f);
             }
+
+            Stats.instance.DisableNailArts(6f);
         }
 
         public void State_CycloneSpin()
@@ -437,6 +431,7 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = (float)angle;//Range(0, HeroController.instance.cState.onGround ? 180 : 360);
                 //hpbb.appliesDamageOvertime = true;
                 hpbb.isDagger = true;
+                hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.dagger;
                 hpbb.size = new Vector3(1.2f, 1f, 1);
 
 
@@ -457,6 +452,7 @@ namespace HollowPoint
 
             }
 
+            Stats.instance.DisableNailArts(18f);
         }
 
         public void State_DashSlash()
@@ -477,6 +473,8 @@ namespace HollowPoint
             hpbb.size = new Vector3(1.6f, 1f, 1);
             Destroy(knife, 1f);
 
+
+            Stats.instance.DisableNailArts(12f);
         }
 
         //Called once the Scream/Shriek has ended, used to call in an airstrike
@@ -484,8 +482,17 @@ namespace HollowPoint
         {
             //HeroController.instance.TakeMP(99);
             //StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
-            StartCoroutine(ScreamAbility_GasArtillery());
+            StartCoroutine(ScreamAbility_CreepingAirburst());
+            //StartCoroutine(ScreamAbility_GasArtilleryAlt());
             //StartCoroutine(SparkingBullets());
+        }
+
+        public void State_QuakeLand()
+        {
+            //GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", HeroController.instance.transform.position, Quaternion.identity);
+            //explosionClone.transform.localScale = new Vector3(1.25f, 1.25f, -1f);
+            //StartCoroutine(QuakeAbility_GasPulse());
+            StartCoroutine(QuakeAbility_DangerClose());
         }
 
         //Triggers from both Heal 1 and Heal 2 states, this state is accessed when the knight successfully heals
@@ -493,7 +500,17 @@ namespace HollowPoint
         {
             Log("Knight Has Focused");
             HeroController.instance.AddHealth(2);//TODO: change this depending on fury
-            Stats.instance.ConsumeBloodRushCharges(true);
+            Stats.instance.ConsumeAdrenalineCharges(true);
+        }
+
+
+        public void HasScream_HasFireSupportAmmo()
+        {
+            //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
+            if (PlayerData.instance.MPCharge < 99 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
+            {
+                spellControlFSM.SetState("Inactive");
+            }
         }
 
         void Update()
@@ -611,82 +628,112 @@ namespace HollowPoint
             AttackHandler.isFiring = false;
         }
 
-        public void HasScream_HasFireSupportAmmo()
+        //========================================SPELL METHODS====================================
+
+        public static IEnumerator ScreamAbility_GasArtilleryAlt()
         {
-            //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (PlayerData.instance.MPCharge < 99 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
+            int burstAmount = 3;
+            int shellsPerBurst = 6;
+            float shellLifeTime = 0.07f;
+
+            for (int burst = 0; burst < burstAmount; burst++)
             {
-                spellControlFSM.SetState("Inactive");
+                //AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
+                float waveRotation = 60;
+                for (int shells = 0; shells < shellsPerBurst; shells++)
+                {
+                    Vector3 knightPos = HeroController.instance.transform.position;
+                    GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(waveRotation + Range(-10f, 10f), knightPos, 0);
+                    BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
+                    hpbb.ignoreAllCollisions = true;
+                    hpbb.bulletSpeed = 70f;
+                    hpbb.size = new Vector2(0.6f, 0.7f);
+                    hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.dung;
+                    shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungGas;
+                    shell.SetActive(true);
+                    Destroy(shell, shellLifeTime);
+                    shellLifeTime += 0.01f;
+                    waveRotation += 60;
+
+                    yield return new WaitForSeconds(0.08f);
+                }
+                //yield return new WaitForSeconds(1f);
             }
         }
-
-        //========================================FIRE SUPPORT SPAWN METHODS====================================
 
         //Regular steel rain (non tracking)
         public static IEnumerator ScreamAbility_GasArtillery()
         {
-            int burstAmount = 5;
+            int burstAmount = 6;
             int shellsPerBurst = 6;
+            Vector3 knightPos = HeroController.instance.transform.position;
             for (int burst = 0; burst < burstAmount; burst++)
             {
-                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
+                //AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
                 for (int shells = 0; shells < shellsPerBurst; shells++)
                 {
-                    Vector3 knightPos = HeroController.instance.transform.position;
                     //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
                     GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, knightPos + new Vector3(Range(-15, 15), 120, 1f), 0);
                     BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                     hpbb.fuseTimerXAxis = true;
-                    hpbb.ignoreCollisions = true;
+                    hpbb.ignoreAllCollisions = true;
                     hpbb.targetDestination = knightPos + new Vector3(0, Range(-1f, 12f), -0.1f);
                     //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
                     shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungGas;
                     shell.SetActive(true);
                     yield return new WaitForSeconds(0.14f);
                 }
-                yield return new WaitForSeconds(1.3f);
+
+                //yield return new WaitForSeconds(0.7f);
             }
         }
 
-        public static IEnumerator ScreamAbility_CreepingBarrage(Vector3 targetCoordinates, int totalShells)
+        public static IEnumerator ScreamAbility_CreepingAirburst()
         {
+            Vector3 targetCoordinates = HeroController.instance.transform.position;
+            int totalShells = 5;
             int artyDirection = (HeroController.instance.cState.facingRight) ? 1 : -1;
             Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
+            yield return new WaitForSeconds(0.65f);
             for (int shells = 0; shells < totalShells; shells++)
             {
-                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
-                yield return new WaitForSeconds(0.65f);
                 //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 80, 1f), 0);
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 80, -1f), 0);
                 shellAimPosition += 2 * artyDirection;
                 BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
                 hpbb.fuseTimerXAxis = true;
-                hpbb.ignoreCollisions = true;
-                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(6f, 8f), -0.1f);
+                hpbb.ignoreAllCollisions = true;
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(5f, 6f), -0.1f);
                 //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
-                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.GasExplosion;
+                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
                 shell.SetActive(true);
-                yield return new WaitForSeconds(0.3f);
+                yield return new WaitForSeconds(0.30f);
             }
         }
 
-        IEnumerator SpawnGasPulse(Vector3 spawnPos, float explosionAmount)
+        IEnumerator QuakeAbility_GasPulse()
         {
+            Vector3 spawnPos = HeroController.instance.transform.position;
+            float pulseAmount = 5;
+
             Log("Spawning Gas Pulse");
-            float addedDegree = 180 / (explosionAmount + 1);
+
             AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.DiveDetonateSFXGO);
             GameObject dungCloud;
-            for (int pulse = 0; pulse < 1; pulse++)
+            for (int pulse = 0; pulse < pulseAmount; pulse++)
             {
                 dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 dungCloud.transform.localScale = new Vector3(2f, 2f, 0);
                 dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", 0.10f); //DEFAULT: 0.15
+
+                yield return new WaitForSeconds(0.80f);
             }
             yield break;
         }
 
-        public IEnumerator BulletSpray()
+        public IEnumerator QuakeAbility_BulletSpray()
         {
             for (int i = 0; i < 30; i++)
             {
@@ -698,12 +745,33 @@ namespace HollowPoint
                 hpbb.bulletDamageScale = 3;
                 hpbb.noDeviation = true;
                 hpbb.bulletOriginPosition = bullet.transform.position;
-                hpbb.bulletSpeed = 30f;
+                hpbb.bulletSpeed = 50f;
                 hpbb.bulletDegreeDirection = degreeDeviation;
-                hpbb.piercing = true;
-                hpbb.size = new Vector3(0.6f, 0.65f, 1);
-                Destroy(bullet, 0.45f);
+                hpbb.piercesEnemy = true;
+                hpbb.piercesWalls = true;
+                hpbb.size = new Vector3(1f, 0.65f, 1);
+                Destroy(bullet, 0.25f);
 
+                yield return new WaitForSeconds(0.01f);
+            }
+        }
+
+        public static IEnumerator QuakeAbility_DangerClose()
+        {
+            int totalShells = 10;
+            Vector3 knightPos = HeroController.instance.transform.position;
+            AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
+            yield return new WaitForSeconds(0.65f);
+            for (int shells = 0; shells < totalShells; shells++)
+            {
+                //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, knightPos + new Vector3(Range(-6,6), 80, -1f), 0);
+                BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
+                hpbb.fuseTimerXAxis = true;
+                hpbb.targetDestination = knightPos + new Vector3(0, Range(2f, 8f), -0.1f);
+                hpbb.ignoreAllCollisions = true;
+                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungExplosion;
+                shell.SetActive(true);
                 yield return new WaitForSeconds(0.05f);
             }
         }

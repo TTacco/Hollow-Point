@@ -161,7 +161,7 @@ namespace HollowPoint
 
             }
 
-            LoadAssets.spriteDictionary.TryGetValue("bulletSprite.png", out Texture2D bulletTexture);
+            LoadAssets.spriteDictionary.TryGetValue("sprite_bullet_soul.png", out Texture2D bulletTexture);
             LoadAssets.spriteDictionary.TryGetValue("bulletSpriteFade.png", out Texture2D fadeTexture);
 
             //Prefab instantiation
@@ -170,7 +170,7 @@ namespace HollowPoint
                 new Rect(0, 0, bulletTexture.width, bulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42);
 
-            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png", "daggerSprite.png"};
+            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png", "sprite_bullet_dagger.png", "sprite_bullet_dung.png" };
             //Special bullet sprite
             /*
             LoadAssets.spriteDictionary.TryGetValue("specialbullet.png", out Texture2D specialBulletTexture);
@@ -178,8 +178,8 @@ namespace HollowPoint
                 new Rect(0, 0, specialBulletTexture.width, specialBulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42));
             */
-            
-            foreach(string tn in textureNames)
+
+            foreach (string tn in textureNames)
             {
                 try
                 {

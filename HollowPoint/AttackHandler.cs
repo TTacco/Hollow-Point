@@ -97,7 +97,7 @@ namespace HollowPoint
             {
                 if (Stats.instance.canFire && OrientationHandler.heldAttack)
                 {
-                    Stats.instance.StartBothCooldown(4f);
+                    Stats.instance.StartFirerateCooldown(4f);
                     StartCoroutine(FireGAU());
                     return;
                 }
@@ -152,7 +152,7 @@ namespace HollowPoint
         {
             //if (isFiring) return;
             isFiring = true;
-            Stats.instance.StartBothCooldown();
+            Stats.instance.StartFirerateCooldown();
 
             if (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SMG)
             {
@@ -190,7 +190,7 @@ namespace HollowPoint
             hpbb.bulletDamage = Stats.instance.current_damagePerShot;
             hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
-            hpbb.piercing = (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SNIPER);
+            //hpbb.piercesEnemy = (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SNIPER);
             hpbb.bulletOriginPosition = bullet.transform.position;
             hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
             hpbb.bulletDegreeDirection = direction;
@@ -224,7 +224,7 @@ namespace HollowPoint
                 hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
                 hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
-                hpbb.piercing = PlayerData.instance.equippedCharm_13;
+                hpbb.piercesEnemy = PlayerData.instance.equippedCharm_13;
                 hpbb.bulletOriginPosition = bullet.transform.position;
                 hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
                 hpbb.bulletDegreeDirection = direction;
@@ -271,7 +271,7 @@ namespace HollowPoint
                 hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
                 hpbb.bulletDegreeDirection = direction + UnityEngine.Random.Range(-15f, 15f);
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
-                hpbb.piercing = false;
+                hpbb.piercesEnemy = false;
 
                 Destroy(bullet, Stats.instance.current_bulletLifetime + UnityEngine.Random.Range(-0.03f, 0.03f));
             }

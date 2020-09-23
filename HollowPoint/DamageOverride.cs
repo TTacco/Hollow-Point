@@ -262,7 +262,7 @@ namespace HollowPoint
             {
                 targetHP.hp -= damageDealt; // the actual damage          
                 HeroController.instance.AddMPCharge(Stats.instance.current_soulGainedPerHit);
-                Stats.instance.IncreaseBloodRushEnergy();
+                Stats.instance.IncreaseAdrenalineChargeEnergy();
                 //TODO: change this audio source location to the sound handler
                 AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.EnemyHitSFXGO);
             }
@@ -289,8 +289,8 @@ namespace HollowPoint
             if (playDeathFromBulletSound) AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.EnemyKillSFXGO);
 
             hm.Die(deathDirection * 90, AttackTypes.Spell, true);
-            HeroController.instance.AddMPCharge(Stats.instance.Stats_EnemyKilled());
-            Stats.instance.IncreaseBloodRushEnergy();
+            HeroController.instance.AddMPCharge(Stats.instance.AddSoulOnEnemyKill());
+            Stats.instance.IncreaseAdrenalineChargeEnergy();
             //GameManager.instance.FreezeMoment(1);
             //Log("Spawning Weavers");
             //GameObject weaverPrefab = HollowPointPrefabs.prefabDictionary["Weaverling"];

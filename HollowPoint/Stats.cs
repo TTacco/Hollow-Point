@@ -19,7 +19,7 @@ namespace HollowPoint
         public static Stats instance = null;
 
         public static event Action<string> FireModeIcon;
-        public static event Action<string> bloodRushIcon;
+        public static event Action<string> adrenalineChargeIcons;
         public static event Action<string> nailArtIcon;
 
         const int DEFAULT_SINGLE_COST = 3;
@@ -45,7 +45,8 @@ namespace HollowPoint
         public float current_walkSpeed = 3f;
         public int current_soulGainedPerHit = 0;
         public int current_soulGainedPerKill = 0;
-        
+
+        public bool canUseNailArts = false;
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
@@ -53,6 +54,7 @@ namespace HollowPoint
         public bool hasActivatedAdrenaline = false;
 
         //Update Timers
+        public float canUseNailArtsTimer = 1f;
         public float recentlyFiredTimer = 0;
         public float passiveSoulTimer = 3f;
         private float recentlyKilledTimer;
@@ -68,11 +70,11 @@ namespace HollowPoint
         public AudioManager am_instance;
 
         //Variables for the healing mechanic
-        public int heal_Charges;
-        int soulC_Energy;
-        float heal_ChargesCoolDown;
+        public int adrenalineCharges;
+        int adrenalineEnergy;
+        float adenalineCooldownTimer;
         float heal_ChargesDecayTimer;
-        bool heal_OnCooldown;
+        bool adrenalineOnCooldown;
 
 
         //Infusion Stuff
@@ -120,8 +122,6 @@ namespace HollowPoint
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
             On.HeroController.CanDreamNail += HeroController_CanDreamNail;
             On.HeroController.CanFocus += HeroController_CanFocus;
-            On.HeroController.CanNailArt += HeroController_CanNailArt;
-            //On.HeroController.AddGeo += HeroController_AddGeo;
         }
 
         private void Instance_SceneChanged(string targetScene)
@@ -148,7 +148,7 @@ namespace HollowPoint
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
-            if (heal_Charges < 2) return false; //If your soul charges are less than 1, you cant heal bud
+            if (adrenalineCharges < 2) return false; //If your soul charges are less than 1, you cant heal bud
 
             return orig(self);
         }
@@ -173,17 +173,9 @@ namespace HollowPoint
 
         private bool HeroController_CanNailCharge(On.HeroController.orig_CanNailCharge orig, HeroController self)
         {
-            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee)
-                return orig(self);
+            if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Melee && canUseNailArts) return orig(self);
 
             return false;
-        }
-
-        private bool HeroController_CanNailArt(On.HeroController.orig_CanNailArt orig, HeroController self)
-        {
-            //throw new NotImplementedException();
-
-            return orig(self);
         }
 
         public string LanguageHook(string key, string sheet)
@@ -239,13 +231,15 @@ namespace HollowPoint
             HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 0.5f;
 
             //Charge Abilities
-            heal_Charges = 0;
-            soulC_Energy = 0 ;
+            adrenalineCharges = 0;
+            adrenalineEnergy = 0 ;
             heal_ChargesDecayTimer = 0;
-            heal_ChargesCoolDown = 0;
-            heal_OnCooldown = false;
+            adenalineCooldownTimer = 0;
+            adrenalineOnCooldown = false;
+
             FireModeIcon?.Invoke("hudicon_omni.png");
-            bloodRushIcon?.Invoke("0");
+            adrenalineChargeIcons?.Invoke("0");
+            nailArtIcon?.Invoke("true");
 
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             if (current_soulCostPerShot < 2) current_soulCostPerShot = 2;
@@ -284,11 +278,11 @@ namespace HollowPoint
             if (hc_instance.cState.isPaused || hc_instance.cState.transitioning) return;
 
             //Soul Cartridge Disable Cooldown Time
-            if(heal_ChargesCoolDown > 0) heal_ChargesCoolDown -= Time.deltaTime * 1f;
-            else if (heal_OnCooldown)
+            if(adenalineCooldownTimer > 0) adenalineCooldownTimer -= Time.deltaTime * 1f;
+            else if (adrenalineOnCooldown)
             {
-                ChangeBloodRushCharges(increase: true);
-                heal_OnCooldown = false;          
+                ChangeAdrenalineChargeAmount(increase: true);
+                adrenalineOnCooldown = false;          
                 Log("[Stats] Player is now off cooldown");
             }
 
@@ -299,10 +293,21 @@ namespace HollowPoint
             }
 
 
+            if (canUseNailArtsTimer > 0)
+            {
+                canUseNailArtsTimer -= Time.deltaTime * 1;
+                if (canUseNailArtsTimer <= 0)
+                {
+                    canUseNailArts = true;
+                    EnableNailArts();
+                }
+
+            }
+
             //Soul Cartridge Decay
             //if (heal_ChargesDecayTimer > 0) heal_ChargesDecayTimer -= Time.deltaTime * 1f;
             //else if(heal_Charges > 0) ChangeBloodRushCharges(increase: false);
-
+            
 
             //On Kill Bonus
             if (recentlyKilledTimer > 0) recentlyKilledTimer -= Time.deltaTime * 1f;
@@ -333,24 +338,22 @@ namespace HollowPoint
             }
         }
 
-        public void IncreaseBloodRushEnergy()
+        public void IncreaseAdrenalineChargeEnergy()
         {
             //If the player is on cooldown, disable soul gain
-            if (heal_OnCooldown) return;
+            if (adrenalineOnCooldown) return;
 
-            int energyIncrease = 15; //Alter this value later
+            int energyIncrease = 12; //Alter this value later
             //Log("Increasing Energy, current is " + soulC_Energy);
-            soulC_Energy += energyIncrease;
-            if (soulC_Energy > 100)
+            adrenalineEnergy += energyIncrease;
+            if (adrenalineEnergy > 100)
             {
                 GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
                 focusBurstAnim.SetActive(true);
                 Destroy(focusBurstAnim, 3f);
-
                 HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
-
-                ChangeBloodRushCharges(increase: true);
-                soulC_Energy = 0;
+                ChangeAdrenalineChargeAmount(increase: true);
+                adrenalineEnergy = 0;
             }
         }
 
@@ -362,38 +365,38 @@ namespace HollowPoint
          *  3 = same but now the player has 2 charges || consuming heals 1 mask
          *  4 = same but now the player has 3 charge  || consuming heals 3 mask
          */
-        void ChangeBloodRushCharges(bool increase)
+        void ChangeAdrenalineChargeAmount(bool increase)
         {
-            heal_Charges += (increase && heal_Charges < 3) ? 1 : (!increase)? -1 : 0;
+            adrenalineCharges += (increase && adrenalineCharges < 3) ? 1 : (!increase)? -1 : 0;
             //if(heal_Charges > 0) heal_ChargesDecayTimer = 10;
 
             //Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
 
             //Update the UI
-            bloodRushIcon?.Invoke(heal_Charges.ToString());
+            adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
-        public void ConsumeBloodRushCharges(bool consumeAll = true)
+        public void ConsumeAdrenalineCharges(bool consumeAll = true)
         {
             //Log("[Stats] Consuming Cartridge");
             if(!consumeAll)
             {
-                ChangeBloodRushCharges(false);
-                bloodRushIcon?.Invoke(heal_Charges.ToString());
+                ChangeAdrenalineChargeAmount(false);
+                adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
                 return;
             }
 
-            heal_Charges = -1;
-            heal_OnCooldown = true;
-            heal_ChargesCoolDown = 10f;
-            bloodRushIcon?.Invoke(heal_Charges.ToString());
+            adrenalineCharges = -1;
+            adrenalineOnCooldown = true;
+            adenalineCooldownTimer = 10f;
+            adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
 
         //TODO: can actually just merge this with ChangeAdrenaline
         public void Stats_TakeDamageEvent()
         {
-            ConsumeBloodRushCharges(true);
+            ConsumeAdrenalineCharges(true);
         }
 
         void UpdateBloodRushBuffs(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -403,7 +406,20 @@ namespace HollowPoint
             HeroController.instance.DASH_COOLDOWN = dashcooldown;
         }
 
-        public int Stats_EnemyKilled()
+        public void DisableNailArts(float time)
+        {
+            canUseNailArts = false;
+            canUseNailArtsTimer = time;
+            nailArtIcon?.Invoke("false");
+        }
+
+        public void EnableNailArts()
+        {
+            canUseNailArts = true;
+            nailArtIcon?.Invoke("true");
+        }
+
+        public int AddSoulOnEnemyKill()
         {
             //prevent soul drain per shot
             recentlyKilledTimer += 0.8f;
@@ -437,7 +453,7 @@ namespace HollowPoint
         }
 
         //Gun cooldown methods inbetween shots
-        public void StartBothCooldown()
+        public void StartFirerateCooldown()
         {
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = current_fireRateCooldown;
@@ -445,7 +461,7 @@ namespace HollowPoint
             recentlyFiredTimer = 1.5f;
         }
 
-        public void StartBothCooldown(float overrideCooldown)
+        public void StartFirerateCooldown(float overrideCooldown)
         {
             fireRateCooldownTimer = -1;
             fireRateCooldownTimer = overrideCooldown; 

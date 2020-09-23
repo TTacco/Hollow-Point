@@ -11,13 +11,13 @@ namespace HollowPoint
     {
         Rigidbody2D rb2d;
         BoxCollider2D bc2d;
-        SpriteRenderer bulletSprite;
+        SpriteRenderer bulletSpriteRenderer;
         HealthManager hm;
         double xDeg, yDeg;
         public float bulletSpeed = 25;
 
         public string specialAttrib;
-        public bool piercing = false;
+        public bool piercesEnemy = false;
 
         public int bulletDamage = 5;
         public int bulletDamageScale = 5;
@@ -25,7 +25,8 @@ namespace HollowPoint
         public float bulletDegreeDirection = 0;
         public float bulletSizeOverride = 1.2f;
 
-        public bool ignoreCollisions = false;
+        public bool piercesWalls = false;
+        public bool ignoreAllCollisions = false;
         public bool hasSporeCloud = true;
 
         public bool isDagger;
@@ -48,6 +49,7 @@ namespace HollowPoint
 
         //TODO: Clean this up, and the bullet types too with structs instead
         public Gun gunUsed;
+        public BulletSpriteType bulletSprite = BulletSpriteType.soul;
 
         static System.Random rand = new System.Random();
 
@@ -65,13 +67,21 @@ namespace HollowPoint
             SpecialType = SpecialTypes.None,
         };
 
+        public enum BulletSpriteType
+        {
+            soul,
+            dung,
+            artillery,
+            dagger,
+        }
+
         public void Start()
         {
 
             rb2d = GetComponent<Rigidbody2D>();
             bc2d = GetComponent<BoxCollider2D>();
-            bulletSprite = GetComponent<SpriteRenderer>();
-            bc2d.enabled = !ignoreCollisions;
+            bulletSpriteRenderer = GetComponent<SpriteRenderer>();
+            bc2d.enabled = !ignoreAllCollisions;
 
             gameObject.tag = "Wall Breaker";
 
@@ -86,14 +96,20 @@ namespace HollowPoint
             if (fuseTimerXAxis)
             {
                 HollowPointPrefabs.projectileSprites.TryGetValue("specialbullet.png", out Sprite fireSupportBulletSprite);
-                bulletSprite.sprite = fireSupportBulletSprite;
+                bulletSpriteRenderer.sprite = fireSupportBulletSprite;
                 bulletSpeed = 120;
             }
+            /*
             else if (isDagger)
             { 
                 //HollowPointPrefabs.projectileSprites.TryGetValue("daggerSprite.png", out Sprite fireSupportBulletSprite);
                 //bulletSprite.sprite = fireSupportBulletSprite;
-                bulletSprite.sprite = HollowPointPrefabs.projectileSprites["daggerSprite.png"];
+                bulletSpriteRenderer.sprite = HollowPointPrefabs.projectileSprites["bullet_daggerSprite.png"];
+            }
+            */
+            if (!bulletSprite.Equals(BulletSpriteType.soul))
+            {
+                bulletSpriteRenderer.sprite = HollowPointPrefabs.projectileSprites["sprite_bullet_" + bulletSprite.ToString() + ".png"];
             }
 
             //Particle Effects
@@ -134,7 +150,7 @@ namespace HollowPoint
             }
 
             rb2d.velocity = new Vector2((float)xDeg, (float)yDeg); //Bullet speed
-            bulletSprite.transform.Rotate(0, 0, degree, 0); //Bullet rotation
+            bulletSpriteRenderer.transform.Rotate(0, 0, degree, 0); //Bullet rotation
         }
 
         //Destroy the artillery shell when it hits the destination
@@ -154,7 +170,7 @@ namespace HollowPoint
             {
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-                if (piercing) return;
+                if (piercesEnemy) return;
                 Destroy(gameObject, 0.03f);
                 return;
             }
@@ -169,7 +185,7 @@ namespace HollowPoint
                     br.Hit(bulletDummyHitInstance);
                 }
                 AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.TerrainHitSFXGO);
-                Destroy(gameObject, 0.04f);
+                if(!piercesWalls) Destroy(gameObject, 0.04f);
             }
         }
 
@@ -219,10 +235,10 @@ namespace HollowPoint
         {
             try
             {
-                Log("[DamageOverride:DamageOvertime] Awakening Damage Overtime");
+                //Log("[DamageOverride:DamageOvertime] Awakening Damage Overtime");
                 stack = 1;
                 damage = 1;
-                tick = 0.2f;
+                tick = 0f;
                 duration = 2f;
 
                 hm = gameObject.GetComponent<HealthManager>();
@@ -253,7 +269,7 @@ namespace HollowPoint
 
             if (tick < 0 && stack > 0)
             {
-                tick = 0.2f;
+                tick = 0.5f - (stack * 0.12f);
                 DamageEnemy();
             }
             if (duration < 0 && stack > 0)
@@ -261,7 +277,6 @@ namespace HollowPoint
                 duration = 3f;
                 stack--;
             }
-
             if(stack <= 0 && playFireAnim)
             {
                 particleSystem.Stop();
@@ -363,6 +378,11 @@ namespace HollowPoint
         {
             if (explosionType == ExplosionType.DungGas)
             {
+                HollowPointPrefabs.prefabDictionary.TryGetValue("Dung Explosion", out GameObject dungExplosion);
+                GameObject dungExplosionGO = Instantiate(dungExplosion, gameObject.transform.position + new Vector3(0, 0, -1.5f), Quaternion.identity);
+                dungExplosionGO.SetActive(true);
+                dungExplosionGO.name += " KnightMadeDungExplosion";
+
                 HollowPointPrefabs.prefabDictionary.TryGetValue("Knight Dung Cloud", out GameObject sporeCloud);
                 GameObject sporeCloudGO = Instantiate(sporeCloud, gameObject.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 sporeCloudGO.SetActive(true);

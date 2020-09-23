@@ -18,8 +18,21 @@ namespace HollowPoint
 
         private GameObject directionalFireModeHudIcon;
         private GameObject adrenalineHudIcon;
+        private GameObject canNailArtHudIcon;
         private Dictionary<string, Sprite> hudSpriteDictionary = new Dictionary<string, Sprite>();
-        private readonly string[] textureNames = { "hudicon_omni.png", "hudicon_cardinal.png", "hudicon_adrenaline0.png", "hudicon_adrenaline1.png", "hudicon_adrenaline2.png", "hudicon_adrenaline3.png", "hudicon_adrenaline4.png", "hudicon_adrenaline5.png" };
+        private readonly string[] textureNames = 
+        {
+            "hudicon_omni.png",
+            "hudicon_cardinal.png",
+            "hudicon_adrenaline0.png",
+            "hudicon_adrenaline1.png",
+            "hudicon_adrenaline2.png",
+            "hudicon_adrenaline3.png",
+            "hudicon_adrenaline4.png",
+            "hudicon_adrenaline5.png",
+            "hudicon_cancastnailart_true.png",
+            "hudicon_cancastnailart_false.png"
+        };
 
         void Start()
         {
@@ -29,20 +42,22 @@ namespace HollowPoint
 
             foreach (var textureName in textureNames)
             {
-                var shardTex = LoadAssets.spriteDictionary[textureName];
-                var shardSprite = Sprite.Create(shardTex, new Rect(0, 0, shardTex.width, shardTex.height), new Vector2(0.5f, 0.5f));
-                hudSpriteDictionary.Add(textureName, shardSprite);
+                var hudIconTexture = LoadAssets.spriteDictionary[textureName];
+                var hudIconSprite = Sprite.Create(hudIconTexture, new Rect(0, 0, hudIconTexture.width, hudIconTexture.height), new Vector2(0.5f, 0.5f));
+                hudSpriteDictionary.Add(textureName, hudIconSprite);
             }
 
             //Modding.Logger.Log("did pepega");
-
             //you may change the name -----|                     
-            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(5f, 11.4f));
             adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3f, 11.4f));
+            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(5f, 11.4f));
+            canNailArtHudIcon = CreateStatObject("CanNailArt", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_cancastnailart_true.png"], new Vector3(6f, 11.4f));
 
             Stats.FireModeIcon += UpdateFireModeIcon;
-            Stats.bloodRushIcon += UpdateAdrenalineIcon;
+            Stats.adrenalineChargeIcons += UpdateAdrenalineIcon;
+            Stats.nailArtIcon += UpdateNailArtIcon;
         }
+
 
         private void UpdateFireModeIcon(string firemode)
         {
@@ -126,6 +141,22 @@ namespace HollowPoint
 
         }
 
+        private void UpdateNailArtIcon(string obj)
+        {
+            try
+            {
+                var canNailArtText = canNailArtHudIcon.GetComponent<DisplayItemAmount>().textObject;
+
+                canNailArtHudIcon.GetComponent<SpriteRenderer>().sprite = hudSpriteDictionary["hudicon_cancastnailart_" + obj + ".png"];
+                Color color = new Color(0.55f, 0.55f, 0.55f);
+                StartCoroutine(BadAnimation(canNailArtText, "", color));
+            }
+            catch (Exception e)
+            {
+                Modding.Logger.Log("[HudController] Exception in UpdateFireModeIcon() Method" + e);
+            }
+        }
+
         IEnumerator BadAnimation(TextMeshPro shardText, string amount, Color color)
         {
             shardText.text = amount;
@@ -151,7 +182,8 @@ namespace HollowPoint
         void OnDestroy()
         {
             Stats.FireModeIcon -= UpdateFireModeIcon;
-            Stats.bloodRushIcon -= UpdateAdrenalineIcon;
+            Stats.adrenalineChargeIcons -= UpdateAdrenalineIcon;
+            Stats.nailArtIcon -= UpdateNailArtIcon;
         }
     }
 }

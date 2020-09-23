@@ -115,7 +115,7 @@
     <EmbeddedResource Include="assets\muzzleflash.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\bulletSprite.png" />
+    <EmbeddedResource Include="assets\sprite_bullet_soul.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_rifle.wav" />
@@ -162,9 +162,6 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_smg.wav" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="assets\Weapon_ShotgunSprite.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\heatbarspriteestimate.png" />
@@ -241,9 +238,6 @@
     <EmbeddedResource Include="assets\shard.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\Weapon_PistolSprite.png" />
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="assets\shoot_sfx_pistol.wav" />
   </ItemGroup>
   <ItemGroup>
@@ -310,12 +304,19 @@
     <EmbeddedResource Include="assets\weapon_sprite_smg_nohands.png" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="assets\daggerSprite.png" />
+    <EmbeddedResource Include="assets\sprite_bullet_dagger.png" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="assets\sfx_daggerthrow_01.wav" />
     <EmbeddedResource Include="assets\sfx_daggerthrow_02.wav" />
     <EmbeddedResource Include="assets\sfx_daggerthrow_03.wav" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\sprite_bullet_dung.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="assets\hudicon_cancastnailart_false.png" />
+    <EmbeddedResource Include="assets\hudicon_cancastnailart_true.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
