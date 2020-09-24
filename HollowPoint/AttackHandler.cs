@@ -97,7 +97,7 @@ namespace HollowPoint
             {
                 if (Stats.instance.canFire && OrientationHandler.heldAttack)
                 {
-                    Stats.instance.StartFirerateCooldown(4f);
+                    Stats.instance.StartFirerateCooldown(cooldownOverride: 4f);
                     StartCoroutine(FireGAU());
                     return;
                 }
@@ -160,7 +160,7 @@ namespace HollowPoint
             }
             else if (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SHOTGUN)
             {
-                StartCoroutine(SpreadShot(6));
+                StartCoroutine(SpreadShot());
             }
             else if (fm == FireModes.Single)
             {
@@ -247,12 +247,18 @@ namespace HollowPoint
             isFiring = false;
         }
 
-        public IEnumerator SpreadShot(int pellets)
+        public IEnumerator SpreadShot()
         {
             hc_instance.TakeMP(Stats.instance.SoulCostPerShot());
             //HeatHandler.IncreaseHeat(50);
             GameCameras.instance.cameraShakeFSM.SendEvent("SmallShake");
+            int pellets = 6;
+            float coneSpread = 40;
+            float coneSpreadDelta = coneSpread / (pellets + 1);
             float direction = OrientationHandler.finalDegreeDirection;
+            float coneStart = direction - (coneSpread / 2);
+            float pelletSpawnDegree = coneStart + coneSpreadDelta;
+
             DirectionalOrientation orientation = OrientationHandler.directionOrientation;
 
             AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
@@ -269,9 +275,10 @@ namespace HollowPoint
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
                 hpbb.bulletOriginPosition = bullet.transform.position;
                 hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
-                hpbb.bulletDegreeDirection = direction + UnityEngine.Random.Range(-15f, 15f);
+                hpbb.bulletDegreeDirection = pelletSpawnDegree + UnityEngine.Random.Range(-3f, 3f); ; //direction + UnityEngine.Random.Range(-20f, 20f);
+                pelletSpawnDegree += coneSpreadDelta;
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
-                hpbb.piercesEnemy = false;
+                hpbb.piercesEnemy = true;
 
                 Destroy(bullet, Stats.instance.current_bulletLifetime + UnityEngine.Random.Range(-0.03f, 0.03f));
             }

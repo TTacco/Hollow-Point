@@ -401,7 +401,10 @@ namespace HollowPoint
                 hpbb.isDagger = true;
                 hpbb.piercesEnemy = true;
                 startingDegree += 10;
-                hpbb.size = new Vector3(1.2f, 0.65f, 1);
+                hpbb.size = new Vector3(0.65f, 0.65f, 1);
+                hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.dagger;
+                knife = AddDaggerTrail(knife);
+
                 Destroy(knife, 0.45f);
             }
 
@@ -431,23 +434,9 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = (float)angle;//Range(0, HeroController.instance.cState.onGround ? 180 : 360);
                 //hpbb.appliesDamageOvertime = true;
                 hpbb.isDagger = true;
+                hpbb.size = new Vector3(0.65f, 0.65f, 1);
                 hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.dagger;
-                hpbb.size = new Vector3(1.2f, 1f, 1);
-
-
-                TrailRenderer knifeTR = knife.AddComponent<TrailRenderer>();
-                knifeTR.material = new Material(Shader.Find("Diffuse"));
-                //knifeTR.material = new Material(Shader.Find("Particles/Additive"));	
-                //knifeTR.widthMultiplier = 0.05f;	
-                knifeTR.startWidth = 0.2f;
-                knifeTR.endWidth = 0.04f;
-                knifeTR.numCornerVertices = 50;
-                knifeTR.numCapVertices = 30;
-                knifeTR.enabled = true;
-                knifeTR.time = 0.10f;
-                knifeTR.startColor = new Color(102, 178, 255);
-                knifeTR.endColor = new Color(204, 229, 255);
-
+                knife = AddDaggerTrail(knife);
                 Destroy(knife, 60f);
 
             }
@@ -468,38 +457,72 @@ namespace HollowPoint
             hpbb.bulletOriginPosition = knife.transform.position;
             hpbb.bulletSpeed = 45f;
             hpbb.bulletDegreeDirection = startingDegree;
-            //hpbb.appliesDamageOvertime = true;
             hpbb.isDagger = true;
-            hpbb.size = new Vector3(1.6f, 1f, 1);
+            hpbb.piercesEnemy = true;
+            hpbb.size = new Vector3(0.65f, 0.65f, 1);
+            hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.dagger;
+            knife = AddDaggerTrail(knife);
             Destroy(knife, 1f);
-
-
             Stats.instance.DisableNailArts(12f);
+        }
+
+        public GameObject AddDaggerTrail(GameObject knife)
+        {
+            TrailRenderer knifeTR = knife.AddComponent<TrailRenderer>();
+            knifeTR.material = new Material(Shader.Find("Diffuse"));
+            //knifeTR.material = new Material(Shader.Find("Particles/Additive"));	
+            //knifeTR.widthMultiplier = 0.05f;	
+            knifeTR.startWidth = 0.2f;
+            knifeTR.endWidth = 0.04f;
+            knifeTR.numCornerVertices = 50;
+            knifeTR.numCapVertices = 30;
+            knifeTR.enabled = true;
+            knifeTR.time = 0.10f;
+            knifeTR.startColor = new Color(102, 178, 255);
+            knifeTR.endColor = new Color(204, 229, 255);
+
+            return knife;
         }
 
         //Called once the Scream/Shriek has ended, used to call in an airstrike
         public void ScreamEnd()
         {
-            //HeroController.instance.TakeMP(99);
-            //StartCoroutine(StartSteelRainNoTrack(HeroController.instance.transform.position, 8));
-            StartCoroutine(ScreamAbility_CreepingAirburst());
-            //StartCoroutine(ScreamAbility_GasArtilleryAlt());
-            //StartCoroutine(SparkingBullets());
+            switch (Stats.instance.currentEquippedGun.gunSubClass)
+            {
+                case WeaponSubClass.BREACHER:
+                    StartCoroutine(ScreamAbility_SparkingBullets());
+                    break;
+                case WeaponSubClass.SAPPER:
+                    StartCoroutine(ScreamAbility_SulphurStorm());
+                    break;
+                case WeaponSubClass.OBSERVER:
+                    StartCoroutine(ScreamAbility_CreepingAirburst());
+                    break;
+            }
         }
 
         public void State_QuakeLand()
         {
-            //GameObject explosionClone = HollowPointPrefabs.SpawnObjectFromDictionary("Gas Explosion Recycle M", HeroController.instance.transform.position, Quaternion.identity);
-            //explosionClone.transform.localScale = new Vector3(1.25f, 1.25f, -1f);
-            //StartCoroutine(QuakeAbility_GasPulse());
-            StartCoroutine(QuakeAbility_DangerClose());
+            switch (Stats.instance.currentEquippedGun.gunSubClass)
+            {
+                case WeaponSubClass.BREACHER:
+                    StartCoroutine(QuakeAbility_BulletSpray());
+                    break;
+                case WeaponSubClass.SAPPER:
+                    StartCoroutine(QuakeAbility_SporeRelease());
+                    break;
+                case WeaponSubClass.OBSERVER:
+                    StartCoroutine(QuakeAbility_DangerClose());
+                    break;
+            }
         }
 
         //Triggers from both Heal 1 and Heal 2 states, this state is accessed when the knight successfully heals
         public void State_FocusHeal()
         {
             Log("Knight Has Focused");
-            HeroController.instance.AddHealth(2);//TODO: change this depending on fury
+            int charges = Stats.instance.adrenalineCharges;
+            HeroController.instance.AddHealth((charges < 3)? 1 : 2);//TODO: change this depending on fury
             Stats.instance.ConsumeAdrenalineCharges(true);
         }
 
@@ -537,7 +560,7 @@ namespace HollowPoint
 
         //========================================SECONDARY FIRE METHODS====================================
 
-        public IEnumerator SparkingBullets()
+        public IEnumerator ScreamAbility_SparkingBullets()
         {
             int sparkAmount = 60;
             GameObject closestEnemy = null;
@@ -554,7 +577,7 @@ namespace HollowPoint
                     Vector2 knightPos = HeroController.instance.transform.position;
                     Vector2 enemyPos = enemy.transform.position;
                     float enemyDistanceFromKnight = Vector3.Distance(knightPos, enemyPos);
-                    if (enemyDistanceFromKnight < 10) validTargets.Add(enemy);   
+                    if (enemyDistanceFromKnight < 8) validTargets.Add(enemy);   
                 }
 
                 if (validTargets.Count <= 0) continue; //If there is no valid tagets, start all over again;
@@ -630,7 +653,7 @@ namespace HollowPoint
 
         //========================================SPELL METHODS====================================
 
-        public static IEnumerator ScreamAbility_GasArtilleryAlt()
+        public static IEnumerator ScreamAbility_SulphurStorm()
         {
             int burstAmount = 3;
             int shellsPerBurst = 6;
@@ -693,7 +716,6 @@ namespace HollowPoint
             Vector3 targetCoordinates = HeroController.instance.transform.position;
             int totalShells = 5;
             int artyDirection = (HeroController.instance.cState.facingRight) ? 1 : -1;
-            Modding.Logger.Log("SPELL CONTROL STEEL RAIN NO TRACKING");
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
             yield return new WaitForSeconds(0.65f);
@@ -713,7 +735,7 @@ namespace HollowPoint
             }
         }
 
-        IEnumerator QuakeAbility_GasPulse()
+        IEnumerator QuakeAbility_SporeRelease()
         {
             Vector3 spawnPos = HeroController.instance.transform.position;
             float pulseAmount = 5;

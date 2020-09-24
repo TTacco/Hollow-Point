@@ -42,6 +42,7 @@ namespace HollowPoint
         public bool perfectAccuracy = false;
         public bool appliesDamageOvertime = false;
         static float bulletPivot = 0;
+        static bool bulletBias = true;
 
         public Vector3 bulletOriginPosition;
         public Vector3 gameObjectScale = new Vector3(1.2f, 1.2f, 0);
@@ -133,9 +134,11 @@ namespace HollowPoint
             // +---| Bullet Spread and Recoil |---+
             //a moving pivot for where the bullet can spread, with its maximum and minimum deviation, this allows the bullet to smoothly spread instead of being just random
             bulletPivot = Mathf.Clamp(bulletPivot, deviation * -1, deviation); //Clamps the max/min deviation, shrinking the cone of fire
-            float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
+            //float bulletPivotDelta = rand.Next(0, 2) * 2 - 1; //gives either -1 or 1
+            bulletBias = !bulletBias;
+            float bulletPivotDelta = (bulletBias) ? 1 : -1;
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * rand.Next(gunUsed.minWeaponSpreadFactor, gunUsed.minWeaponSpreadFactor + 4); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(gunUsed.minWeaponSpreadFactor, gunUsed.minWeaponSpreadFactor + 5); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
             float radian = (float)(degree * Math.PI / 180);
 

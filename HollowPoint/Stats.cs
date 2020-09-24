@@ -37,6 +37,7 @@ namespace HollowPoint
         public float current_boostMultiplier = 0;
         public int current_damagePerShot = 0;
         public int current_damagePerLevel = 0;
+        public int current_energyGainOnHit = 0;
         public float current_fireRateCooldown = 5f;
         public float current_heatPerShot = 0;
         public int current_soulCostPerShot = 1;
@@ -216,6 +217,7 @@ namespace HollowPoint
 
             current_damagePerShot = currentEquippedGun.damageBase;
             current_damagePerLevel = currentEquippedGun.damageScale;
+            current_energyGainOnHit = currentEquippedGun.energyGainOnHit;
             current_bulletLifetime = currentEquippedGun.bulletLifetime;
             current_boostMultiplier = currentEquippedGun.boostMultiplier;
             current_bulletVelocity = currentEquippedGun.bulletVelocity; 
@@ -342,17 +344,18 @@ namespace HollowPoint
         {
             //If the player is on cooldown, disable soul gain
             if (adrenalineOnCooldown) return;
-
-            int energyIncrease = 12; //Alter this value later
-            //Log("Increasing Energy, current is " + soulC_Energy);
+            int energyIncrease = current_energyGainOnHit; //Alter this value later
             adrenalineEnergy += energyIncrease;
             if (adrenalineEnergy > 100)
             {
-                GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
-                focusBurstAnim.SetActive(true);
-                Destroy(focusBurstAnim, 3f);
-                HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
-                ChangeAdrenalineChargeAmount(increase: true);
+                if (adrenalineCharges < 4)
+                {
+                    GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
+                    focusBurstAnim.SetActive(true);
+                    Destroy(focusBurstAnim, 3f);
+                    HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
+                    ChangeAdrenalineChargeAmount(increase: true);
+                }
                 adrenalineEnergy = 0;
             }
         }
@@ -376,7 +379,7 @@ namespace HollowPoint
             adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
-        public void ConsumeAdrenalineCharges(bool consumeAll = true)
+        public void ConsumeAdrenalineCharges(bool consumeAll = true, float cooldownOverride = 15f)
         {
             //Log("[Stats] Consuming Cartridge");
             if(!consumeAll)
@@ -388,7 +391,7 @@ namespace HollowPoint
 
             adrenalineCharges = -1;
             adrenalineOnCooldown = true;
-            adenalineCooldownTimer = 10f;
+            adenalineCooldownTimer = cooldownOverride;
             adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
@@ -453,18 +456,29 @@ namespace HollowPoint
         }
 
         //Gun cooldown methods inbetween shots
-        public void StartFirerateCooldown()
+        public void StartFirerateCooldown(float? cooldownOverride = null)
         {
-            fireRateCooldownTimer = -1;
-            fireRateCooldownTimer = current_fireRateCooldown;
-            canFire = false;
-            recentlyFiredTimer = 1.5f;
-        }
+            float cooldown = current_fireRateCooldown; //set the cooldown depending on the current equipped weapon
+            if (cooldownOverride != null) cooldown = (float)cooldownOverride; //used the override cooldown value in the parameter instead
 
-        public void StartFirerateCooldown(float overrideCooldown)
-        {
+            if (infusionActivated && currentEquippedGun.gunSubClass == WeaponSubClass.OBSERVER)
+            {
+                switch (currentEquippedGun.gunName)
+                {
+                    case WeaponModifierName.DMR:
+                        cooldown = 0.12f;
+                        break;
+                    case WeaponModifierName.SNIPER:
+                        cooldown = 0.25f;
+                        break;
+                    default:
+                        cooldown *= 0.70f;
+                        break;
+                }
+            }
+
             fireRateCooldownTimer = -1;
-            fireRateCooldownTimer = overrideCooldown; 
+            fireRateCooldownTimer = cooldown;
             canFire = false;
             recentlyFiredTimer = 1.5f;
         }
