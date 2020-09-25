@@ -26,6 +26,7 @@ namespace HollowPoint
             MortarWhistleSFXGO,
             MortarExplosionSFXGO,
             ThrowDaggerSFXGO,
+            FireSelectSFXGO,
             DrawAndHolsterGun
         }
 
@@ -93,7 +94,7 @@ namespace HollowPoint
 
                         soundName = "enemydead" + Range(1, 3);
                         canPlayKillSound = false;
-                        canPlayKillSoundTimer = 0.02f;
+                        canPlayKillSoundTimer = 0.04f;
                         break;
                     case HollowPointSoundType.TerrainHitSFXGO:
                         soundName = "impact_0" + Range(1, 5);
@@ -115,6 +116,9 @@ namespace HollowPoint
                         break;
                     case HollowPointSoundType.MortarExplosionSFXGO:
                         soundName = "mortarexplosion";
+                        break;
+                    case HollowPointSoundType.FireSelectSFXGO:
+                        soundName = "sfx_fireselect";
                         break;
                     default:
                         Log(hpst.ToString() + " Sound Enum Not Yet Implemented Please Fix This You Moron");

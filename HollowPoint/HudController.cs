@@ -50,10 +50,10 @@ namespace HollowPoint
             //Modding.Logger.Log("did pepega");
             //you may change the name -----|                     
             adrenalineHudIcon = CreateStatObject("AdrenalineLevel", "", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_adrenaline0.png"], new Vector3(3f, 11.4f));
-            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(5f, 11.4f));
-            canNailArtHudIcon = CreateStatObject("CanNailArt", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_cancastnailart_true.png"], new Vector3(6f, 11.4f));
+            directionalFireModeHudIcon = CreateStatObject("FireModeSetting", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_omni.png"], new Vector3(4.6f, 11.4f));
+            canNailArtHudIcon = CreateStatObject("CanNailArt", " ", prefab, hudCanvas.transform, hudSpriteDictionary["hudicon_cancastnailart_true.png"], new Vector3(5.6f, 11.4f));
 
-            Stats.FireModeIcon += UpdateFireModeIcon;
+            Stats.fireModeIcon += UpdateFireModeIcon;
             Stats.adrenalineChargeIcons += UpdateAdrenalineIcon;
             Stats.nailArtIcon += UpdateNailArtIcon;
         }
@@ -181,7 +181,7 @@ namespace HollowPoint
 
         void OnDestroy()
         {
-            Stats.FireModeIcon -= UpdateFireModeIcon;
+            Stats.fireModeIcon -= UpdateFireModeIcon;
             Stats.adrenalineChargeIcons -= UpdateAdrenalineIcon;
             Stats.nailArtIcon -= UpdateNailArtIcon;
         }

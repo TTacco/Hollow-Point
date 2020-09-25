@@ -272,7 +272,7 @@ namespace HollowPoint
 
             if (tick < 0 && stack > 0)
             {
-                tick = 0.5f - (stack * 0.12f);
+                tick = 0.5f - (stack * 0.12f); //Damage overtime becomes faster the more stacks are applies to an enemy
                 DamageEnemy();
             }
             if (duration < 0 && stack > 0)
@@ -301,12 +301,15 @@ namespace HollowPoint
                 particleSystem.Play();
                 playFireAnim = true;
             }
-            //TODO: Add sounds whenever they take damage
 
+            GameObject HitPrefab = hm.GetAttr<GameObject>("strikeNailPrefab");
+            Vector3? effectOrigin = hm.GetAttr<Vector3?>("effectOrigin");
+            if (HitPrefab != null && effectOrigin != null) HitPrefab.Spawn(hm.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+ 
             hm.hp -= damage * stack;
             SpriteFlash f = hm.gameObject.GetComponent<SpriteFlash>();
             if (f != null) f.flashBenchRest();
-            if (hm.hp <= 0) DamageOverride.EnemyDeathEvent(hm, 90, false);       
+            if (hm.hp <= 0) DamageOverride.EnemyDeathEvent(hm, 90, false);
         }
 
         public void IncreaseStack()

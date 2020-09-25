@@ -190,12 +190,15 @@ namespace HollowPoint
             hpbb.bulletDamage = Stats.instance.current_damagePerShot;
             hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
-            //hpbb.piercesEnemy = (Stats.instance.currentEquippedGun.gunName == WeaponModifierName.SNIPER);
             hpbb.bulletOriginPosition = bullet.transform.position;
             hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
             hpbb.bulletDegreeDirection = direction;
             hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
             hpbb.gunUsed = Stats.instance.currentEquippedGun;
+
+            bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+            hpbb.appliesDamageOvertime = sapperBuffs;
+            hpbb.piercesEnemy = (sapperBuffs || Stats.instance.current_weapon == WeaponModifierName.SNIPER);
 
             AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
             HollowPointSprites.StartGunAnims();

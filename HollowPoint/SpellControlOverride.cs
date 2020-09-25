@@ -33,6 +33,7 @@ namespace HollowPoint
         static GameObject infusionSoundGO;
 
         private static ILHook removeFocusCost = null;
+        public static FsmInt canUseSpellOrbHighlight = 0;
 
         void Awake()
         {
@@ -523,7 +524,7 @@ namespace HollowPoint
             Log("Knight Has Focused");
             int charges = Stats.instance.adrenalineCharges;
             HeroController.instance.AddHealth((charges < 3)? 1 : 2);//TODO: change this depending on fury
-            Stats.instance.ConsumeAdrenalineCharges(true);
+            Stats.instance.ConsumeAdrenalineCharges(true, cooldownOverride: 10f);
         }
 
 
@@ -558,66 +559,7 @@ namespace HollowPoint
         }
 
 
-        //========================================SECONDARY FIRE METHODS====================================
-
-        public IEnumerator ScreamAbility_SparkingBullets()
-        {
-            int sparkAmount = 60;
-            GameObject closestEnemy = null;
-            while (sparkAmount > 0)
-            {
-                yield return new WaitForSeconds(0.12f);
-                Stats.instance.enemyList.RemoveAll(enemy => enemy == null);
-
-                //Create a list of valid targets from the enemy list, meaning anyone closer than 10 units
-                List<GameObject> validTargets = new List<GameObject>();
-                while (Stats.instance.enemyList.Count <= 0 || HeroController.instance.cState.transitioning) yield return null;
-                foreach (GameObject enemy in Stats.instance.enemyList)
-                {
-                    Vector2 knightPos = HeroController.instance.transform.position;
-                    Vector2 enemyPos = enemy.transform.position;
-                    float enemyDistanceFromKnight = Vector3.Distance(knightPos, enemyPos);
-                    if (enemyDistanceFromKnight < 8) validTargets.Add(enemy);   
-                }
-
-                if (validTargets.Count <= 0) continue; //If there is no valid tagets, start all over again;
-
-                //For each of the valid enemies, find the closest one to the knight
-                closestEnemy = null;
-                float closetEnemyDistance = float.MaxValue;
-                foreach (GameObject validTarget in validTargets)
-                {
-                    Vector2 knightPos = HeroController.instance.transform.position;
-                    Vector2 enemyPos = validTarget.transform.position;
-                    float enemyDistance = Vector3.Distance(knightPos, enemyPos);
-                    if (Vector3.Distance(knightPos, enemyPos) < closetEnemyDistance)
-                    {
-                        closestEnemy = validTarget;
-                        closetEnemyDistance = enemyDistance;
-                    }
-                }
-
-                Vector2 knightPos2 = HeroController.instance.transform.position;
-                Vector2 enemyPos2 = closestEnemy.transform.position;
-                double fireBulletAtAngle = Math.Atan2(enemyPos2.y - knightPos2.y, enemyPos2.x - knightPos2.x) * 180 / Math.PI;
-
-                AudioHandler.instance.PlayGunSoundEffect("lmg");
-                GameObject spark = HollowPointPrefabs.SpawnBulletFromKnight((float)fireBulletAtAngle, DirectionalOrientation.Center);
-                BulletBehaviour hpbb = spark.GetComponent<BulletBehaviour>();
-                hpbb.gunUsed = Stats.instance.currentEquippedGun;
-                hpbb.bulletDamage = 2;
-                hpbb.bulletDamageScale = 2;
-                hpbb.noDeviation = true;
-                hpbb.bulletOriginPosition = spark.transform.position;
-                hpbb.bulletSpeed = 40f;
-                hpbb.bulletDegreeDirection = (float)fireBulletAtAngle + Range(-3,3);
-                hpbb.size = new Vector3(0.8f, 0.8f, 1);
-                Destroy(spark, 1);
-                sparkAmount -= 1;
-            }
-            yield return null;
-        }
-        
+        //========================================SECONDARY FIRE METHODS====================================  
 
         public IEnumerator FireGAU(int rounds)
         {
@@ -684,32 +626,66 @@ namespace HollowPoint
             }
         }
 
-        //Regular steel rain (non tracking)
-        public static IEnumerator ScreamAbility_GasArtillery()
+        public IEnumerator ScreamAbility_SparkingBullets()
         {
-            int burstAmount = 6;
-            int shellsPerBurst = 6;
-            Vector3 knightPos = HeroController.instance.transform.position;
-            for (int burst = 0; burst < burstAmount; burst++)
+            int sparkAmount = 60;
+            GameObject closestEnemy = null;
+            while (sparkAmount > 0)
             {
-                //AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
-                for (int shells = 0; shells < shellsPerBurst; shells++)
+                yield return new WaitForSeconds(0.12f);
+                Stats.instance.enemyList.RemoveAll(enemy => enemy == null);
+
+                //Create a list of valid targets from the enemy list, meaning anyone closer than 10 units
+                List<GameObject> validTargets = new List<GameObject>();
+                while (Stats.instance.enemyList.Count <= 0 || HeroController.instance.cState.transitioning) yield return null;
+                foreach (GameObject enemy in Stats.instance.enemyList)
                 {
-                    //GameObject shell = Instantiate(HollowPointPrefabs.bulletPrefab, targetCoordinates + new Vector3(Range(-5, 5), Range(25, 50), -0.1f), new Quaternion(0, 0, 0, 0));
-                    GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, knightPos + new Vector3(Range(-15, 15), 120, 1f), 0);
-                    BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
-                    hpbb.fuseTimerXAxis = true;
-                    hpbb.ignoreAllCollisions = true;
-                    hpbb.targetDestination = knightPos + new Vector3(0, Range(-1f, 12f), -0.1f);
-                    //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
-                    shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.DungGas;
-                    shell.SetActive(true);
-                    yield return new WaitForSeconds(0.14f);
+                    Vector2 knightPos = HeroController.instance.transform.position;
+                    Vector2 enemyPos = enemy.transform.position;
+                    float enemyDistanceFromKnight = Vector3.Distance(knightPos, enemyPos);
+                    if (enemyDistanceFromKnight < 8) validTargets.Add(enemy);
                 }
 
-                //yield return new WaitForSeconds(0.7f);
+                if (validTargets.Count <= 0) continue; //If there is no valid tagets, start all over again;
+
+                //For each of the valid enemies, find the closest one to the knight
+                closestEnemy = null;
+                float closetEnemyDistance = float.MaxValue;
+                foreach (GameObject validTarget in validTargets)
+                {
+                    Vector2 knightPos = HeroController.instance.transform.position;
+                    Vector2 enemyPos = validTarget.transform.position;
+                    float enemyDistance = Vector3.Distance(knightPos, enemyPos);
+                    if (Vector3.Distance(knightPos, enemyPos) < closetEnemyDistance)
+                    {
+                        closestEnemy = validTarget;
+                        closetEnemyDistance = enemyDistance;
+                    }
+                }
+
+                Vector2 knightPos2 = HeroController.instance.transform.position;
+                Vector2 enemyPos2 = closestEnemy.transform.position;
+                double fireBulletAtAngle = Math.Atan2(enemyPos2.y - knightPos2.y, enemyPos2.x - knightPos2.x) * 180 / Math.PI;
+
+                AudioHandler.instance.PlayGunSoundEffect("rifle");
+                GameObject spark = HollowPointPrefabs.SpawnBulletFromKnight((float)fireBulletAtAngle, DirectionalOrientation.Center);
+                BulletBehaviour hpbb = spark.GetComponent<BulletBehaviour>();
+                hpbb.gunUsed = Stats.instance.currentEquippedGun;
+                hpbb.bulletDamage = 2;
+                hpbb.bulletDamageScale = 2;
+                hpbb.noDeviation = true;
+                hpbb.bulletOriginPosition = spark.transform.position;
+                hpbb.bulletSpeed = 40f;
+                hpbb.bulletDegreeDirection = (float)fireBulletAtAngle + Range(-3, 3);
+                hpbb.size = new Vector3(0.8f, 0.8f, 1);
+                Destroy(spark, 1);
+                sparkAmount -= 1;
+
+                HollowPointSprites.StartFlash();
             }
+            yield return null;
         }
+
 
         public static IEnumerator ScreamAbility_CreepingAirburst()
         {
@@ -757,6 +733,7 @@ namespace HollowPoint
 
         public IEnumerator QuakeAbility_BulletSpray()
         {
+            AudioHandler.instance.PlayGunSoundEffect("gatlinggun");
             for (int i = 0; i < 30; i++)
             {
                 float degreeDeviation = Range(0, 180);
@@ -770,7 +747,7 @@ namespace HollowPoint
                 hpbb.bulletSpeed = 50f;
                 hpbb.bulletDegreeDirection = degreeDeviation;
                 hpbb.piercesEnemy = true;
-                hpbb.piercesWalls = true;
+                //hpbb.piercesWalls = true;
                 hpbb.size = new Vector3(1f, 0.65f, 1);
                 Destroy(bullet, 0.25f);
 

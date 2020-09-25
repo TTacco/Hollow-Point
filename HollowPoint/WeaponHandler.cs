@@ -191,27 +191,6 @@ namespace HollowPoint
             }
         }
 
-        public static float ExtraCooldown()
-        {
-            ActorStates hstate = HeroController.instance.hero_state;
-
-            switch (hstate)
-            {
-                case ActorStates.airborne:
-                    return 1f;
-
-                case ActorStates.running:
-                    return 0.50f;
-
-                case ActorStates.wall_sliding:
-                    return 1; 
-
-                default:
-                    return 0;
-            }
-        }
-
-
         void CreateGuns()
         {
             Modding.Logger.Log("[WeaponHandler] Creating Gun Structs");
@@ -230,15 +209,15 @@ namespace HollowPoint
                 gunName = WeaponModifierName.SHOTGUN,
                 gunSubClass = WeaponSubClass.BREACHER,
                 minWeaponSpreadFactor = 1,
-                soulCostPerShot = 10,
+                soulCostPerShot = 20,
                 soulGainOnHit = 0,
                 soulGainOnKill = 40,
-                soulRegenSpeed = 0.27f,
+                soulRegenSpeed = 0.050f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.SMG, new Gun
             {
-                boostMultiplier = 9,
+                boostMultiplier = 15,
                 bulletLifetime = 0.19f,
                 bulletSize = new Vector3(0.65f, 0.7f, 0),
                 bulletVelocity = 30f,
@@ -253,7 +232,7 @@ namespace HollowPoint
                 soulCostPerShot = 19,
                 soulGainOnHit = 0,
                 soulGainOnKill = 40,
-                soulRegenSpeed = 0.030f,
+                soulRegenSpeed = 0.038f,
             });
 
             weaponModifierDictionary.Add(WeaponModifierName.CARBINE, new Gun
@@ -290,7 +269,7 @@ namespace HollowPoint
                 gunName = WeaponModifierName.RIFLE,
                 gunSubClass = WeaponSubClass.SAPPER,
                 minWeaponSpreadFactor = 8,
-                soulCostPerShot = 6,
+                soulCostPerShot = 10,
                 soulGainOnHit = 3,
                 soulGainOnKill = 12,
                 soulRegenSpeed = 0.027f,
