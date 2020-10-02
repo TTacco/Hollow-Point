@@ -72,12 +72,14 @@ namespace HollowPoint
             //Melee attack with the gun out 
             if (WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged && !isFiring && hc_instance.CanCast())
             {
+                /*
                 if (InputHandler.Instance.inputActions.dreamNail.WasPressed)
                 {
                     Log("[AttackHandler] Changing Firemode from : " + Stats.instance.cardinalFiringMode + " to : " + !Stats.instance.cardinalFiringMode );
                     Stats.instance.ToggleFireMode();
                 }
-                else if(OrientationHandler.heldAttack && Stats.instance.canFire)
+                */
+                if(OrientationHandler.heldAttack && Stats.instance.canFire)
                 {
 
                     if(PlayerData.instance.MPCharge >= Stats.instance.SoulCostPerShot())
@@ -191,14 +193,14 @@ namespace HollowPoint
             hpbb.bulletDamageScale = Stats.instance.current_damagePerLevel;
             hpbb.noDeviation = (PlayerData.instance.equippedCharm_14 && HeroController.instance.cState.onGround) ? true : false;
             hpbb.bulletOriginPosition = bullet.transform.position;
-            hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
             hpbb.bulletDegreeDirection = direction;
             hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
             hpbb.gunUsed = Stats.instance.currentEquippedGun;
 
             bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
-            hpbb.appliesDamageOvertime = sapperBuffs;
-            hpbb.piercesEnemy = (sapperBuffs || Stats.instance.current_weapon == WeaponModifierName.SNIPER);
+            hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
+            hpbb.bulletSpeed = (sapperBuffs)? Stats.instance.current_bulletVelocity * 1.20f: Stats.instance.current_bulletVelocity;
+            hpbb.piercesEnemy = (Stats.instance.current_weapon == WeaponModifierName.SNIPER || PlayerData.instance.equippedCharm_16);
 
             AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
             HollowPointSprites.StartGunAnims();
@@ -232,6 +234,11 @@ namespace HollowPoint
                 hpbb.bulletSpeed = Stats.instance.current_bulletVelocity;
                 hpbb.bulletDegreeDirection = direction;
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
+
+                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+                hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
+                hpbb.bulletSpeed = (sapperBuffs) ? Stats.instance.current_bulletVelocity * 1.20f : Stats.instance.current_bulletVelocity;
+                hpbb.piercesEnemy = (PlayerData.instance.equippedCharm_16);
 
                 AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
                 HollowPointSprites.StartGunAnims();
@@ -283,6 +290,10 @@ namespace HollowPoint
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
                 hpbb.piercesEnemy = true;
 
+                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+                hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
+                hpbb.bulletSpeed = (sapperBuffs) ? Stats.instance.current_bulletVelocity * 1.20f : Stats.instance.current_bulletVelocity;
+
                 Destroy(bullet, Stats.instance.current_bulletLifetime + UnityEngine.Random.Range(-0.03f, 0.03f));
             }
             //HeatHandler.IncreaseHeat(Stats.instance.current_heatPerShot);
@@ -316,6 +327,43 @@ namespace HollowPoint
 
                 Destroy(bullet, 1f);
                 yield return new WaitForSeconds(0.03f); //0.12f This yield will determine the time inbetween shots   
+            }
+
+            yield return new WaitForSeconds(0.02f);
+            isFiring = false;
+        }
+
+        public void SpawnVoidSpikes()
+        {
+            StartCoroutine(VoidSpikes());
+        }
+
+        public IEnumerator VoidSpikes()
+        {
+            isFiring = true;
+            GameCameras.instance.cameraShakeFSM.SendEvent("EnemyKillShake");
+            DirectionalOrientation orientation = DirectionalOrientation.Center;
+
+            float rotation = 0;
+            for (int b = 0; b < 15; b++)
+            {
+                GameObject bullet = HollowPointPrefabs.SpawnBulletFromKnight(rotation, orientation);
+                BulletBehaviour hpbb = bullet.GetComponent<BulletBehaviour>();
+                hpbb.bulletDamage = 1;
+                hpbb.bulletDamageScale = 1;
+                hpbb.noDeviation = true;
+                hpbb.canGainEnergyCharges = false;
+                hpbb.bulletOriginPosition = HeroController.instance.transform.position;
+                hpbb.bulletSpeed = 10;
+                hpbb.bulletDegreeDirection = rotation;
+                hpbb.enableSoulParticles = false;
+                hpbb.piercesEnemy = true;
+                hpbb.playSoundOnSurfaceHit = false;
+                hpbb.size = new Vector3(0.65f, 0.65f, 1);
+                hpbb.bulletSprite = BulletBehaviour.BulletSpriteType.voids;
+ 
+                rotation += 24;
+                Destroy(bullet, 4f);
             }
 
             yield return new WaitForSeconds(0.02f);

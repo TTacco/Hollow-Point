@@ -116,6 +116,29 @@ namespace HollowPoint
             return currentEquippedGun;
         }
 
+        public WeaponSubClass ChangeClass(WeaponSubClass wsc)
+        {
+            List<int> classConversionCharms = new List<int>() { 3, 12, 17 }; //Compass, Grub, Spore
+            List<int> equippedCharms = PlayerData.instance.equippedCharms;
+            //if (equippedCharms.Count < 1) return wsc;
+            List<int> equippedConversionCharms = classConversionCharms.Intersect(equippedCharms).ToList();
+            int intersectedCharmsCount = equippedConversionCharms.Count();
+
+            if (intersectedCharmsCount > 1 || intersectedCharmsCount == 0) return wsc;
+
+            switch (equippedConversionCharms[0])
+            {
+                case 3:
+                    return WeaponSubClass.OBSERVER;
+                case 12:
+                    return WeaponSubClass.BREACHER;
+                case 17:
+                    return WeaponSubClass.SAPPER;
+            }
+
+            return wsc;
+        }
+
         public void SwapWeapons()
         {
             Stats.instance.swapTimer = (PlayerData.instance.equippedCharm_26) ? 1.5f : 7f;
@@ -203,7 +226,7 @@ namespace HollowPoint
                 bulletVelocity = 45f,
                 damageBase = 2,
                 damageScale = 1,
-                energyGainOnHit = 3,
+                energyGainOnHit = 5,
                 fireRate = 0.65f,
                 heatPerShot = 20,
                 gunName = WeaponModifierName.SHOTGUN,
@@ -222,8 +245,8 @@ namespace HollowPoint
                 bulletSize = new Vector3(0.65f, 0.7f, 0),
                 bulletVelocity = 30f,
                 damageBase = 2,
-                damageScale = 2,
-                energyGainOnHit = 5,
+                damageScale = 3,
+                energyGainOnHit = 12,
                 fireRate = 0.51f,
                 heatPerShot = 10,
                 gunName = WeaponModifierName.SMG,
@@ -241,9 +264,9 @@ namespace HollowPoint
                 bulletLifetime = 0.17f,
                 bulletSize = new Vector3(0.7f, 0.7f, 0),
                 bulletVelocity = 35f,
-                damageBase = 4,
+                damageBase = 3,
                 damageScale = 3,
-                energyGainOnHit = 10,
+                energyGainOnHit = 15,
                 fireRate = 0.09f,
                 heatPerShot = 15,
                 gunName = WeaponModifierName.CARBINE,
@@ -269,7 +292,7 @@ namespace HollowPoint
                 gunName = WeaponModifierName.RIFLE,
                 gunSubClass = WeaponSubClass.SAPPER,
                 minWeaponSpreadFactor = 8,
-                soulCostPerShot = 10,
+                soulCostPerShot = 9,
                 soulGainOnHit = 3,
                 soulGainOnKill = 12,
                 soulRegenSpeed = 0.027f,
@@ -281,18 +304,18 @@ namespace HollowPoint
                 bulletLifetime = 0.37f,
                 bulletSize = new Vector3(0.8f, 0.8f, 0),
                 bulletVelocity = 34f,
-                damageBase = 3,
-                damageScale = 3,
-                energyGainOnHit = 7,
+                damageBase = 5,
+                damageScale = 4,
+                energyGainOnHit = 10,
                 fireRate = 0.10f,
                 heatPerShot = 14,
                 gunName = WeaponModifierName.LMG,
                 gunSubClass = WeaponSubClass.SAPPER,
                 minWeaponSpreadFactor = 5,
-                soulCostPerShot = 2,
+                soulCostPerShot = 3,
                 soulGainOnHit = 0,
                 soulGainOnKill = 6,
-                soulRegenSpeed = 0.040f,
+                soulRegenSpeed = 0.042f,
         });
 
             weaponModifierDictionary.Add(WeaponModifierName.DMR, new Gun
@@ -301,9 +324,9 @@ namespace HollowPoint
                 bulletLifetime = 0.28f,
                 bulletSize = new Vector3(1.2f, 0.8f, 0),
                 bulletVelocity = 50f,
-                damageBase = 8,
+                damageBase = 6,
                 damageScale = 5,
-                energyGainOnHit = 15,
+                energyGainOnHit = 20,
                 fireRate = 0.25f,
                 heatPerShot = 6,
                 gunName = WeaponModifierName.DMR,
@@ -321,9 +344,9 @@ namespace HollowPoint
                 bulletLifetime = 0.33f,
                 bulletSize = new Vector3(1.4f, 0.8f, 0),
                 bulletVelocity = 80f,
-                damageBase = 15,
-                damageScale = 8,
-                energyGainOnHit = 20,
+                damageBase = 10,
+                damageScale = 7,
+                energyGainOnHit = 25,
                 fireRate = 1f,
                 heatPerShot = 0,
                 gunName = WeaponModifierName.SNIPER,

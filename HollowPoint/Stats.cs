@@ -44,6 +44,7 @@ namespace HollowPoint
         public float current_soulRegenSpeed = 1;
         public float current_soulRegenTimer = 3f;
         public float current_walkSpeed = 3f;
+        public int current_minWeaponSpreadFactor = 1;
         public int current_soulGainedPerHit = 0;
         public int current_soulGainedPerKill = 0;
 
@@ -60,6 +61,7 @@ namespace HollowPoint
         public float passiveSoulTimer = 3f;
         private float recentlyKilledTimer;
         public float fireRateCooldownTimer = 5f;
+        float recentlyTookDamageTimer = 0f;
 
         //Weapon Swapping
         public bool canSwap = true;
@@ -148,6 +150,8 @@ namespace HollowPoint
 
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
+            return false;
+
             if (adrenalineCharges < 1) return false; //If your soul charges are less than 1, you cant heal bud
 
             return orig(self);
@@ -162,7 +166,8 @@ namespace HollowPoint
 
         private int Instance_SoulGainHook(int num)
         {
-            return 6;
+            IncreaseAdrenalineChargeEnergy();
+            return 4;
         }
 
         private void HeroController_AddGeo(On.HeroController.orig_AddGeo orig, HeroController self, int amount)
@@ -228,12 +233,64 @@ namespace HollowPoint
             current_soulGainedPerHit = currentEquippedGun.soulGainOnHit;
             current_soulGainedPerKill = currentEquippedGun.soulGainOnHit;
             current_soulRegenSpeed = currentEquippedGun.soulRegenSpeed;
+            current_minWeaponSpreadFactor = currentEquippedGun.minWeaponSpreadFactor;
             current_walkSpeed = 3f;
-            //SpellControlOverride.canUseSpellOrbHighlight.Value = 1;
-            PlayerData.instance.focusMP_amount = current_soulCostPerShot;
+
+            current_class = WeaponSwapAndStatHandler.instance.ChangeClass(current_class);
+
+            if (pd_instance.equippedCharm_8) //Fury of the Fallen
+            {
+                current_soulGainedPerKill += 10;
+                current_soulGainedPerHit += 2;
+                current_damagePerLevel += 2;
+                current_soulRegenSpeed -= 0.05f;
+            }
+
+            if (pd_instance.equippedCharm_16) //Shaman Stone
+            {
+                current_damagePerShot -= 1;
+                current_damagePerLevel -= 1;
+            }
+
+            if (pd_instance.equippedCharm_19) //Shaman Stone
+            {
+                current_fireRateCooldown *= 0.80f;
+                current_heatPerShot += 10;
+            }
+
+            if (pd_instance.equippedCharm_21) //Soul Eater
+            {
+                current_soulGainedPerKill += 24;
+                current_soulGainedPerHit += 3;
+                current_soulRegenSpeed -= 0.08f;
+                current_heatPerShot += 15;
+                current_minWeaponSpreadFactor += 3;
+            }
+
+            if (pd_instance.equippedCharm_31) //Dash Master
+            {
+                current_boostMultiplier *= 1.35f;
+            }
+
+            if (pd_instance.equippedCharm_33) //Spell Twister
+            {
+                current_soulCostPerShot = (int)(current_soulCostPerShot * 0.75f);
+            }
+
+            if (pd_instance.equippedCharm_34) //Deep Focus
+            {
+                current_energyGainOnHit += 3;
+            }
+
+            if (pd_instance.equippedCharm_26) //Fragile Greed
+            {
+                current_soulGainedPerKill *= 2;
+                current_soulGainedPerHit *= 0;
+                current_soulRegenTimer *= 2f;
+            }
 
             recentlyKilledTimer = 0;
-            HeroController.instance.NAIL_CHARGE_TIME_DEFAULT = 0.5f;
+            hc_instance.NAIL_CHARGE_TIME_DEFAULT = 0.75f;
 
             //Charge Abilities
             adrenalineCharges = 0;
@@ -246,10 +303,13 @@ namespace HollowPoint
             adrenalineChargeIcons?.Invoke("0");
             nailArtIcon?.Invoke("true");
 
+            PlayerData.instance.focusMP_amount = current_soulCostPerShot;
+
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             if (current_soulCostPerShot < 2) current_soulCostPerShot = 2;
             if (current_walkSpeed < 1) current_walkSpeed = 1;
             if (current_fireRateCooldown < 0.01f) current_fireRateCooldown = 0.01f;
+            if (current_soulRegenSpeed < 0.01f) current_fireRateCooldown = 0.01f;
         }
 
 
@@ -286,7 +346,7 @@ namespace HollowPoint
             if(adenalineCooldownTimer > 0) adenalineCooldownTimer -= Time.deltaTime * 1f;
             else if (adrenalineOnCooldown)
             {
-                ChangeAdrenalineChargeAmount(increase: true);
+                IncDecAdrenalineCharges(1);
                 adrenalineOnCooldown = false;          
                 Log("[Stats] Player is now off cooldown");
             }
@@ -313,6 +373,7 @@ namespace HollowPoint
             //if (heal_ChargesDecayTimer > 0) heal_ChargesDecayTimer -= Time.deltaTime * 1f;
             //else if(heal_Charges > 0) ChangeBloodRushCharges(increase: false);
             
+            if(recentlyTookDamageTimer > 0) recentlyTookDamageTimer -= Time.deltaTime * 1f;
 
             //On Kill Bonus
             if (recentlyKilledTimer > 0) recentlyKilledTimer -= Time.deltaTime * 1f;
@@ -327,7 +388,6 @@ namespace HollowPoint
                 passiveSoulTimer -= Time.deltaTime * 1;
                 if (passiveSoulTimer <= 0)
                 {
-                    passiveSoulTimer = current_soulRegenSpeed;
                     RegenerateSoul();
                 }
             }
@@ -338,16 +398,15 @@ namespace HollowPoint
 
                 if (infusionTimer <= 0)
                 {
-                    ActivateInfusionBuff(false);
+                    //ActivateInfusionBuff(false);
                 }
             }
         }
 
         public void RegenerateSoul()
         {
-            int regenAmount = 1;
-            if (current_class == WeaponSubClass.BREACHER && infusionActivated) regenAmount = 20;
-            HeroController.instance.TryAddMPChargeSpa(regenAmount);
+            passiveSoulTimer = (current_class == WeaponSubClass.BREACHER && infusionActivated) ? current_soulRegenSpeed - 0.02f : current_soulRegenSpeed;
+            HeroController.instance.TryAddMPChargeSpa(1);
         }
 
         public void IncreaseAdrenalineChargeEnergy()
@@ -355,17 +414,31 @@ namespace HollowPoint
             //If the player is on cooldown, disable soul gain
             if (adrenalineOnCooldown) return;
             int energyIncrease = current_energyGainOnHit; //Alter this value later
+
+            //Basically once the player is in full adrenaline, slow down the adreline increase by a fraction so that they wont heal too fast
+            float energyIncreaseBuffer = (pd_instance.equippedCharm_23) ? 0.7f : 0.5f;
+
+            if (adrenalineCharges == 3) energyIncrease = (int)(energyIncrease * energyIncreaseBuffer);
             adrenalineEnergy += energyIncrease;
+
             if (adrenalineEnergy > 100)
             {
+                //Thorns of Agony
+                if (PlayerData.instance.equippedCharm_12) GameManager.instance.GetComponent<AttackHandler>().SpawnVoidSpikes();
+
+                GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
+                focusBurstAnim.SetActive(true);
+                HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
+                Destroy(focusBurstAnim, 3f);
                 if (adrenalineCharges < 3)
                 {
-                    GameObject focusBurstAnim = Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform);
-                    focusBurstAnim.SetActive(true);
-                    Destroy(focusBurstAnim, 3f);
-                    HeroController.instance.GetComponent<SpriteFlash>().flashWhiteQuick();
-                    ChangeAdrenalineChargeAmount(increase: true);
+                    IncDecAdrenalineCharges(1);
                 }
+                else
+                {
+                    HeroController.instance.AddHealth(1);
+                }
+
                 adrenalineEnergy = 0;
             }
         }
@@ -377,38 +450,49 @@ namespace HollowPoint
          *  2 = same but now the player has 2 charges || consuming heals 1 mask
          *  3 = same but now the player has 3 charge  || consuming heals 2 mask
          */
-        void ChangeAdrenalineChargeAmount(bool increase)
+        void IncDecAdrenalineCharges(int amount)
         {
-            adrenalineCharges += (increase && adrenalineCharges < 3) ? 1 : (!increase)? -1 : 0;
-            //if(heal_Charges > 0) heal_ChargesDecayTimer = 10;
+            //adrenalineCharges += (increase && adrenalineCharges < 3) ? 1 : (!increase)? -1 : 0;
+            adrenalineCharges += amount;
+            if (adrenalineCharges > 3) adrenalineCharges = 3;
+            else if (adrenalineCharges < 0) adrenalineCharges = 0;
 
-            //Log("[Stats] Changing Soul Cartridge, INCREASING? " + increase + "   CURRENT LEVEL? " + soulC_Charges);
+            //Enable/Disable infusion
+            if (adrenalineCharges == 3 && !infusionActivated) ActivateInfusionBuff(true);
+            else if (adrenalineCharges < 3 && infusionActivated) ActivateInfusionBuff(false);
 
-            //Update the UI
             adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
-        public void ConsumeAdrenalineCharges(bool consumeAll = true, float cooldownOverride = 15f)
+        public int ConsumeAdrenalineCharges(bool consumeAll = false, float cooldownOverride = 15f, int consumeAmount = -1)
         {
-            //Log("[Stats] Consuming Cartridge");
-            if(!consumeAll)
+            adrenalineEnergy = 0;
+            if (consumeAll)
             {
-                ChangeAdrenalineChargeAmount(false);
+                adrenalineOnCooldown = true;
+                adenalineCooldownTimer = cooldownOverride;
+                int originalAdrenaline = adrenalineCharges;
+                IncDecAdrenalineCharges(-3);
                 adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
-                return;
+                return originalAdrenaline;
             }
 
-            adrenalineCharges = -1;
-            adrenalineOnCooldown = true;
-            adenalineCooldownTimer = cooldownOverride;
+            //Log("[Stats] Consuming Cartridge");
+            int adrenalineChargesOnConsumption = adrenalineCharges;
+            IncDecAdrenalineCharges(consumeAmount);
             adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
+
+            return adrenalineChargesOnConsumption;
         }
 
 
         //TODO: can actually just merge this with ChangeAdrenaline
         public void Stats_TakeDamageEvent()
         {
-            ConsumeAdrenalineCharges(true);
+            if (recentlyTookDamageTimer > 0) return;
+            recentlyTookDamageTimer = 0.30f;
+
+            ConsumeAdrenalineCharges(consumeAmount: -2);
         }
 
         void UpdateBloodRushBuffs(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -471,15 +555,15 @@ namespace HollowPoint
             float cooldown = current_fireRateCooldown; //set the cooldown depending on the current equipped weapon
             if (cooldownOverride != null) cooldown = (float)cooldownOverride; //used the override cooldown value in the parameter instead
 
-            if (infusionActivated && currentEquippedGun.gunSubClass == WeaponSubClass.OBSERVER)
+            if (infusionActivated && current_class == WeaponSubClass.OBSERVER)
             {
                 switch (currentEquippedGun.gunName)
                 {
                     case WeaponModifierName.DMR:
-                        cooldown = 0.12f;
+                        cooldown = 0.18f;
                         break;
                     case WeaponModifierName.SNIPER:
-                        cooldown = 0.25f;
+                        cooldown = 0.45f;
                         break;
                     default:
                         cooldown *= 0.70f;
@@ -498,22 +582,25 @@ namespace HollowPoint
             if (activate)
             {
                 infusionActivated = true;
-                infusionTimer = 10;
+                //int infusionMultiplier = (pd_instance.equippedCharm_10) ? 6 : 4;
+                //infusionTimer = adrenalineCharges * infusionMultiplier;
                 furyParticle.SetActive(true);
                 furyParticle.GetComponent<ParticleSystem>().Play();
                 furyBurst.SetActive(true);
 
+                /*
                 GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform);
                 artChargeFlash.SetActive(true);
                 Destroy(artChargeFlash, 0.5f);
                 GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform);
                 dJumpFlash.SetActive(true);
                 Destroy(dJumpFlash, 0.5f);
+                */
 
-                Instantiate(SpellControlOverride.sharpFlash, HeroController.instance.transform).SetActive(true);
+                //Instantiate(SpellControlOverride.sharpFlash, HeroController.instance.transform).SetActive(true);
                 //Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
-                GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
-                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.InfusionSFXGO, alteredPitch: false);
+                //GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
+                //AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.InfusionSFXGO, alteredPitch: false);
 
 
             }
@@ -525,16 +612,6 @@ namespace HollowPoint
                 furyBurst.SetActive(false);
 
             }
-        }
-
-        public void EnableBuffs()
-        {
-
-        }
-
-        public void DisableBuffs()
-        {
-
         }
 
         void OnDestroy()

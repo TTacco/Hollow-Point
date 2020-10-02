@@ -98,7 +98,7 @@ namespace HollowPoint
                 return;
             }
 
-            //if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
+            if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
 
             orig(self, go, damageSide, damageAmount, hazardType);
         }
@@ -108,7 +108,6 @@ namespace HollowPoint
         {
             //Alternative hit damages from other sources like weaver or explosions 
             string srcName = hitInstance.Source.name;
-            //Log("[DamageOverride] Source Name is " + srcName);
 
             if (srcName.Contains("Gas"))
             {
@@ -261,7 +260,7 @@ namespace HollowPoint
             else
             {
                 targetHP.hp -= damageDealt; // the actual damage          
-                HeroController.instance.AddMPCharge(Stats.instance.current_soulGainedPerHit);
+                if(hpbb.canGainEnergyCharges) HeroController.instance.AddMPCharge(Stats.instance.current_soulGainedPerHit);
                 Stats.instance.IncreaseAdrenalineChargeEnergy();
                 //TODO: change this audio source location to the sound handler
                 AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.EnemyHitSFXGO);

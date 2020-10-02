@@ -27,7 +27,6 @@ namespace HollowPoint
 
         public bool piercesWalls = false;
         public bool ignoreAllCollisions = false;
-        public bool hasSporeCloud = true;
 
         public bool isDagger;
 
@@ -41,6 +40,9 @@ namespace HollowPoint
         public bool noHeat = false;
         public bool perfectAccuracy = false;
         public bool appliesDamageOvertime = false;
+        public bool enableSoulParticles = true;
+        public bool playSoundOnSurfaceHit = true;
+        public bool canGainEnergyCharges = true;
         static float bulletPivot = 0;
         static bool bulletBias = true;
 
@@ -74,6 +76,7 @@ namespace HollowPoint
             dung,
             artillery,
             dagger,
+            voids,
         }
 
         public void Start()
@@ -115,12 +118,14 @@ namespace HollowPoint
 
             //Particle Effects
 
-            string particlePrefabName = (useDefaultParticles) ? "SpellParticlePrefab" : "GrimmParticlePrefab"; 
-            GameObject fireballParticles = HollowPointPrefabs.SpawnObjectFromDictionary(particlePrefabName, gameObject.transform.position, Quaternion.identity);
-            fireballParticles.AddComponent<ParticlesController>().parent = gameObject;
-            //fireballParticles.GetComponent<ParticlesController>().size = bullet.size;
-            fireballParticles.SetActive(true);
-
+            if (enableSoulParticles)
+            {
+                string particlePrefabName = (useDefaultParticles) ? "SpellParticlePrefab" : "GrimmParticlePrefab";
+                GameObject fireballParticles = HollowPointPrefabs.SpawnObjectFromDictionary(particlePrefabName, gameObject.transform.position, Quaternion.identity);
+                fireballParticles.AddComponent<ParticlesController>().parent = gameObject;
+                //fireballParticles.GetComponent<ParticlesController>().size = bullet.size;
+                fireballParticles.SetActive(true);
+            }
 
             // +---| Bullet Heat |---+
             float deviationFromHeat = (noHeat) ? 0 : (float)Math.Pow(HeatHandler.currentHeat, 2f) / 500; //exponential
@@ -138,7 +143,7 @@ namespace HollowPoint
             bulletBias = !bulletBias;
             float bulletPivotDelta = (bulletBias) ? 1 : -1;
             bulletPivotDelta = (bulletPivot >= deviation || bulletPivot <= (deviation * -1)) ? bulletPivotDelta * -1 : bulletPivotDelta;
-            bulletPivot += bulletPivotDelta * rand.Next(gunUsed.minWeaponSpreadFactor, gunUsed.minWeaponSpreadFactor + 5); //1 can be changed by the amount of distance each bullet deviation should have
+            bulletPivot += bulletPivotDelta * rand.Next(Stats.instance.current_minWeaponSpreadFactor, Stats.instance.current_minWeaponSpreadFactor + 5); //1 can be changed by the amount of distance each bullet deviation should have
             float degree = bulletDegreeDirection + Mathf.Clamp(bulletPivot, deviation * -1, deviation); ;
             float radian = (float)(degree * Math.PI / 180);
 
@@ -168,16 +173,15 @@ namespace HollowPoint
             hm = col.GetComponentInChildren<HealthManager>();
             bulletDummyHitInstance.Source = gameObject;
 
-            // Log("[BulletBehaviour] Col Name" + col.name);
+            //Log("[BulletBehaviour] Name" + hm.gameObject.name);
+            //Array.ForEach<Component>(col.gameObject.GetComponents<Component>(), x => Log(x));
             if (col.gameObject.name.Contains("Idle") || hm != null)
             {
                 HeroController.instance.ResetAirMoves();
                 HitTaker.Hit(col.gameObject, bulletDummyHitInstance);
-                if (piercesEnemy) return;
-                Destroy(gameObject, 0.03f);
+                if (!piercesEnemy) Destroy(gameObject, 0.03f);
                 return;
             }
-
             else if (hm == null && col.gameObject.layer.Equals(8))
             {
                 StartCoroutine(WallHitDust());
@@ -187,7 +191,7 @@ namespace HollowPoint
                     bulletDummyHitInstance.Direction = 270f;
                     br.Hit(bulletDummyHitInstance);
                 }
-                AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.TerrainHitSFXGO);
+                if(playSoundOnSurfaceHit) AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.TerrainHitSFXGO);
                 if(!piercesWalls) Destroy(gameObject, 0.04f);
             }
         }
@@ -213,6 +217,8 @@ namespace HollowPoint
         //TODO: Create an "explosion component" to spawn on destroy instead of creating the object at the Destroy of the bullet
         public void OnDestroy()
         {
+            if (bulletSprite != BulletSpriteType.soul) return;
+
             GameObject fireballImpact = HollowPointPrefabs.SpawnObjectFromDictionary("FireballImpact", gameObject.transform.position, Quaternion.identity);
             fireballImpact.transform.Rotate(0, 0, gameObject.transform.eulerAngles.z, 0);
             fireballImpact.transform.localScale = size - new Vector3(0, 0.50f, 0);

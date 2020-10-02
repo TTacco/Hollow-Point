@@ -170,7 +170,7 @@ namespace HollowPoint
                 new Rect(0, 0, bulletTexture.width, bulletTexture.height),
                 new Vector2(0.5f, 0.5f), 42);
 
-            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png", "sprite_bullet_dagger.png", "sprite_bullet_dung.png" };
+            string[] textureNames = {"specialbullet.png", "furybullet.png", "shadebullet.png", "sprite_bullet_dagger.png", "sprite_bullet_dung.png", "sprite_bullet_voids.png" };
             //Special bullet sprite
             /*
             LoadAssets.spriteDictionary.TryGetValue("specialbullet.png", out Texture2D specialBulletTexture);
