@@ -46,17 +46,13 @@ namespace HollowPoint
         {
             //Log(go.name);
             /*
-            if (go.name.Contains("Weaverling")) Destroy(go);
-            else if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
+if (go.name.Contains("Weaverling")) Destroy(go);
+*/
+
+            if (go.name.Contains("Orbit Shield") && !prefabDictionary.ContainsKey("Orbit Shield"))
             {
                 prefabDictionary.Add("Orbit Shield", go);
             }
-            if(grimmChildAttackSpeed == null && go.name.Contains("Grimmchild"))
-            {
-                //StartCoroutine(ChangeGrimmChildFSM(go));
-            }
-            */
-
             if (!prefabDictionary.ContainsKey("Hatchling") && go.name.Contains("Hatchling"))
             {
                 prefabDictionary.Add("Hatchling", go);

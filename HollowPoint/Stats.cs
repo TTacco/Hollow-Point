@@ -48,12 +48,16 @@ namespace HollowPoint
         public int current_soulGainedPerHit = 0;
         public int current_soulGainedPerKill = 0;
 
+        int current_energyRequirement = 100;
+        float current_energyPenalty = 0.6f;
+
         public bool canUseNailArts = false;
         public bool canFire = false;
         public bool usingGunMelee = false;
         public bool cardinalFiringMode = false;
         public bool slowWalk = false;
         public bool hasActivatedAdrenaline = false;
+        public bool hiveBloodHealActive = false;
 
         //Update Timers
         public float canUseNailArtsTimer = 1f;
@@ -62,6 +66,7 @@ namespace HollowPoint
         private float recentlyKilledTimer;
         public float fireRateCooldownTimer = 5f;
         float recentlyTookDamageTimer = 0f;
+        float hiveBloodHealTimer = 0f;
 
         //Weapon Swapping
         public bool canSwap = true;
@@ -238,18 +243,11 @@ namespace HollowPoint
 
             current_class = WeaponSwapAndStatHandler.instance.ChangeClass(current_class);
 
-            if (pd_instance.equippedCharm_8) //Fury of the Fallen
+            if (pd_instance.equippedCharm_6) //Fury of the Fallen
             {
                 current_soulGainedPerKill += 10;
-                current_soulGainedPerHit += 2;
-                current_damagePerLevel += 2;
-                current_soulRegenSpeed -= 0.05f;
-            }
-
-            if (pd_instance.equippedCharm_16) //Shaman Stone
-            {
-                current_damagePerShot -= 1;
-                current_damagePerLevel -= 1;
+                current_soulRegenSpeed -= 0.10f;
+                current_energyGainOnHit *= 2;
             }
 
             if (pd_instance.equippedCharm_19) //Shaman Stone
@@ -267,26 +265,43 @@ namespace HollowPoint
                 current_minWeaponSpreadFactor += 3;
             }
 
-            if (pd_instance.equippedCharm_31) //Dash Master
+            if (pd_instance.equippedCharm_25) //Strength
             {
-                current_boostMultiplier *= 1.35f;
+                current_damagePerShot += 3;
+                current_damagePerLevel += 2;
+                current_fireRateCooldown *= 0.75f;
+                current_heatPerShot += 15f;
             }
 
-            if (pd_instance.equippedCharm_33) //Spell Twister
+            if (pd_instance.equippedCharm_28) //Shape of Unn
             {
-                current_soulCostPerShot = (int)(current_soulCostPerShot * 0.75f);
+                current_bulletVelocity *= 1.2f;
+                current_heatPerShot -= 10;
+                current_minWeaponSpreadFactor -= 3;
             }
 
-            if (pd_instance.equippedCharm_34) //Deep Focus
+            if (pd_instance.equippedCharm_27) //Soul Eater
             {
-                current_energyGainOnHit += 3;
+                current_soulRegenSpeed -= 0.12f;
             }
 
-            if (pd_instance.equippedCharm_26) //Fragile Greed
+            //Dash Master
+            if (pd_instance.equippedCharm_31) current_boostMultiplier *= 1.35f;
+
+            //Spell Twister
+            if (pd_instance.equippedCharm_33) current_soulCostPerShot = (int)(current_soulCostPerShot * 0.75f);
+
+
+            if (pd_instance.equippedCharm_7) current_energyGainOnHit = (int)(current_energyGainOnHit * 1.5f);
+            current_energyRequirement = (pd_instance.equippedCharm_34) ? 140 : 100; //Deep Focus
+            current_energyPenalty = (pd_instance.equippedCharm_23) ? 0.7f : 0.5f; // Fragile Heart
+
+            if (pd_instance.equippedCharm_24) //Fragile Greed
             {
-                current_soulGainedPerKill *= 2;
+                current_soulGainedPerKill *= 3;
                 current_soulGainedPerHit *= 0;
                 current_soulRegenTimer *= 2f;
+                current_fireRateCooldown *= 0.80f;
             }
 
             recentlyKilledTimer = 0;
@@ -310,6 +325,9 @@ namespace HollowPoint
             if (current_walkSpeed < 1) current_walkSpeed = 1;
             if (current_fireRateCooldown < 0.01f) current_fireRateCooldown = 0.01f;
             if (current_soulRegenSpeed < 0.01f) current_fireRateCooldown = 0.01f;
+            if (current_bulletVelocity > 80) current_bulletVelocity = 80;
+            if (current_heatPerShot < 1) current_heatPerShot = 1;
+            if (current_minWeaponSpreadFactor < 1) current_minWeaponSpreadFactor = 1;
         }
 
 
@@ -357,6 +375,15 @@ namespace HollowPoint
                 if(swapTimer <= 0 ) canSwap = true;
             }
 
+            if (hiveBloodHealTimer > 0)
+            {
+                hiveBloodHealTimer -= Time.deltaTime * 1f;
+                if (hiveBloodHealTimer <= 0 && adrenalineCharges == 3)
+                {
+                    hiveBloodHealTimer = (pd_instance.equippedCharm_34) ? 4f : 7f;
+                    HeroController.instance.AddHealth(1);
+                }
+            }
 
             if (canUseNailArtsTimer > 0)
             {
@@ -416,9 +443,8 @@ namespace HollowPoint
             int energyIncrease = current_energyGainOnHit; //Alter this value later
 
             //Basically once the player is in full adrenaline, slow down the adreline increase by a fraction so that they wont heal too fast
-            float energyIncreaseBuffer = (pd_instance.equippedCharm_23) ? 0.7f : 0.5f;
 
-            if (adrenalineCharges == 3) energyIncrease = (int)(energyIncrease * energyIncreaseBuffer);
+            if (adrenalineCharges == 3) energyIncrease = (int)(energyIncrease * current_energyPenalty);
             adrenalineEnergy += energyIncrease;
 
             if (adrenalineEnergy > 100)
@@ -434,9 +460,10 @@ namespace HollowPoint
                 {
                     IncDecAdrenalineCharges(1);
                 }
-                else
+                else if(!PlayerData.instance.equippedCharm_29)
                 {
-                    HeroController.instance.AddHealth(1);
+                    int healAmount = (pd_instance.equippedCharm_34) ? 2 : 1;
+                    HeroController.instance.AddHealth(healAmount);
                 }
 
                 adrenalineEnergy = 0;
@@ -461,12 +488,14 @@ namespace HollowPoint
             if (adrenalineCharges == 3 && !infusionActivated) ActivateInfusionBuff(true);
             else if (adrenalineCharges < 3 && infusionActivated) ActivateInfusionBuff(false);
 
+            if(adrenalineCharges == 3 && pd_instance.equippedCharm_29) hiveBloodHealTimer = (pd_instance.equippedCharm_34) ? 4f: 7f;
+
             adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
         }
 
-        public int ConsumeAdrenalineCharges(bool consumeAll = false, float cooldownOverride = 15f, int consumeAmount = -1)
+        public int ConsumeAdrenalineCharges(bool consumeAll = false, float cooldownOverride = 5f, int consumeAmount = -1)
         {
-            adrenalineEnergy = 0;
+            //adrenalineEnergy = 0;
             if (consumeAll)
             {
                 adrenalineOnCooldown = true;
@@ -485,14 +514,27 @@ namespace HollowPoint
             return adrenalineChargesOnConsumption;
         }
 
-
-        //TODO: can actually just merge this with ChangeAdrenaline
-        public void Stats_TakeDamageEvent()
+        public void TakeAdrenalineEnergyDamage(int damageAmount)
         {
             if (recentlyTookDamageTimer > 0) return;
-            recentlyTookDamageTimer = 0.30f;
+            recentlyTookDamageTimer = 1f;
 
-            ConsumeAdrenalineCharges(consumeAmount: -2);
+            int energyLost = 200;
+            int energySum = adrenalineEnergy;
+            if (pd_instance.equippedCharm_8) energyLost -= 80;
+            if (pd_instance.equippedCharm_9) energyLost -= 150;
+            if (pd_instance.equippedCharm_27) energyLost -= 200;
+            if (energyLost < 0) return;
+
+            energySum -= energyLost;
+
+            int totalAdrenalineToConsume = (int)(energyLost / 100f);
+            int excessEnergyToConsume = energyLost % 100;
+
+            adrenalineEnergy -= excessEnergyToConsume;
+            if (adrenalineEnergy < 0) adrenalineEnergy = 0;
+
+            ConsumeAdrenalineCharges(consumeAmount: -totalAdrenalineToConsume);
         }
 
         void UpdateBloodRushBuffs(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -577,6 +619,8 @@ namespace HollowPoint
             recentlyFiredTimer = 1.5f;
         }
 
+        GameObject extraShield = null;
+
         public void ActivateInfusionBuff(bool activate)
         {
             if (activate)
@@ -587,22 +631,11 @@ namespace HollowPoint
                 furyParticle.SetActive(true);
                 furyParticle.GetComponent<ParticleSystem>().Play();
                 furyBurst.SetActive(true);
+                
 
-                /*
-                GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform);
-                artChargeFlash.SetActive(true);
-                Destroy(artChargeFlash, 0.5f);
-                GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform);
-                dJumpFlash.SetActive(true);
-                Destroy(dJumpFlash, 0.5f);
-                */
-
-                //Instantiate(SpellControlOverride.sharpFlash, HeroController.instance.transform).SetActive(true);
-                //Instantiate(SpellControlOverride.focusBurstAnim, HeroController.instance.transform).SetActive(true);
-                //GameCameras.instance.cameraShakeFSM.SendEvent("AverageShake");
-                //AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.InfusionSFXGO, alteredPitch: false);
-
-
+                hc_instance.RUN_SPEED_CH = 12f;
+                hc_instance.RUN_SPEED_CH_COMBO = 14f;
+                hc_instance.SHADOW_DASH_COOLDOWN = (pd_instance.equippedCharm_16)? 1.0f : 1.5f;
             }
             else
             {
@@ -611,6 +644,9 @@ namespace HollowPoint
                 furyParticle.GetComponent<ParticleSystem>().Stop();
                 furyBurst.SetActive(false);
 
+                hc_instance.RUN_SPEED_CH = 10f; 
+                hc_instance.RUN_SPEED_CH_COMBO = 11.5f; 
+                hc_instance.SHADOW_DASH_COOLDOWN = 1.5f;
             }
         }
 

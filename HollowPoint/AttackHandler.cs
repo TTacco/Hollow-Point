@@ -200,7 +200,7 @@ namespace HollowPoint
             bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
             hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
             hpbb.bulletSpeed = (sapperBuffs)? Stats.instance.current_bulletVelocity * 1.20f: Stats.instance.current_bulletVelocity;
-            hpbb.piercesEnemy = (Stats.instance.current_weapon == WeaponModifierName.SNIPER || PlayerData.instance.equippedCharm_16);
+            hpbb.piercesEnemy = (Stats.instance.current_weapon == WeaponModifierName.SNIPER || PlayerData.instance.equippedCharm_25);
 
             AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
             HollowPointSprites.StartGunAnims();
@@ -238,7 +238,7 @@ namespace HollowPoint
                 bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
                 hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
                 hpbb.bulletSpeed = (sapperBuffs) ? Stats.instance.current_bulletVelocity * 1.20f : Stats.instance.current_bulletVelocity;
-                hpbb.piercesEnemy = (PlayerData.instance.equippedCharm_16);
+                hpbb.piercesEnemy = (PlayerData.instance.equippedCharm_25);
 
                 AudioHandler.instance.PlayGunSoundEffect(Stats.instance.currentEquippedGun.gunName.ToString());
                 HollowPointSprites.StartGunAnims();

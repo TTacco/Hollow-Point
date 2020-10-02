@@ -37,11 +37,26 @@ namespace HollowPoint
             DontDestroyOnLoad(healSoundGO);
 
             rand = new System.Random();
-
             On.HeroController.TakeDamage += PlayerDamaged;
             On.HealthManager.Hit += HealthManager_HitHook;
             On.HealthManager.Die += HealthManager_Die;
         }
+
+        public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
+        {
+            //Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
+            if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
+            {
+                Log("negating bomb damage weary");
+                orig(self, go, damageSide, damageAmount * 0, hazardType);
+                return;
+            }
+
+            if (damageAmount > 0) Stats.instance.TakeAdrenalineEnergyDamage(damageAmount);
+
+            orig(self, go, damageSide, damageAmount, hazardType);
+        }
+
 
         private void HealthManager_Die(On.HealthManager.orig_Die orig, HealthManager self, float? attackDirection, AttackTypes attackType, bool ignoreEvasion)
         {
@@ -52,56 +67,9 @@ namespace HollowPoint
             orig(self, attackDirection, attackType, ignoreEvasion);
         }
 
-        public void PlayerDamaged(On.HeroController.orig_TakeDamage orig, HeroController self, GameObject go, CollisionSide damageSide, int damageAmount, int hazardType)
-        {
-            //Log("it fucking hurts oh god oh fuck damage dealt " + damageAmount);
-            if (go.name.Contains("Gas Explosion") && PlayerData.instance.equippedCharm_5)
-            {
-                Log("negating bomb damage weary");
-                orig(self, go, damageSide, damageAmount * 0, hazardType);
-            }
-            //Adrenaline from fragile heart
 
-            if (false)
-            {
-                Stats.instance.hasActivatedAdrenaline = true;
-                HeroController.instance.AddMPCharge(99);
-                orig(self, go, damageSide, 0, hazardType);
-                return;
-            }
-            else if (false) 
-            {
 
-                LoadAssets.sfxDictionary.TryGetValue("focussound.wav", out AudioClip ac);
-                AudioSource aud = healSoundGO.GetComponent<AudioSource>();
-                aud.PlayOneShot(ac);
-
-                GameObject artChargeFlash = Instantiate(HeroController.instance.artChargedFlash, HeroController.instance.transform.position, Quaternion.identity);
-                artChargeFlash.SetActive(true);
-                artChargeFlash.transform.SetParent(HeroController.instance.transform);
-                Destroy(artChargeFlash, 0.5f);
-
-                GameObject dJumpFlash = Instantiate(HeroController.instance.dJumpFlashPrefab, HeroController.instance.transform.position, Quaternion.identity);
-                dJumpFlash.SetActive(true);
-                dJumpFlash.transform.SetParent(HeroController.instance.transform);
-                Destroy(dJumpFlash, 0.5f);
-
-                Stats.instance.hasActivatedAdrenaline = true;
-
-                HeroController.instance.AddHealth(3);
-                orig(self, go, damageSide, 0, hazardType);
-                return;
-            }
-            else if (PlayerData.instance.equippedCharm_6)
-            {
-                orig(self, go, damageSide, damageAmount*2, hazardType);
-                return;
-            }
-
-            if(damageAmount > 0) Stats.instance.Stats_TakeDamageEvent(); 
-
-            orig(self, go, damageSide, damageAmount, hazardType);
-        }
+           
 
         //Intercepts HealthManager's Hit method and allows me to override it with my own calculation
         public void HealthManager_HitHook(On.HealthManager.orig_Hit orig, HealthManager self, HitInstance hitInstance)
