@@ -4,15 +4,13 @@ A Hollow Knight mod that gives the Knight the ability to wield a modern day assa
 Why did I make this? I wish I knew too.
 
 While this mod is not to be taken seriously, It still aims to make a semi-serious fun ranged weapon mod to capitalize on Hollow Knight's movement system.  
+________________________________________________________________________________________________________________
 
 ## FEATURES:
 -	Swap between the Nail or the Gun, allowing you range killing power and the ability to fire it at all 8 directions.
 - Ability to set the firing direction, allowing you to stay on target when someones above you.
 - New healing/spell resource: ADRENALINE. Consume ADRENALINE to allow you to use powerful skills. Filling your ADRENALINE completely gives you class specific buffs to help you cover their weakness. When your ADRENALINE meter is full, keep attacking and you will automatically heal, forcing you to play as aggressively as possible.
 -	Replaces/modifies base spells that changes depending on what special weapon you carry, effectively creating a small class system for added flavor.
-  1. BREACHER, Applies close range weapons such as SMGs, Shotguns and spells meant to kill enemies as quickly as possible. 
-  2. SABOTEUR, Balanced class carrying large capacity, quick charging weaponry and wide range chemicals for drawn out fights. (Default Class)
-  3. OBSERVER, Heavy hitting class capable of using long range precision weapons and calling in airstrikes.
 -	Passive soul regeneration, soul gained upon killing or damaging enemy, damage scaling, etc and more stats that differs from weapon to weapon.
 -	Any damage you deal with your bullets will reset your dash/double jump, allowing you to stay on air as long as you keep hitting enemies.
 - Firing below propels you! Use this to keep afloat above enemies while you pepper them, stay mobile during a fight or access areas you normally cant.
@@ -36,13 +34,11 @@ NOTE: These can all be easily installed using the Official HK Discord's Modding 
 - Make sure the Modding API correct installs itself when running the installer
 - Install and Enable "ModCommon"
 - Install and Enable Hollow Point
-________________________________________________________________________________________________________________
 
 ## CONTROLS:
 **CAST** = Swap between the Nail and the Gun.
 **QUICK CAST** = Use spells, you can now use spells while the gun is equipped.
 
-________________________________________________________________________________________________________________
 ## MECHANICS:
 ##### Ammo System
 The SOUL gauge is no longer related to spells, **the SOUL gauge is now the gun's pure ammo counter**
@@ -59,7 +55,7 @@ In addition, staying on 3 adrenaline points gives you a small buff depending on 
 
 ##### Fire Mode
 Tapping cast when it would normally use fireball will now **swap your fire mode**, there are 2 fire mode types
-1. Omnitdirectional = Denoted by an 8 pointed arrow, this means you will fire at all 8 directions.
+1. Omnidirectional = Denoted by an 8 pointed arrow, this means you will fire at all 8 directions.
 2. Cardinal = Denoted by a 4 pointed arrow, you will only fire at 4 directions, useful for accurate firing on the move.
 NOTE: You do not need Vengeful Spirit/Fireball to change this.
 
@@ -71,8 +67,8 @@ Some special charms are capable of giving you an entirely different gun with its
 **You may only carry one of these conversion kits, equipping more than one will prevent you from firing**. 
 You can also transfer the current class by a specific charm, that allows you for example, to use an SMG with the Observer abilities, if you equip the Observer transfer charm.
 Note however equipping more than one of these will set you back to the gun's original class.
-________________________________________________________________________________________________________________
-## Classes
+
+## CLASSES
 These classes changes the abilities that fits their appropriate guns. 
 **Passive** - Automatically actives when you have 3 points in your adrenaline bar. 
 **Down Spell** - Modifies the dive attack (Desolate Dive/Descending Dark), used for defensive means.
@@ -97,6 +93,7 @@ Down Spell: Call in several small yield exploding projectiles on your location.
 Up Spell: Call in a slow sweeping air burst barrage that slowly walks forward to the area the knight is facing. Can harm the player.
 
 ________________________________________________________________________________________________________________
+
 ## Known Issues (EXTREMELY IMPORTANT TO READ)
 - Bullets sometimes destroys walls, sometimes they dont. The checks feels inconsistent and I have no idea how TC determines what surfaces should get broken or not. at best just use the nail for these.
 - THK/Pure Vessel sometimes do not get damaged, your bullets will past them on specific attacks, unable to fix.
@@ -104,6 +101,7 @@ ________________________________________________________________________________
 - Gas attacks dont affect mosskin enemies, doesnt work either on vanilla, im not sure if this is a vanilla bug or a feature due to lore reasons. 
 - Creating a new save in Godmaster will not show with the gun. To fix this, simply save the Godmaster save, quick to menu then load it again. You only need to do this once on a fresh save.
 - Some issues posted by users are sometimes very rare and something thats not easy to replicate, if you find an issue, make sure its not due to a vanilla bug or from incompatibility with other mods.
+
 ________________________________________________________________________________________________________________
 ## Possible Q&A:
 ##### Q: Why, just why?
