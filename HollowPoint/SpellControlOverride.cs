@@ -200,7 +200,7 @@ namespace HollowPoint
                     parameters = new FsmVar[0],
                     everyFrame = false
                 }
-                , 0);
+                , 1);
 
                 spellControlFSM.InsertAction("Has Scream?", new CallMethod
                 {
@@ -325,16 +325,16 @@ namespace HollowPoint
         //This state handles the checking whether a can cast during Quick Cast or not 
         public void State_CanCastQC()
         {
-            if (!HeroController.instance.CanCast() || (PlayerData.instance.fireballLevel == 0))
+            if (!HeroController.instance.CanCast())
             {
                 spellControlFSM.SetState("Inactive");
                 return;
             }
 
+            /*
             if ((WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged) && !(grenadeCooldown > 0))
             {
-                grenadeCooldown = 30f;
-
+ 
                 //StartCoroutine(SpreadShot(1));
                 spellControlFSM.SetState("Has Fireball?"); 
                 spellControlFSM.SetState("Inactive");
@@ -344,15 +344,14 @@ namespace HollowPoint
             {
                 spellControlFSM.SetState("Inactive");
             }
+            */
         }
 
         public void HasQuake_CanCastQuake()
         {
             if (!HeroController.instance.CanCast() || (PlayerData.instance.quakeLevel == 0)) return;
 
-            int soulCost = (PlayerData.instance.equippedCharm_33) ? 24 : 33;
-
-            if(Stats.instance.adrenalineCharges < 1 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
+            if(Stats.instance.adrenalineCharges < 1)// || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
             {       
                 HeroController.instance.spellControl.SetState("Inactive");
             }
@@ -361,23 +360,7 @@ namespace HollowPoint
         public void SpawnFireball()
         {
             Stats.instance.ToggleFireMode();
-
             HeroController.instance.spellControl.SetState("Inactive");
-            return;
-            /*
-            if (PlayerData.instance.fireballLevel == 0 || Stats.instance.adrenalineCharges <= 0)
-            {
-                HeroController.instance.spellControl.SetState("Inactive");
-                return;
-            }
-            */
-            //HeroController.instance.TakeMP(soulCost);
-            //HeroController.instance.TakeMP(33);
-
-            //int adrenalineCharges = Stats.instance.ConsumeAdrenalineCharges();      
-            //Stats.instance.ActivateInfusionBuff(true);
-
-            HeroController.instance.spellControl.SetState("Spell End");
         }
 
         //State GSlash is called whenever the player is about to perform a great slash, use this to spawn the knives
@@ -489,12 +472,14 @@ namespace HollowPoint
             int charges = Stats.instance.adrenalineCharges;
             Stats.instance.ConsumeAdrenalineCharges(true, cooldownOverride: 3f);
 
+            if (PlayerData.instance.screamLevel == 2) charges += 1;
+
             switch (Stats.instance.current_class)
             {
                 case WeaponSubClass.BREACHER:
                     StartCoroutine(ScreamAbility_SparkingBullets(charges));
                     break;
-                case WeaponSubClass.SAPPER:
+                case WeaponSubClass.SABOTEUR:
                     StartCoroutine(ScreamAbility_SulphurStorm(charges));
                     break;
                 case WeaponSubClass.OBSERVER:
@@ -508,12 +493,14 @@ namespace HollowPoint
             int charges = Stats.instance.adrenalineCharges;
             Stats.instance.ConsumeAdrenalineCharges(true, cooldownOverride: 3f);
 
+            if (PlayerData.instance.quakeLevel == 2) charges += 2;
+
             switch (Stats.instance.current_class)
             {
                 case WeaponSubClass.BREACHER:
                     StartCoroutine(QuakeAbility_BulletSpray(charges));
                     break;
-                case WeaponSubClass.SAPPER:
+                case WeaponSubClass.SABOTEUR:
                     StartCoroutine(QuakeAbility_SporeRelease(charges));
                     break;
                 case WeaponSubClass.OBSERVER:
@@ -546,7 +533,7 @@ namespace HollowPoint
         public void HasScream_HasFireSupportAmmo()
         {
             //if (HP_Stats.artifactPower <= 0 || HP_WeaponHandler.currentGun.gunName != "Nail")
-            if (Stats.instance.adrenalineCharges < 1 || WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
+            if (Stats.instance.adrenalineCharges < 1)
             {
                 spellControlFSM.SetState("Inactive");
             }
@@ -614,7 +601,7 @@ namespace HollowPoint
         {
             int burstAmount = 1 * charges;
             int shellsPerBurst = 6;
-            float shellLifeTime = 0.07f;
+            float shellLifeTime = 0.06f;
 
             for (int burst = 0; burst < burstAmount; burst++)
             {
@@ -682,7 +669,7 @@ namespace HollowPoint
                 Vector2 enemyPos2 = closestEnemy.transform.position;
                 double fireBulletAtAngle = Math.Atan2(enemyPos2.y - knightPos2.y, enemyPos2.x - knightPos2.x) * 180 / Math.PI;
 
-                AudioHandler.instance.PlayGunSoundEffect("rifle");
+                AudioHandler.instance.PlayGunSoundEffect("shrapnel");
                 GameObject spark = HollowPointPrefabs.SpawnBulletFromKnight((float)fireBulletAtAngle, DirectionalOrientation.Center);
                 BulletBehaviour hpbb = spark.GetComponent<BulletBehaviour>();
                 hpbb.gunUsed = Stats.instance.currentEquippedGun;
@@ -711,56 +698,21 @@ namespace HollowPoint
             float shellAimPosition = 5 * artyDirection; //Allows the shell to "walk" slowly infront of the player
             AudioHandler.instance.PlayMiscSoundEffect(AudioHandler.HollowPointSoundType.MortarWhistleSFXGO, alteredPitch: false);
             yield return new WaitForSeconds(0.65f);
-            Transform enemyToTrack = null;
 
-            if (PlayerData.instance.defeatedNightmareGrimm && PlayerData.instance.equippedCharm_40)
+            for (int shells = 0; shells < totalShells; shells++)
             {
-                Stats.instance.enemyList.RemoveAll(enemy => enemy == null);
-                int highestHP = -1;
-                //For each enemy in the scene, get the highest health enemy and drop bombs on it, provided they exist and Grimmchild is equipped
-                foreach (GameObject enemy in Stats.instance.enemyList)
-                {
-                    int enemyHP = enemy.GetComponent<HealthManager>().hp;
-                    if (enemyHP > highestHP)
-                    {
-                        highestHP = enemyHP;
-                        enemyToTrack = enemy.transform;
-                    }
-                }
-                totalShells = -1;
+                GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 80, -1f), 0);
+                shellAimPosition += 2 * artyDirection;
+                BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
+                hpbb.fuseTimerXAxis = true;
+                hpbb.ignoreAllCollisions = true;
+                hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(5f, 6f), -0.1f);
+                //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
+                shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
+                shell.SetActive(true);
+                yield return new WaitForSeconds(0.30f);
             }
 
-            if(enemyToTrack != null) //if player is gonna track enemies, call bombs on him
-            {
-                for (int shells = 0; shells < totalShells; shells++)
-                {
-                    GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, enemyToTrack.position + new Vector3(Range(-4, 4), 80, -1f), 0);
-                    BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
-                    hpbb.fuseTimerXAxis = true;
-                    hpbb.ignoreAllCollisions = true;
-                    hpbb.targetDestination = enemyToTrack.position + new Vector3(0, Range(-2f, 2f), -0.1f);
-                    //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
-                    shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.GasExplosion;
-                    shell.SetActive(true);
-                    yield return new WaitForSeconds(0.15f);
-                }
-            }
-            else //use the ordinary creeping barrage attack
-            {
-                for (int shells = 0; shells < totalShells; shells++)
-                {
-                    GameObject shell = HollowPointPrefabs.SpawnBulletAtCoordinate(270, HeroController.instance.transform.position + new Vector3(shellAimPosition, 80, -1f), 0);
-                    shellAimPosition += 2 * artyDirection;
-                    BulletBehaviour hpbb = shell.GetComponent<BulletBehaviour>();
-                    hpbb.fuseTimerXAxis = true;
-                    hpbb.ignoreAllCollisions = true;
-                    hpbb.targetDestination = targetCoordinates + new Vector3(0, Range(5f, 6f), -0.1f);
-                    //shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
-                    shell.AddComponent<BulletIsExplosive>().explosionType = BulletIsExplosive.ExplosionType.ArtilleryShell;
-                    shell.SetActive(true);
-                    yield return new WaitForSeconds(0.30f);
-                }
-            }
         }
 
         IEnumerator QuakeAbility_SporeRelease(int charges)

@@ -252,7 +252,7 @@ namespace HollowPoint
 
             if (pd_instance.equippedCharm_19) //Shaman Stone
             {
-                current_fireRateCooldown *= 0.80f;
+                current_fireRateCooldown *= 0.75f;
                 current_heatPerShot += 10;
             }
 
@@ -260,7 +260,7 @@ namespace HollowPoint
             {
                 current_soulGainedPerKill += 24;
                 current_soulGainedPerHit += 3;
-                current_soulRegenSpeed -= 0.08f;
+                current_soulRegenSpeed -= 0.015f;
                 current_heatPerShot += 15;
                 current_minWeaponSpreadFactor += 3;
             }
@@ -273,6 +273,8 @@ namespace HollowPoint
                 current_heatPerShot += 15f;
             }
 
+            Log("currentFireCooldown " + current_fireRateCooldown);
+
             if (pd_instance.equippedCharm_28) //Shape of Unn
             {
                 current_bulletVelocity *= 1.2f;
@@ -280,9 +282,9 @@ namespace HollowPoint
                 current_minWeaponSpreadFactor -= 3;
             }
 
-            if (pd_instance.equippedCharm_27) //Soul Eater
+            if (pd_instance.equippedCharm_27) //Joni
             {
-                current_soulRegenSpeed -= 0.12f;
+                current_soulRegenSpeed -= 0.033f;
             }
 
             //Dash Master
@@ -323,8 +325,8 @@ namespace HollowPoint
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             if (current_soulCostPerShot < 2) current_soulCostPerShot = 2;
             if (current_walkSpeed < 1) current_walkSpeed = 1;
-            if (current_fireRateCooldown < 0.01f) current_fireRateCooldown = 0.01f;
-            if (current_soulRegenSpeed < 0.01f) current_fireRateCooldown = 0.01f;
+            if (current_fireRateCooldown < 0.01f) current_fireRateCooldown = 0.05f;
+            if (current_soulRegenSpeed < 0.01f) current_soulRegenSpeed = 0.005f;
             if (current_bulletVelocity > 80) current_bulletVelocity = 80;
             if (current_heatPerShot < 1) current_heatPerShot = 1;
             if (current_minWeaponSpreadFactor < 1) current_minWeaponSpreadFactor = 1;
@@ -334,41 +336,24 @@ namespace HollowPoint
 
         void Update()
         {
-            if (slowWalk)
-            {
-                //h_state.inWalkZone = true;
-            }
-            else
-            {
-                //h_state.inWalkZone = false;
-            }
-
-            if (fireRateCooldownTimer >= 0)
-            {
-                fireRateCooldownTimer -= Time.deltaTime * 1f;
-                //canFire = false;
-            }
-            else
-            { 
-                if(!canFire) canFire = true;
-
-                if (usingGunMelee) usingGunMelee = false;
-            }
         }
 
         void FixedUpdate()
         {
+
+            if (fireRateCooldownTimer >= 0)
+            {
+                fireRateCooldownTimer -= Time.deltaTime * 1f;
+            }
+            else
+            {
+                if (!canFire) canFire = true;
+                if (usingGunMelee) usingGunMelee = false;
+            }
+
             if (hc_instance.cState.isPaused || hc_instance.cState.transitioning) return;
 
             //Soul Cartridge Disable Cooldown Time
-            if(adenalineCooldownTimer > 0) adenalineCooldownTimer -= Time.deltaTime * 1f;
-            else if (adrenalineOnCooldown)
-            {
-                IncDecAdrenalineCharges(1);
-                adrenalineOnCooldown = false;          
-                Log("[Stats] Player is now off cooldown");
-            }
-
             if (swapTimer > 0)
             {
                 swapTimer -= Time.deltaTime * 30f;
@@ -438,17 +423,31 @@ namespace HollowPoint
 
         public void IncreaseAdrenalineChargeEnergy()
         {
-            //If the player is on cooldown, disable soul gain
-            if (adrenalineOnCooldown) return;
+
             int energyIncrease = current_energyGainOnHit; //Alter this value later
 
             //Basically once the player is in full adrenaline, slow down the adreline increase by a fraction so that they wont heal too fast
 
             if (adrenalineCharges == 3) energyIncrease = (int)(energyIncrease * current_energyPenalty);
+            switch (pd_instance.fireballLevel)
+            {
+                case 1:
+                    energyIncrease = (int)(energyIncrease * 1f);
+                    break;
+                case 2:
+                    energyIncrease = (int)(energyIncrease * 1.25f);
+                    break;
+                default:
+                    energyIncrease = (int)(energyIncrease * 0.60f);
+                    break;
+            }
+
             adrenalineEnergy += energyIncrease;
 
             if (adrenalineEnergy > 100)
             {
+                Log("Increasing Charges Adrenaline Energy " + adrenalineEnergy);
+                adrenalineEnergy = adrenalineEnergy % 100;
                 //Thorns of Agony
                 if (PlayerData.instance.equippedCharm_12) GameManager.instance.GetComponent<AttackHandler>().SpawnVoidSpikes();
 
@@ -460,13 +459,12 @@ namespace HollowPoint
                 {
                     IncDecAdrenalineCharges(1);
                 }
-                else if(!PlayerData.instance.equippedCharm_29)
+                else if(!pd_instance.equippedCharm_29 || !pd_instance.equippedCharm_27)
                 {
                     int healAmount = (pd_instance.equippedCharm_34) ? 2 : 1;
                     HeroController.instance.AddHealth(healAmount);
                 }
 
-                adrenalineEnergy = 0;
             }
         }
 
@@ -498,8 +496,8 @@ namespace HollowPoint
             //adrenalineEnergy = 0;
             if (consumeAll)
             {
-                adrenalineOnCooldown = true;
-                adenalineCooldownTimer = cooldownOverride;
+                //adrenalineOnCooldown = true;
+                //adenalineCooldownTimer = cooldownOverride;
                 int originalAdrenaline = adrenalineCharges;
                 IncDecAdrenalineCharges(-3);
                 adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
@@ -519,22 +517,27 @@ namespace HollowPoint
             if (recentlyTookDamageTimer > 0) return;
             recentlyTookDamageTimer = 1f;
 
-            int energyLost = 200;
-            int energySum = adrenalineEnergy;
-            if (pd_instance.equippedCharm_8) energyLost -= 80;
-            if (pd_instance.equippedCharm_9) energyLost -= 150;
+            int energyLost = 150;
+            int totalPlayerEnergy = adrenalineCharges * 100 + adrenalineEnergy;
+
+            if (pd_instance.equippedCharm_8) energyLost -= 75;
+            if (pd_instance.equippedCharm_9) energyLost -= 125;
             if (pd_instance.equippedCharm_27) energyLost -= 200;
-            if (energyLost < 0) return;
+            if (energyLost <= 0) return;
 
-            energySum -= energyLost;
+            int energyRemaining = totalPlayerEnergy - energyLost;
+            Log("REMAINING energyRemaining " + energyRemaining);
 
-            int totalAdrenalineToConsume = (int)(energyLost / 100f);
-            int excessEnergyToConsume = energyLost % 100;
+            adrenalineCharges = (int)(energyRemaining / 100f);
+            adrenalineEnergy = energyRemaining % 100;
 
-            adrenalineEnergy -= excessEnergyToConsume;
+            if (adrenalineCharges < 0) adrenalineCharges = 0;
             if (adrenalineEnergy < 0) adrenalineEnergy = 0;
+            Log("REMAINING adrenalineCharges " + adrenalineCharges);
+            Log("REMAINING adrenalineCharges " + adrenalineEnergy);
 
-            ConsumeAdrenalineCharges(consumeAmount: -totalAdrenalineToConsume);
+            adrenalineChargeIcons?.Invoke(adrenalineCharges.ToString());
+            //ConsumeAdrenalineCharges(consumeAmount: -totalAdrenalineToConsume);
         }
 
         void UpdateBloodRushBuffs(float runspeed, float dashcooldown, int soulusage, float timer)
@@ -599,18 +602,7 @@ namespace HollowPoint
 
             if (infusionActivated && current_class == WeaponSubClass.OBSERVER)
             {
-                switch (currentEquippedGun.gunName)
-                {
-                    case WeaponModifierName.DMR:
-                        cooldown = 0.18f;
-                        break;
-                    case WeaponModifierName.SNIPER:
-                        cooldown = 0.45f;
-                        break;
-                    default:
-                        cooldown *= 0.70f;
-                        break;
-                }
+                cooldown *= 0.70f;
             }
 
             fireRateCooldownTimer = -1;
@@ -632,7 +624,6 @@ namespace HollowPoint
                 furyParticle.GetComponent<ParticleSystem>().Play();
                 furyBurst.SetActive(true);
                 
-
                 hc_instance.RUN_SPEED_CH = 12f;
                 hc_instance.RUN_SPEED_CH_COMBO = 14f;
                 hc_instance.SHADOW_DASH_COOLDOWN = (pd_instance.equippedCharm_16)? 1.0f : 1.5f;

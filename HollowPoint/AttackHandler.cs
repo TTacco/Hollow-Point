@@ -95,16 +95,6 @@ namespace HollowPoint
                     //FireGun(FireModes.Burst);
                 }
             }
-            else if (hc_instance.cState.superDashing && !isFiring && WeaponSwapAndStatHandler.instance.currentWeapon == WeaponType.Ranged)
-            {
-                if (Stats.instance.canFire && OrientationHandler.heldAttack)
-                {
-                    Stats.instance.StartFirerateCooldown(cooldownOverride: 4f);
-                    StartCoroutine(FireGAU());
-                    return;
-                }
-
-            }
             else if (!isFiring)
             {
                 hc_instance.WALK_SPEED = 2.5f;
@@ -197,7 +187,7 @@ namespace HollowPoint
             hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
             hpbb.gunUsed = Stats.instance.currentEquippedGun;
 
-            bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+            bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SABOTEUR && Stats.instance.infusionActivated);
             hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
             hpbb.bulletSpeed = (sapperBuffs)? Stats.instance.current_bulletVelocity * 1.20f: Stats.instance.current_bulletVelocity;
             hpbb.piercesEnemy = (Stats.instance.current_weapon == WeaponModifierName.SNIPER || PlayerData.instance.equippedCharm_25);
@@ -235,7 +225,7 @@ namespace HollowPoint
                 hpbb.bulletDegreeDirection = direction;
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
 
-                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SABOTEUR && Stats.instance.infusionActivated);
                 hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
                 hpbb.bulletSpeed = (sapperBuffs) ? Stats.instance.current_bulletVelocity * 1.20f : Stats.instance.current_bulletVelocity;
                 hpbb.piercesEnemy = (PlayerData.instance.equippedCharm_25);
@@ -290,7 +280,7 @@ namespace HollowPoint
                 hpbb.size = Stats.instance.currentEquippedGun.bulletSize;
                 hpbb.piercesEnemy = true;
 
-                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SAPPER && Stats.instance.infusionActivated);
+                bool sapperBuffs = (Stats.instance.current_class == WeaponSubClass.SABOTEUR && Stats.instance.infusionActivated);
                 hpbb.appliesDamageOvertime = (Stats.instance.infusionActivated && PlayerData.instance.equippedCharm_35);
                 hpbb.bulletSpeed = (sapperBuffs) ? Stats.instance.current_bulletVelocity * 1.20f : Stats.instance.current_bulletVelocity;
 
