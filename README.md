@@ -5,7 +5,7 @@ Why did I make this? I wish I knew too.
 
 While this mod is not to be taken seriously, It still aims to make a semi-serious fun ranged weapon mod to capitalize on Hollow Knight's movement system.  
 
-### FEATURES:
+## FEATURES:
 -	Swap between the Nail or the Gun, allowing you range killing power and the ability to fire it at all 8 directions.
 - Ability to set the firing direction, allowing you to stay on target when someones above you.
 - New healing/spell resource: ADRENALINE. Consume ADRENALINE to allow you to use powerful skills. Filling your ADRENALINE completely gives you class specific buffs to help you cover their weakness. When your ADRENALINE meter is full, keep attacking and you will automatically heal, forcing you to play as aggressively as possible.
@@ -23,14 +23,14 @@ charms that were not changed much were either buffed, or found themselves being 
 -	Upgrading your nail also upgrades your gun, allowing them to scale through the game.
 -	New save or loaded save compatibility, as well as uninstallation capability (better back up your saves regardless though).
 
-### What it does NOT do:
+## What it does NOT do:
 - Adds new bosses, sprites, music or modifies any of them.
 - Change charm cost values.
 - Care about lore. 
 - No seriously who cares about the lore.
 
 ________________________________________________________________________________________________________________
-### REQUIREMENTS:
+## REQUIREMENTS:
 NOTE: These can all be easily installed using the Official HK Discord's Modding Installer
 - A legit copy of Hollow Knight on either GOG or Steam
 - Make sure the Modding API correct installs itself when running the installer
@@ -38,12 +38,12 @@ NOTE: These can all be easily installed using the Official HK Discord's Modding 
 - Install and Enable Hollow Point
 ________________________________________________________________________________________________________________
 
-### CONTROLS:
+## CONTROLS:
 **CAST** = Swap between the Nail and the Gun.
 **QUICK CAST** = Use spells, you can now use spells while the gun is equipped.
 
 ________________________________________________________________________________________________________________
-### MECHANICS:
+## MECHANICS:
 ##### Ammo System
 The SOUL gauge is no longer related to spells, **the SOUL gauge is now the gun's pure ammo counter**
 
@@ -72,7 +72,7 @@ Some special charms are capable of giving you an entirely different gun with its
 You can also transfer the current class by a specific charm, that allows you for example, to use an SMG with the Observer abilities, if you equip the Observer transfer charm.
 Note however equipping more than one of these will set you back to the gun's original class.
 ________________________________________________________________________________________________________________
-##### Classes
+## Classes
 These classes changes the abilities that fits their appropriate guns. 
 **Passive** - Automatically actives when you have 3 points in your adrenaline bar. 
 **Down Spell** - Modifies the dive attack (Desolate Dive/Descending Dark), used for defensive means.
@@ -97,7 +97,7 @@ Down Spell: Call in several small yield exploding projectiles on your location.
 Up Spell: Call in a slow sweeping air burst barrage that slowly walks forward to the area the knight is facing. Can harm the player.
 
 ________________________________________________________________________________________________________________
-##### Known Issues (EXTREMELY IMPORTANT TO READ)
+## Known Issues (EXTREMELY IMPORTANT TO READ)
 - Bullets sometimes destroys walls, sometimes they dont. The checks feels inconsistent and I have no idea how TC determines what surfaces should get broken or not. at best just use the nail for these.
 - THK/Pure Vessel sometimes do not get damaged, your bullets will past them on specific attacks, unable to fix.
 - Massive Moss Charger is not affected by bullets, unable to fix, just stab them. 
@@ -105,10 +105,10 @@ ________________________________________________________________________________
 - Creating a new save in Godmaster will not show with the gun. To fix this, simply save the Godmaster save, quick to menu then load it again. You only need to do this once on a fresh save.
 - Some issues posted by users are sometimes very rare and something thats not easy to replicate, if you find an issue, make sure its not due to a vanilla bug or from incompatibility with other mods.
 ________________________________________________________________________________________________________________
-### Possible Q&A:
+## Possible Q&A:
 ##### Q: Why, just why?
 
-A: The massive amount of fan art involving Hollow Knight characters with guns was asking for it and I just had to. Also being able to create a massive high effort shitpost is something I'm proud of.
+A: The massive amount of fan art involving Hollow Knight characters with guns was asking for it and I just had to. Also while this mod did start out as my first modding joke, the reception of something as dumb as this was just too good of an opportunity to pass.
 
 ##### Q: Is this compatible with mod X or Y?
 
