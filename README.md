@@ -40,11 +40,11 @@ NOTE: These can all be easily installed using the Official HK Discord's Modding 
 **QUICK CAST** = Use spells, you can now use spells while the gun is equipped.
 
 ## MECHANICS:
-#### Ammo System
+#### *Ammo System*
 The SOUL gauge is no longer related to spells, **the SOUL gauge is now the gun's pure ammo counter**
 
 
-#### Adrenaline, Healing and Infusion
+#### *Adrenaline, Healing and Infusion*
 To promote more aggression, the healing system is changed along with the spells. you instead have an ADRENALINE bar, denoted by 3 dots on your HUD.
 To gain adrenaline, simply keep attacking the enemy, **getting hit by enemies also makes you lose them**, so watch out.
 
@@ -55,18 +55,18 @@ To heal, you need to charge up your adrenaline to max (3 points), while at its m
 In addition, staying on 3 adrenaline points gives you a small buff depending on the charm or class you currently have.
 
 
-#### Fire Mode
+#### *Fire Mode*
 Tapping cast when it would normally use fireball will now **swap your fire mode**, there are 2 fire mode types
 1. Omnidirectional = Denoted by an 8 pointed arrow, this means you will fire at all 8 directions.
 2. Cardinal = Denoted by a 4 pointed arrow, you will only fire at 4 directions, useful for accurate firing on the move.
 NOTE: You do not need Vengeful Spirit/Fireball to change this.
 
 
-#### Nail Arts/Dagger Arts
+#### *Nail Arts/Dagger Arts*
 You will notice a dagger icon at the top, this just means you can use Dagger Arts. Using Nail/Dagger arts will cause to start a cooldown, the cooldown depends on the art itself.
 
 
-#### Weapon Conversion Kits and Class Transfers
+#### *Weapon Conversion Kits and Class Transfers*
 Some special charms are capable of giving you an entirely different gun with its own properties. These guns are capable of changing your currently class.
 **You may only carry one of these conversion kits, equipping more than one will prevent you from firing**. 
 You can also transfer the current class by a specific charm, that allows you for example, to use an SMG with the Observer abilities, if you equip the Observer transfer charm.
@@ -74,8 +74,11 @@ Note however equipping more than one of these will set you back to the gun's ori
 
 ## CLASSES
 These classes changes the abilities that fits their appropriate guns. 
+
 **Passive** - Automatically actives when you have 3 points in your adrenaline bar. 
+
 **Down Spell** - Modifies the dive attack (Desolate Dive/Descending Dark), used for defensive means.
+
 **Up Spell** - Modifies the scream attack (Howling Wraiths/Abyss Shriek), used for offensive means.
 
 **BREACHER:** Focuses on close range combat, using high damaging but slow charging weapons.
