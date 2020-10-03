@@ -3,66 +3,112 @@
 A Hollow Knight mod that gives the Knight the ability to wield a modern day assault rifle.
 Why did I make this? I wish I knew too.
 
-While this mod is not to be taken seriously, It still attempts to keep a semblance of balance while being fun to play without it ending up as a 5 minute gimmick, at least thats what I hope im doing.
-
+While this mod is not to be taken seriously, It still aims to make a semi-serious fun ranged weapon mod to capitalize on Hollow Knight's movement system.  
 
 ### FEATURES:
--	The knight now has a rifle capable of firing at all 8 cardinal directions.
--	Firing your weapon while wall sliding.
--	New save or loaded save compatibility, as well as uninstallation capability (better back up your saves regardless though).
--	Firing costs SOUL, but hitting regains more than the cost, so don’t miss your shots.
+-	Swap between the Nail or the Gun, allowing you range killing power and the ability to fire it at all 8 directions.
+- Ability to set the firing direction, allowing you to stay on target when someones above you.
+- New healing/spell resource: ADRENALINE. Consume ADRENALINE to allow you to use powerful skills. Filling your ADRENALINE completely gives you class specific buffs to help you cover their weakness. When your ADRENALINE meter is full, keep attacking and you will automatically heal, forcing you to play as aggressively as possible.
+-	Replaces/modifies base spells that changes depending on what special weapon you carry, effectively creating a small class system for added flavor.
+  1. BREACHER, Applies close range weapons such as SMGs, Shotguns and spells meant to kill enemies as quickly as possible. 
+  2. SABOTEUR, Balanced class carrying large capacity, quick charging weaponry and wide range chemicals for drawn out fights. (Default Class)
+  3. OBSERVER, Heavy hitting class capable of using long range precision weapons and calling in airstrikes.
+-	Passive soul regeneration, soul gained upon killing or damaging enemy, damage scaling, etc and more stats that differs from weapon to weapon.
 -	Any damage you deal with your bullets will reset your dash/double jump, allowing you to stay on air as long as you keep hitting enemies.
 - Firing below propels you! Use this to keep afloat above enemies while you pepper them, stay mobile during a fight or access areas you normally cant.
 -	Heat and recoil mechanics, the longer you fire the more innacurate youll be, forcing you to fire at burst against farther targets.
--	Several (about 70%+) charms that was modified to fit the gun mechanics (These charms are still subject to change including the ones that don’t have any changes yet, until I get a good idea of how they should be changed. **Not all charms will be changed for the sake of changing them, but I do want to modify all of it to fit inline thematically, or at least to balance them out with the rest**).
--	Replaces/modifies base spells to fit them both more inline mechanically and thematically.
--	Modifies nail damage and soul gain to fit better without being inherently useless. **Upgrading your nail upgrades both your weapon range and damage**.
-- Terrible obviously made excuse plot made to explain both the shard and the gun that was inspired from S.T.A.L.K.E.R.
+-	80% of charms changed to mesh with the gun mechanics. These includes charms that gives you powerful buffs, weapon changing charms or defensive charms.
+charms that were not changed much were either buffed, or found themselves being more effective tools for long range combat.
+- Nail arts now have their own different abilities, giving them ranged power when you lack the ammunition to fight back.
+-	Upgrading your nail also upgrades your gun, allowing them to scale through the game.
+-	New save or loaded save compatibility, as well as uninstallation capability (better back up your saves regardless though).
 
 ### What it does NOT do:
--	Contain changes to nail arts for now but I do have plans to not leave them behind the ditch.
-- Touch dialogues of NPCs outside of charms and skills. (Might change some of them though just to keep it inline with the gun)
-- Add new bosses, sprites, music or modifies any of them.
+- Adds new bosses, sprites, music or modifies any of them.
 - Change charm cost values.
 - Care about lore. 
+- No seriously who cares about the lore.
 
+________________________________________________________________________________________________________________
+### REQUIREMENTS:
+NOTE: These can all be easily installed using the Official HK Discord's Modding Installer
+- A legit copy of Hollow Knight on either GOG or Steam
+- Make sure the Modding API correct installs itself when running the installer
+- Install and Enable "ModCommon"
+- Install and Enable Hollow Point
 ________________________________________________________________________________________________________________
 
 ### CONTROLS:
-**Tapping the focus button no longer cast spells, instead they swap between the nail or the gun. Quick cast is now the required button needed to cast “spells”, but the Focus mechanic still works the same.**
-
-- FIREBALL (Vengeful Spirit/Shade Soul) = ROCKET LAUNCH
-REQUIRES **GUN** TO BE ACTIVE - 
-Launch a rocket, requires 33 soul. Can be fired in all direction 
-Explosion scales off nail damage.
-
-- DIVE (Desolate Dive/Descending Dark) = TYPHOON SCATTER
-REQUIRES **NAIL** TO BE ACTIVE -
-Dive is still the same, requires 33 soul. Will now scatter weak bombs around you if you press ATTACK the moment you hit the ground, for an additional 33 soul. Designed to eliminate weaker enemies that surrounds you. Totally did not ripoff the Typhoon skill from Deus Ex, totally.
-
-- SCREAM (Howling Wraith/Abyss Shriek) = ACTIVATE SHARD
-REQUIRES **NAIL** TO BE ACTIVE -
-After activating artifact/scream ability (Tap + Up), notice that you will glow indicating that the ability is now active, Tap + Up again to disable this, casting any of the following ability requires 1 Shard power, which is refilled by sitting on the bench. (Later to also refill by doing enough damage)
-
-
-**While Shard is activated, Tap ATTACK while wielding the NAIL for INFUSION**
-
-INFUSION buffs you for a couple of seconds. The buff passively gives you soul for its duration (8 seconds), though its duration and effects can change depending on certain charms (make you dash more often, run faster, etc). Designed to accomodate builds that heavily uses soul.
-
-**While Shard is activated, Tap ATTACK while wielding the GUN for BOMBARDMENT**
-
-Fire a flare at a target, immediately launch several missiles that will track an enemy it hits, or at a surface. Your own explosive can and will damage you.
+**CAST** = Swap between the Nail and the Gun.
+**QUICK CAST** = Use spells, you can now use spells while the gun is equipped.
 
 ________________________________________________________________________________________________________________
+### MECHANICS:
+##### Ammo System
+The SOUL gauge is no longer related to spells, **the SOUL gauge is now the gun's pure ammo counter**
 
-### Q&A:
+##### Adrenaline, Healing and Infusion
+To promote more aggression, the healing system is changed along with the spells. you instead have an ADRENALINE bar, denoted by 3 dots on your HUD.
+To gain adrenaline, simply keep attacking the enemy, **getting hit by enemies also makes you lose them**, so watch out.
+
+You have a maximum of 3 Adrenaline points, and using spells will always consume all of it. The more Adrenaline consumed, the stronger your spell would be (for example, an OBSERVER class will call 3 extra artillery barrages for every point spent)
+
+To heal, you need to charge up your adrenaline to max (3 points), while at its maximum, your adrenaline can still charge albeit at a slower rate. During this, damaging and charging while at full power will grant you 1 mask instead, **that means you can heal yourself back from 1 mask to full as long as you keep doing damage at max adrenaline charge.**
+
+In addition, staying on 3 adrenaline points gives you a small buff depending on the charm or class you currently have.
+
+##### Fire Mode
+Tapping cast when it would normally use fireball will now **swap your fire mode**, there are 2 fire mode types
+1. Omnitdirectional = Denoted by an 8 pointed arrow, this means you will fire at all 8 directions.
+2. Cardinal = Denoted by a 4 pointed arrow, you will only fire at 4 directions, useful for accurate firing on the move.
+NOTE: You do not need Vengeful Spirit/Fireball to change this.
+
+##### Nail Arts/Dagger Arts
+You will notice a dagger icon at the top, this just means you can use Dagger Arts. Using Nail/Dagger arts will cause to start a cooldown, the cooldown depends on the art itself.
+
+##### Weapon Conversion Kits and Class Transfers
+Some special charms are capable of giving you an entirely different gun with its own properties. These guns are capable of changing your currently class.
+**You may only carry one of these conversion kits, equipping more than one will prevent you from firing**. 
+You can also transfer the current class by a specific charm, that allows you for example, to use an SMG with the Observer abilities, if you equip the Observer transfer charm.
+Note however equipping more than one of these will set you back to the gun's original class.
+________________________________________________________________________________________________________________
+##### Classes
+These classes changes the abilities that fits their appropriate guns. 
+**Passive** - Automatically actives when you have 3 points in your adrenaline bar. 
+**Down Spell** - Modifies the dive attack (Desolate Dive/Descending Dark), used for defensive means.
+**Up Spell** - Modifies the scream attack (Howling Wraiths/Abyss Shriek), used for offensive means.
+
+**BREACHER:** Focuses on close range combat, using high damaging but slow charging weapons.
+Weapons: SMG and Shotgun
+Passive: Increases SOUL generation.
+Down Spell: Eject several shrapnel that can tear apart close enemies.
+Up Spell: Loads you up with terrain piercing ammunition, automatically firing and shooting at nearby enemies that get close.
+
+**SABOTEUR** Uses a balanced approach to combat, carrying gas abilities that helps with prolonged fights.
+Weapons: Rifle (Default Gun), Carbine and Light Machine Gun.
+Passive: Imrpove the chemical components of your gun, increasing slightly increasing their velocity and damage.
+Down Spell: Release a gas pulse useful for enemies that get to close.
+Up Spell: Call in a storm of sulphur, scattering the entire screen with dung bombs.
+
+**OBSERVER:** Uses hard hitting long range weapons, together with powerful airstrikes.
+Weapons: Designated Marksman's Rifle and Sniper Rifle.
+Passive: Slightly increases firerate.
+Down Spell: Call in several small yield exploding projectiles on your location.
+Up Spell: Call in a slow sweeping air burst barrage that slowly walks forward to the area the knight is facing. Can harm the player.
+
+________________________________________________________________________________________________________________
+##### Known Issues (EXTREMELY IMPORTANT TO READ)
+- Bullets sometimes destroys walls, sometimes they dont. The checks feels inconsistent and I have no idea how TC determines what surfaces should get broken or not. at best just use the nail for these.
+- THK/Pure Vessel sometimes do not get damaged, your bullets will past them on specific attacks, unable to fix.
+- Massive Moss Charger is not affected by bullets, unable to fix, just stab them. 
+- Gas attacks dont affect mosskin enemies, doesnt work either on vanilla, im not sure if this is a vanilla bug or a feature due to lore reasons. 
+- Creating a new save in Godmaster will not show with the gun. To fix this, simply save the Godmaster save, quick to menu then load it again. You only need to do this once on a fresh save.
+- Some issues posted by users are sometimes very rare and something thats not easy to replicate, if you find an issue, make sure its not due to a vanilla bug or from incompatibility with other mods.
+________________________________________________________________________________________________________________
+### Possible Q&A:
 ##### Q: Why, just why?
 
 A: The massive amount of fan art involving Hollow Knight characters with guns was asking for it and I just had to. Also being able to create a massive high effort shitpost is something I'm proud of.
-
-##### Q: What the hell is the shard supposed to be?
- 
-A: Inspired from S.T.A.L.K.E.R. where weird radioactive artifacts give special properties and bonuses to whoever carries them (with the sole problem that they emit radiation). In the case for this mod, its used as an excuse to call cast/manifest/conjure/etc soul regen buffs or artillery strikes.
 
 ##### Q: Is this compatible with mod X or Y?
 
@@ -71,6 +117,10 @@ A: So far QOL, RANDOMIZER, HP Bars works without any weird oddities, but while i
 ##### Q: Is this safe to Install/Uninstall on an existing save?
 
 A: Should be, this mod loads all of its stuff on the fly when you load/make a new save and it doesn’t do anything that would permanently affect the game. THAT SAID, you should ALWAYS backup your save when using mods. This applies to any mod really, better safe than sorry.
+
+##### Q: Why did you change the resource system for the spells/healing?
+
+A:  Due to some technical difficulty with the game's system, I found it easier to just make an entirely new resources meter. As for the healing system, I made it so because I wanted to promote the player to play as aggressively as they can, and to minimize the downtime of fights. If this ends up making the mod too hard to be unfun, then I am more than willing to do some adjustments.
 
 ##### Q: I think __________ can be improved/ and here’s my suggestion.
 
