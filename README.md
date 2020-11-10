@@ -23,6 +23,7 @@ ________________________________________________________________________________
 charms that were not changed much were either buffed, or found themselves being more effective tools for long range combat.
 - Nail arts now have their own different abilities, giving them ranged power when you lack the ammunition to fight back.
 -	Upgrading your nail also upgrades your gun, allowing them to scale through the game.
+- **CAN HAS CHANGES ON THE PLAYERDATA** so uninstalling on an existing save may not be safe or compatible, backup your saves!. 
 
 ## What it does NOT do:
 - Adds new bosses, sprites, music or modifies any of them.
