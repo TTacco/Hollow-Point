@@ -4,6 +4,10 @@ A Hollow Knight mod that gives the Knight the ability to wield a modern day assa
 Why did I make this? I wish I knew too.
 
 While this mod is not to be taken seriously, It still aims to make a semi-serious fun ranged weapon mod to capitalize on Hollow Knight's movement system.  
+
+
+**AUTHOR'S NOTE: Due to personal reasons like burnout and motivation, I might not be able to fix all the bugs so PLEASE READ THE ISSUES LIST BELOW BEFORE ASKING QUESTIONS ABOUT IT**
+
 ________________________________________________________________________________________________________________
 
 ## FEATURES:
@@ -19,14 +23,12 @@ ________________________________________________________________________________
 charms that were not changed much were either buffed, or found themselves being more effective tools for long range combat.
 - Nail arts now have their own different abilities, giving them ranged power when you lack the ammunition to fight back.
 -	Upgrading your nail also upgrades your gun, allowing them to scale through the game.
--	New save or loaded save compatibility, as well as uninstallation capability (better back up your saves regardless though).
 
 ## What it does NOT do:
 - Adds new bosses, sprites, music or modifies any of them.
 - Change charm cost values.
 - Care about lore. 
 - No seriously who cares about the lore.
-
 ________________________________________________________________________________________________________________
 ## REQUIREMENTS:
 NOTE: These can all be easily installed using the Official HK Discord's Modding Installer
@@ -37,7 +39,9 @@ NOTE: These can all be easily installed using the Official HK Discord's Modding 
 
 ## CONTROLS:
 **CAST** = Swap between the Nail and the Gun.
+**FOCUS** = Quick reload, consume adrenaline to reload your gun.
 **QUICK CAST** = Use spells, you can now use spells while the gun is equipped.
+
 
 ## MECHANICS:
 #### - *Ammo System*
@@ -102,11 +106,17 @@ Up Spell: Call in a slow sweeping air burst barrage that slowly walks forward to
 ________________________________________________________________________________________________________________
 
 ## Known Issues (EXTREMELY IMPORTANT TO READ)
+MAJOR ISSUES:
+- **Backing up your save is highly recommended**, due to some code changes left over modifications stay on the save file and I dont have the time anymore to fix it in the near future. This is mostly related to the focusing cost so please, please, please backup your saves first before installing it in an existing save so you wont end up needing to modifying your save just to fix it. **If you have the focus bug on your save file with the mod uninstalled, you'll need to manually edit your save file to the default values.** 
+- **This mod doesnt work on a new save**, To fix this you must first create the new save, quit to main menu, and load the save again. This will then make the mod work as intended, this applies to both Regular and Godmaster new saves. 
+- **This mod DOES work with Randomizer but be wary of the same issues above**, you first need create a Rando save with Hollow Point DISABLED, quit the game, ENABLE Hollow Point, start the game (with both Rando and Hollow Point enabled) and you can now load the Rando save with Hollow Point completely working. (Otherwise, creating a new Rando save with Hollow Point enabled tends to crash the game)
+
+MINOR ISSUES:
+- Due to the wonky nature of the game, some objects have issues with colliding such as the Pure Vessel and MMC examples below. To compensate for this, nail base damage is set to a lower value but the scaling is increased, meaning the nail is significantly weaker early game but gets a higher benefit per nail upgrade than in the vanilla game.
 - Bullets sometimes destroys walls, sometimes they dont. The checks feels inconsistent and I have no idea how TC determines what surfaces should get broken or not. at best just use the nail for these.
 - THK/Pure Vessel sometimes do not get damaged, your bullets will past them on specific attacks, unable to fix.
 - Massive Moss Charger is not affected by bullets, unable to fix, just stab them. 
 - Gas attacks dont affect mosskin enemies, doesnt work either on vanilla, im not sure if this is a vanilla bug or a feature due to lore reasons. 
-- Creating a new save in Godmaster will not show with the gun. To fix this, simply save the Godmaster save, quick to menu then load it again. You only need to do this once on a fresh save.
 - Some issues posted by users are sometimes very rare and something thats not easy to replicate, if you find an issue, make sure its not due to a vanilla bug or from incompatibility with other mods.
 
 ________________________________________________________________________________________________________________
