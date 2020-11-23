@@ -23,7 +23,7 @@ ________________________________________________________________________________
 charms that were not changed much were either buffed, or found themselves being more effective tools for long range combat.
 - Nail arts now have their own different abilities, giving them ranged power when you lack the ammunition to fight back.
 -	Upgrading your nail also upgrades your gun, allowing them to scale through the game.
-- **CAN HAS CHANGES ON THE PLAYERDATA** so uninstalling on an existing save may not be safe or compatible, backup your saves!. 
+- **CONTAINS CHANGES TO THE PLAYER** so uninstalling on an existing save may not be safe or compatible, backup your saves!. Instructions of how to fix detailed below the Issues tab.
 
 ## What it does NOT do:
 - Adds new bosses, sprites, music or modifies any of them.
@@ -87,15 +87,15 @@ These classes changes the abilities that fits their appropriate guns.
 **Up Spell** - Modifies the scream attack (Howling Wraiths/Abyss Shriek), used for offensive means.
 
 **BREACHER:** Focuses on close range combat, using high damaging but slow charging weapons.
-Weapons: SMG and Shotgun
+Weapons: SMG and Shotgun.
 Passive: Increases SOUL generation.
 Down Spell: Eject several shrapnel that can tear apart close enemies.
-Up Spell: Loads you up with terrain piercing ammunition, automatically firing and shooting at nearby enemies that get close.
+Up Spell: Loads you up with terrain piercing ammunition, automatically firing and shooting at nearby enemies that gets close.
 
 **SABOTEUR** Uses a balanced approach to combat, carrying gas abilities that helps with prolonged fights.
 Weapons: Rifle (Default Gun), Carbine and Light Machine Gun.
-Passive: Imrpove the chemical components of your gun, increasing slightly increasing their velocity and damage.
-Down Spell: Release a gas pulse useful for enemies that get to close.
+Passive: Improve the chemical components of your gun, slightly increasing your bullet's velocity and damage.
+Down Spell: Release a gas pulse useful for enemies that get too close.
 Up Spell: Call in a storm of sulphur, scattering the entire screen with dung bombs.
 
 **OBSERVER:** Uses hard hitting long range weapons, together with powerful airstrikes.
@@ -109,6 +109,9 @@ ________________________________________________________________________________
 ## Known Issues (EXTREMELY IMPORTANT TO READ)
 MAJOR ISSUES:
 - **Backing up your save is highly recommended**, due to some code changes left over modifications stay on the save file and I dont have the time anymore to fix it in the near future. This is mostly related to the focusing cost so please, please, please backup your saves first before installing it in an existing save so you wont end up needing to modifying your save just to fix it. **If you have the focus bug on your save file with the mod uninstalled, you'll need to manually edit your save file to the default values.** 
+
+FIXX: To fix your file all you have to is use a save editor (search for one, but most quick and convenient would be Bloodorca's online save editor), find the line **focusMP_amount: ##** and make sure its set to 33, so **"focusMP_amount:" 33**, this should fix your focusing upon uninstalling.
+
 - **This mod doesnt work on a new save**, To fix this you must first create the new save, quit to main menu, and load the save again. This will then make the mod work as intended, this applies to both Regular and Godmaster new saves. 
 - **This mod DOES work with Randomizer but be wary of the same issues above**, you first need create a Rando save with Hollow Point DISABLED, quit the game, ENABLE Hollow Point, start the game (with both Rando and Hollow Point enabled) and you can now load the Rando save with Hollow Point completely working. (Otherwise, creating a new Rando save with Hollow Point enabled tends to crash the game)
 
