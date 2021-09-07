@@ -1,6 +1,6 @@
 # HOLLOW POINT
 
-I know defer ownership to Knightmere so uhh bother him
+**I know defer ownership to Knightmere so uhh bother him**
 
 A Hollow Knight mod that gives the Knight the ability to wield a modern day assault rifle.
 Why did I make this? I wish I knew too.
