@@ -359,14 +359,18 @@ namespace HollowPoint
 
         void Update()
         {
-            if (parent == null && !toBeDestroyed)
+            if (parent == null)
             {
-                toBeDestroyed = true;
-                //Log("BulletBehaviour:FireballParticlesProperties Parent gone, behaviour will destroy itself in a bit");
-                particleSystem.Stop();
-                Destroy(gameObject, 2.7f);
+                if (!toBeDestroyed)
+                {
+                    toBeDestroyed = true;
+                    //Log("BulletBehaviour:FireballParticlesProperties Parent gone, behaviour will destroy itself in a bit");
+                    particleSystem.Stop();
+                    Destroy(gameObject, 2.7f);
+                }
             }
-            gameObject.transform.position = parent.transform.position;
+            else
+                gameObject.transform.position = parent.transform.position;
         }
 
         void OnDestroy()

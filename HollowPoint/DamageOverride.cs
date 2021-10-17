@@ -200,14 +200,14 @@ namespace HollowPoint
 
             GameObject HitPrefab = Mirror.GetField<HealthManager, GameObject>(targetHP, "strikeNailPrefab");
             GameObject ImpactPrefab = Mirror.GetField<HealthManager, GameObject>(targetHP, "slashImpactPrefab");
-            Vector3? effectOrigin = Mirror.GetField<HealthManager, Vector3?>(targetHP, "effectOrigin");
+            Vector3 effectOrigin = Mirror.GetField<HealthManager, Vector3>(targetHP, "effectOrigin");
             if (HitPrefab != null && effectOrigin != null)
             {
-                HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+                HitPrefab.Spawn(targetHP.transform.position + effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
             if (ImpactPrefab != null && effectOrigin != null)
             {
-                ImpactPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
+                ImpactPrefab.Spawn(targetHP.transform.position + effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
             }
             SpriteFlash f = targetHP.gameObject.GetComponent<SpriteFlash>();
             if (f != null) f.flashWhiteQuick();
@@ -240,9 +240,9 @@ namespace HollowPoint
                 return;
             }
 
-            bool? hasAlternateHitAnimation = Mirror.GetField<HealthManager, bool?>(targetHP, "hasAlternateHitAnimation");
+            bool hasAlternateHitAnimation = Mirror.GetField<HealthManager, bool>(targetHP, "hasAlternateHitAnimation");
             string alternateHitAnimation = Mirror.GetField<HealthManager, string>(targetHP, "alternateHitAnimation");
-            if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
+            if (/*hasAlternateHitAnimation != null && */hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
             {
                 targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);
             }
