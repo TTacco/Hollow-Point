@@ -192,8 +192,8 @@ namespace HollowPoint
              */
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-            GameObject sendHitGO = Mirror.GetField<HealthManager, GameObject>(targetHP, "sendHitGO");
-            if (sendHitGO != null)
+            GameObject sendHitTo = Mirror.GetField<HealthManager, GameObject>(targetHP, "sendHitTo");
+            if (sendHitTo != null)
             {
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
@@ -219,7 +219,7 @@ namespace HollowPoint
 
             // Actually do damage to target.
             LoadAssets.sfxDictionary.TryGetValue("enemyhurt" + rand.Next(1, 4) + ".wav", out AudioClip hurtSound);
-            HeroController.instance.spellControl.gameObject.GetComponent<AudioSource>().PlayOneShot(hurtSound);
+            HeroController.instance.GetComponent<AudioSource>().PlayOneShot(hurtSound);
 
             if (targetHP.damageOverride)
             {

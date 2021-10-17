@@ -209,7 +209,7 @@ namespace HollowPoint
                     gunSpriteRenderer.sprite = sprites.Item1;
                     return;
                 }
-                else if ((int)wt < 7)
+                else if ((int)currentEquippedGun.gunName < 7)
                     gunNameLowerCaps = currentEquippedGun.gunName.ToString().ToLower();
                 else
                     gunNameLowerCaps = "rifle";
