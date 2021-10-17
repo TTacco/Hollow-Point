@@ -3,18 +3,34 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace HollowPoint
 {
     public static class CustomWeapons
     {
         internal static List<CustomGun> CustomGuns = new List<CustomGun>();
-        public static void AddWeapon(Gun gunSettings, Func<bool> useGun, bool overrideOriginal)
-            => AddWeapon(new CustomGun(gunSettings, useGun, overrideOriginal));
-        public static void AddWeapon(Gun gunSettings, int charmNum, bool overrideOriginal)
-            => AddWeapon(new CustomGun(gunSettings, charmNum, overrideOriginal));
+        internal static Dictionary<int, (Sprite, Sprite)> CustomSprites = new Dictionary<int, (Sprite, Sprite)>();
         public static void AddWeapon(CustomGun gunSettings)
             => CustomGuns.Add(gunSettings);
+        public static int ReserveSpriteSlot()
+        {
+            int slot = CustomSprites.Count + 7;
+            CustomSprites.Add(slot, (null, null));
+            return slot;
+        }
+        public static void SetGunSprite(int slot, Sprite s)
+        {
+            var tuple = CustomSprites[slot];
+            tuple.Item1 = s;
+            CustomSprites[slot] = tuple;
+        }
+        public static void SetBulletSprite(int slot, Sprite s)
+        {
+            var tuple = CustomSprites[slot];
+            tuple.Item2 = s;
+            CustomSprites[slot] = tuple;
+        }
     }
     public enum CustomGunType
     {

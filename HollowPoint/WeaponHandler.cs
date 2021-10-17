@@ -85,7 +85,7 @@ namespace HollowPoint
                 overridenOriginal = overridenOriginal || gunSettings.overrideOriginal;
             }
 
-            bool incompatible = !overridenOriginal || passedGuns + intersectedCharmsCount > 1;
+            bool incompatible = !overridenOriginal && passedGuns + intersectedCharmsCount > 1;
 
             if (incompatible)
             {
@@ -203,7 +203,16 @@ namespace HollowPoint
             {
                 if (gunSpriteRenderer == null) gunSpriteRenderer = HollowPointSprites.gunSpriteGO.GetComponent<SpriteRenderer>();
 
-                string gunNameLowerCaps = currentEquippedGun.gunName.ToString().ToLower();
+                string gunNameLowerCaps;
+                if (CustomWeapons.CustomSprites.TryGetValue((int)wt, out var sprites))
+                {
+                    gunSpriteRenderer.sprite = sprites.Item1;
+                    return;
+                }
+                else if ((int)wt < 7)
+                    gunNameLowerCaps = currentEquippedGun.gunName.ToString().ToLower();
+                else
+                    gunNameLowerCaps = "rifle";
                 spriteName = "weapon_sprite_" + gunNameLowerCaps;
                 spriteName += (wt == WeaponType.Ranged) ? ".png" : "_nohands.png";
 

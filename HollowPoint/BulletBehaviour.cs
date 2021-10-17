@@ -115,6 +115,10 @@ namespace HollowPoint
             {
                 bulletSpriteRenderer.sprite = HollowPointPrefabs.projectileSprites["sprite_bullet_" + bulletSprite.ToString() + ".png"];
             }
+            else if (CustomWeapons.CustomSprites.TryGetValue((int)Stats.instance.current_weapon, out var tuple) && tuple.Item2)
+            {
+                bulletSpriteRenderer.sprite = tuple.Item2;
+            }
 
             //Particle Effects
 
