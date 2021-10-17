@@ -7,10 +7,9 @@ using MonoMod.Utils;
 using MonoMod;
 using static Modding.Logger;
 using Modding;
-using ModCommon;
-using ModCommon.Util;
 using Object = UnityEngine.Object;
 using static HollowPoint.HollowPointEnums;
+using Vasi;
 
 namespace HollowPoint
 {
@@ -62,7 +61,7 @@ namespace HollowPoint
 
             hc_instance = HeroController.instance;
             h_state = HeroController.instance.cState;
-            knight = HeroController.instance.GetAttr<Rigidbody2D>("rb2d");
+            knight = HeroController.instance.GetComponent<Rigidbody2D>();
             damageNumberTestGO = new GameObject("damageNumberTESTCLONE", typeof(Text), typeof(CanvasRenderer), typeof(RectTransform));
             DontDestroyOnLoad(damageNumberTestGO);
         }
@@ -385,20 +384,20 @@ namespace HollowPoint
             if (HeroController.instance.cState.facingRight)
             {
                 //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
-                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                Mirror.SetField<HeroController, int>(HeroController.instance, "recoilSteps", 0);
                 HeroController.instance.cState.recoilingLeft = true;
                 HeroController.instance.cState.recoilingRight = false;
-                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+                Mirror.SetField<HeroController, bool>(HeroController.instance, "recoilLarge", true);
 
                 knight.velocity = new Vector2(-xDeg, yDeg);
             }
             else
             {
                 //Modding.Logger.Log(HeroController.instance.GetAttr<float>("RECOIL_HOR_VELOCITY"));
-                HeroController.instance.SetAttr<int>("recoilSteps", 0);
+                Mirror.SetField<HeroController, int>(HeroController.instance, "recoilSteps", 0);
                 HeroController.instance.cState.recoilingLeft = false;
                 HeroController.instance.cState.recoilingRight = true;
-                HeroController.instance.SetAttr<bool>("recoilLarge", true);
+                Mirror.SetField<HeroController, bool>(HeroController.instance, "recoilLarge", true);
 
                 knight.velocity = new Vector2(xDeg, yDeg);
             }

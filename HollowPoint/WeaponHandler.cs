@@ -6,7 +6,7 @@ using UnityEngine;
 using GlobalEnums;
 using static HollowPoint.HollowPointEnums;
 using static Modding.Logger;
-using ModCommon.Util;
+using Vasi;
 
 
 namespace HollowPoint
@@ -154,7 +154,7 @@ namespace HollowPoint
                  * on animation because even at 0 animation time, sometimes they play for a quarter of a milisecond
                  * thus giving that weird head jerk anim playing on the knight */
 
-                HeroController.instance.SetAttr<float>("attack_cooldown", 0.1f);
+                Mirror.SetField<HeroController, float>(HeroController.instance, "attack_cooldown", 0.1f);
                 instance.SwapBetweenNail();
                 AudioHandler.instance.PlayDrawHolsterSound("holster");
             }
@@ -184,6 +184,7 @@ namespace HollowPoint
             catch(Exception e)
             {
                 Log("[WeaponHandler] Cannot find texture of the name " + spriteName);
+                Log("Exception: " + e);
             }
         }
 

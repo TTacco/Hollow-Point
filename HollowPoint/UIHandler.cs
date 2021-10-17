@@ -2,12 +2,10 @@
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.UI.Extensions;
-using ModCommon;
 using GlobalEnums;
 using Modding.Menu;
 using System.Collections;
 using System.Collections.Generic;
-using ModCommon.Util;
 using System;
 using TMPro;
 
@@ -48,8 +46,6 @@ namespace HollowPoint
 
             try
             {
-                CanvasUtil.CreateFonts();
-
                 canvas = CanvasUtil.CreateCanvas(RenderMode.ScreenSpaceOverlay, new Vector2(1920, 1080));
 
                 canvasGroup = canvas.GetComponent<CanvasGroup>();
@@ -270,7 +266,7 @@ namespace HollowPoint
         public static void ShowDamageNumbers(string damage, HealthManager target, Color c)
         {
 
-            return;
+            // return; commented so vs doesn't yell at me. this is unused so it doesn't matter
             try
             {
                 if (damageNumberGO == null)

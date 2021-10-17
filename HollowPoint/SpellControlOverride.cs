@@ -2,7 +2,6 @@
 using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
-using ModCommon.Util;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
 using static UnityEngine.Random ;
@@ -11,6 +10,7 @@ using static HollowPoint.HollowPointEnums;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using System.Reflection;
+using Vasi;
 
 
 namespace HollowPoint
@@ -64,8 +64,8 @@ namespace HollowPoint
             soulOrbFSM = GameManager.instance.soulOrb_fsm;
             //Array.ForEach<FsmState>(soulOrb.FsmStates, x => Log("FSM Soul Orb : " + x.Name));
             //Array.ForEach<NamedVariable>(soulOrbFSM.FsmVariables.GetAllNamedVariables(), x => Log("FSM Soul Orb Vars : " + x.Name));
-            soulOrbFSM.RemoveAction("Can Heal 2", 4);
-            soulOrbFSM.RemoveAction("Can Heal 2", 3);
+            soulOrbFSM.GetState("Can Heal 2").RemoveAction(4);
+            soulOrbFSM.GetState("Can Heal 2").RemoveAction(3);
             //PlayerData.instance.focusMP_amount = 15;
         }
 
@@ -106,7 +106,7 @@ namespace HollowPoint
                 glowingWombFSM = GameObject.Find("Charm Effects").LocateMyFSM("Hatchling Spawn");
                 glowingWombFSM.GetAction<IntCompare>("Can Hatch?", 2).integer2.Value = 0;
                 glowingWombFSM.GetAction<Wait>("Equipped", 0).time.Value = 2.5f;
-                glowingWombFSM.RemoveAction("Hatch", 0); //Removes the soul consume on spawn
+                glowingWombFSM.GetState("Hatch").RemoveAction(0); //Removes the soul consume on spawn
            
                 //Modifies Heal Amount, Heal Cost and Heal Speed
                 spellControlFSM.GetAction<SetIntValue>("Set HP Amount", 0).intValue = 0; //Heal Amt
@@ -131,167 +131,62 @@ namespace HollowPoint
                 spellControlFSM.GetAction<CreateObject>("Scream Burst 1", 2).gameObject = screamFsmGO;
 
                 //Note some of these repeats because after removing an action, their index is pushed backwards to fill in the missing parts
-                spellControlFSM.RemoveAction("Scream Burst 1", 6);  // Removes both Scream 1 "skulls"
-                spellControlFSM.RemoveAction("Scream Burst 1", 6);  // ditto
+                spellControlFSM.GetState("Scream Burst 1").RemoveAction(6);  // Removes both Scream 1 "skulls"
+                spellControlFSM.GetState("Scream Burst 1").RemoveAction(6);  // ditto
 
-                spellControlFSM.RemoveAction("Scream Burst 2", 7); //ditto but for Scream 2 (Abyss Shriek)
-                spellControlFSM.RemoveAction("Scream Burst 2", 7); //ditto
+                spellControlFSM.GetState("Scream Burst 2").RemoveAction(7); //ditto but for Scream 2 (Abyss Shriek)
+                spellControlFSM.GetState("Scream Burst 2").RemoveAction(7); //ditto
 
-                spellControlFSM.RemoveAction("Level Check 2", 0); //removes the action that takes your soul when you slam
+                spellControlFSM.GetState("Level Check 2").RemoveAction(0); //removes the action that takes your soul when you slam
 
 
-                spellControlFSM.RemoveAction("Quake1 Land", 9);
-                spellControlFSM.RemoveAction("Quake1 Land", 11); // removes pillars
+                spellControlFSM.GetState("Quake1 Land").RemoveAction(9);
+                spellControlFSM.GetState("Quake1 Land").RemoveAction(11); // removes pillars
 
-                spellControlFSM.RemoveAction("Q2 Land", 11); //slam effects
+                spellControlFSM.GetState("Q2 Land").RemoveAction(11); //slam effects
 
-                spellControlFSM.RemoveAction("Q2 Pillar", 2); //pillars 
-                spellControlFSM.RemoveAction("Q2 Pillar", 2); // "Q mega" no idea but removing it otherwise
+                spellControlFSM.GetState("Q2 Pillar").RemoveAction(2); //pillars 
+                spellControlFSM.GetState("Q2 Pillar").RemoveAction(2); // "Q mega" no idea but removing it otherwise
 
-                spellControlFSM.InsertAction("Can Cast?", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_CanCast",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Can Cast?").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_CanCast", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Can Cast? QC", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_CanCastQC",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Can Cast? QC").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_CanCastQC", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Can Cast? QC", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "CanCastQC_SkipSpellReq",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 3);
+                spellControlFSM.GetState("Can Cast? QC").InsertAction(3, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "CanCastQC_SkipSpellReq", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.AddAction("Quake1 Land", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_QuakeLand",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
+                spellControlFSM.GetState("Quake1 Land").AddAction(new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_QuakeLand", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.AddAction("Q2 Land", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_QuakeLand",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
+                spellControlFSM.GetState("Q2 Land").AddAction(new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_QuakeLand", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Has Fireball?", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "SpawnFireball",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 1);
+                spellControlFSM.GetState("Has Fireball?").InsertAction(1, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "SpawnFireball", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Has Scream?", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "HasScream_HasFireSupportAmmo",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Has Scream?").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "HasScream_HasFireSupportAmmo", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Has Quake?", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "HasQuake_CanCastQuake",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Has Quake?").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "HasQuake_CanCastQuake", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Scream End", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "ScreamEnd",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Scream End").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "ScreamEnd", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Scream End 2", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "ScreamEnd",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Scream End 2").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "ScreamEnd", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.RemoveAction("Scream Burst 1", 3);
-                spellControlFSM.RemoveAction("Scream Burst 2", 4);
+                spellControlFSM.GetState("Scream Burst 1").RemoveAction(3);
+                spellControlFSM.GetState("Scream Burst 2").RemoveAction(4);
 
-                spellControlFSM.InsertAction("Focus Heal", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_FocusHeal",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Focus Heal").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_FocusHeal", parameters = new FsmVar[0], everyFrame = false });
 
-                spellControlFSM.InsertAction("Focus Heal 2", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_FocusHeal",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                , 0);
+                spellControlFSM.GetState("Focus Heal 2").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_FocusHeal", parameters = new FsmVar[0], everyFrame = false });
 
                 nailArtFSM.GetAction<ActivateGameObject>("G Slash", 2).activate = false;
 
                 //For Fan of Knives
-                nailArtFSM.AddAction("G Slash", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_GSlash",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
+                nailArtFSM.GetState("G Slash").AddAction(new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_GSlash", parameters = new FsmVar[0], everyFrame = false });
 
                 //Dagger Rain
-                nailArtFSM.AddAction("Cyclone Spin", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_CycloneSpin",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                }
-                );
+                nailArtFSM.GetState("Cyclone Spin").AddAction(new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_CycloneSpin", parameters = new FsmVar[0], everyFrame = false });
 
                 //Assassinate
 
                 nailArtFSM.GetAction<ActivateGameObject>("Dash Slash", 0).activate = false; //Disable DSlash
-                nailArtFSM.InsertAction("Dash Slash", new CallMethod
-                {
-                    behaviour = GameManager.instance.GetComponent<SpellControlOverride>(),
-                    methodName = "State_DashSlash",
-                    parameters = new FsmVar[0],
-                    everyFrame = false
-                },
-                0);
+                nailArtFSM.GetState("Dash Slash").InsertAction(0, new CallMethod { behaviour = GameManager.instance.GetComponent<SpellControlOverride>(), methodName = "State_DashSlash", parameters = new FsmVar[0], everyFrame = false });
             }
             catch (Exception e)
             {
@@ -729,7 +624,7 @@ namespace HollowPoint
             {
                 dungCloud = HollowPointPrefabs.SpawnObjectFromDictionary("Knight Spore Cloud", HeroController.instance.transform.position + new Vector3(0, 0, -.001f), Quaternion.identity);
                 dungCloud.transform.localScale = new Vector3(2f, 2f, 0);
-                dungCloud.GetComponent<DamageEffectTicker>().SetAttr<float>("damageInterval", cloudIntensity);
+                Mirror.SetField<DamageEffectTicker, float>(dungCloud.GetComponent<DamageEffectTicker>(), "damageInterval", cloudIntensity);
 
                 yield return new WaitForSeconds(0.80f);
             }

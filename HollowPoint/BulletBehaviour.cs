@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
-using ModCommon.Util;
+using Vasi;
 
 namespace HollowPoint
 {
@@ -308,8 +308,8 @@ namespace HollowPoint
                 playFireAnim = true;
             }
 
-            GameObject HitPrefab = hm.GetAttr<GameObject>("strikeNailPrefab");
-            Vector3? effectOrigin = hm.GetAttr<Vector3?>("effectOrigin");
+            GameObject HitPrefab = Mirror.GetField<HealthManager, GameObject>(hm, "strikeNailPrefab");
+            Vector3? effectOrigin = Mirror.GetField<HealthManager, Vector3?>(hm, "effectOrigin");
             if (HitPrefab != null && effectOrigin != null) HitPrefab.Spawn(hm.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
  
             hm.hp -= damage * stack;
@@ -375,7 +375,6 @@ namespace HollowPoint
     {
         public ExplosionType explosionType = ExplosionType.DungExplosion;
         public bool artilleryShell = false;
-        static UnityEngine.Random rand = new UnityEngine.Random();
         public enum ExplosionType
         {
             SporeGas,

@@ -1,5 +1,4 @@
-﻿using ModCommon;
-using System;
+﻿using System;
 using System.Collections;
 using TMPro;
 using UnityEngine;
@@ -37,8 +36,8 @@ namespace HollowPoint
         void Start()
         {
             Modding.Logger.Log("INTIALIZING HUDCONTROLLER");
-            var prefab = GameManager.instance.inventoryFSM.gameObject.FindGameObjectInChildren("Geo");
-            var hudCanvas = GameObject.Find("_GameCameras").FindGameObjectInChildren("HudCamera").FindGameObjectInChildren("Hud Canvas");
+            var prefab = GameManager.instance.inventoryFSM.gameObject.transform.Find("Inv").Find("Inv_Items").Find("Geo").gameObject;
+            var hudCanvas = GameObject.Find("_GameCameras").transform.Find("HudCamera/").Find("Hud Canvas").gameObject;
 
             foreach (var textureName in textureNames)
             {

@@ -6,9 +6,9 @@ using System.Text;
 using Modding;
 using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
-using ModCommon.Util;
 using UnityEngine;
 using GlobalEnums;
+using Vasi;
 
 namespace HollowPoint
 {
@@ -146,7 +146,7 @@ namespace HollowPoint
             if (targetHP == null) return;
 
             int cardinalDirection = DirectionUtils.GetCardinalDirection(hitInstance.GetActualDirection(targetHP.transform));
-            GameObject blockHitPrefab = targetHP.GetAttr<GameObject>("blockHitPrefab");
+            GameObject blockHitPrefab = Mirror.GetField<HealthManager, GameObject>(targetHP, "blockHitPrefab");
 
             bool specialEnemy = (targetHP.name.Contains("Charger"));
             if (targetHP.IsBlockingByDirection(cardinalDirection, AttackTypes.Nail) && !specialEnemy)
@@ -192,15 +192,15 @@ namespace HollowPoint
              */
 
             FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
-            GameObject sendHitGO = targetHP.GetAttr<GameObject>("sendHitGO");
+            GameObject sendHitGO = Mirror.GetField<HealthManager, GameObject>(targetHP, "sendHitGO");
             if (sendHitGO != null)
             {
                 FSMUtility.SendEventToGameObject(targetHP.gameObject, "HIT", false);
             }
 
-            GameObject HitPrefab = targetHP.GetAttr<GameObject>("strikeNailPrefab");
-            GameObject ImpactPrefab = targetHP.GetAttr<GameObject>("slashImpactPrefab");
-            Vector3? effectOrigin = targetHP.GetAttr<Vector3?>("effectOrigin");
+            GameObject HitPrefab = Mirror.GetField<HealthManager, GameObject>(targetHP, "strikeNailPrefab");
+            GameObject ImpactPrefab = Mirror.GetField<HealthManager, GameObject>(targetHP, "slashImpactPrefab");
+            Vector3? effectOrigin = Mirror.GetField<HealthManager, Vector3?>(targetHP, "effectOrigin");
             if (HitPrefab != null && effectOrigin != null)
             {
                 HitPrefab.Spawn(targetHP.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
@@ -240,8 +240,8 @@ namespace HollowPoint
                 return;
             }
 
-            bool? hasAlternateHitAnimation = targetHP.GetAttr<bool?>("hasAlternateHitAnimation");
-            string alternateHitAnimation = targetHP.GetAttr<string>("alternateHitAnimation");
+            bool? hasAlternateHitAnimation = Mirror.GetField<HealthManager, bool?>(targetHP, "hasAlternateHitAnimation");
+            string alternateHitAnimation = Mirror.GetField<HealthManager, string>(targetHP, "alternateHitAnimation");
             if (hasAlternateHitAnimation != null && (bool)hasAlternateHitAnimation && targetHP.GetComponent<tk2dSpriteAnimator>() && alternateHitAnimation != null)
             {
                 targetHP.GetComponent<tk2dSpriteAnimator>().Play(alternateHitAnimation);

@@ -6,7 +6,6 @@ using UnityEngine;
 using System.Collections;
 using GlobalEnums;
 using static Modding.Logger;
-using ModCommon.Util;
 using System.Reflection;
 using static HollowPoint.HollowPointEnums;
 
@@ -581,6 +580,7 @@ namespace HollowPoint
             catch(Exception e)
             {
                 Log("[SpriteHP_GunSpriteRenderer]No sprite with the name " + weaponName + " was found");
+                Log("Exception: " + e);
             }
         }
 

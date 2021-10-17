@@ -23,8 +23,8 @@ namespace HollowPoint
 
         public override void Initialize()
         {
-            ModHooks.Instance.AfterSavegameLoadHook += SaveGame;
-            ModHooks.Instance.NewGameHook += NewGame;
+            ModHooks.AfterSavegameLoadHook += SaveGame;
+            ModHooks.NewGameHook += NewGame;
             LoadAssets.LoadResources();
 
         }
@@ -52,15 +52,15 @@ namespace HollowPoint
 
         public void Unload()
         {
-            ModHooks.Instance.AfterSavegameLoadHook -= SaveGame;
-            ModHooks.Instance.NewGameHook -= NewGame;
+            ModHooks.AfterSavegameLoadHook -= SaveGame;
+            ModHooks.NewGameHook -= NewGame;
             Modding.Logger.Log("Unload on Init is called");
         }
 
         public void OnDestroy()
         {
-            ModHooks.Instance.AfterSavegameLoadHook -= SaveGame;
-            ModHooks.Instance.NewGameHook -= NewGame;
+            ModHooks.AfterSavegameLoadHook -= SaveGame;
+            ModHooks.NewGameHook -= NewGame;
             Modding.Logger.Log("Destroy on Init is called");
         }
     }

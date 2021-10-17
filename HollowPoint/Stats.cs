@@ -5,7 +5,6 @@ using UnityEngine;
 using static UnityEngine.Random;
 using static Modding.Logger;
 using Modding;
-using ModCommon.Util;
 using MonoMod;
 using Language;
 using System.Xml;
@@ -121,11 +120,11 @@ namespace HollowPoint
             */
             //Log(am_instance.GetAttr<float>("Volume"));
 
-            ModHooks.Instance.CharmUpdateHook += CharmUpdate;
-            ModHooks.Instance.LanguageGetHook += LanguageHook;
-            ModHooks.Instance.SoulGainHook += Instance_SoulGainHook;
-            ModHooks.Instance.OnEnableEnemyHook += Instance_OnEnableEnemyHook;
-            ModHooks.Instance.SceneChanged += Instance_SceneChanged;
+            ModHooks.CharmUpdateHook += CharmUpdate;
+            ModHooks.LanguageGetHook += LanguageHook;
+            ModHooks.SoulGainHook += Instance_SoulGainHook;
+            ModHooks.OnEnableEnemyHook += Instance_OnEnableEnemyHook;
+            ModHooks.SceneChanged += Instance_SceneChanged;
             On.HeroController.CanNailCharge += HeroController_CanNailCharge;
             On.HeroController.CanDreamNail += HeroController_CanDreamNail;
             On.HeroController.CanFocus += HeroController_CanFocus;
@@ -156,10 +155,10 @@ namespace HollowPoint
         private bool HeroController_CanFocus(On.HeroController.orig_CanFocus orig, HeroController self)
         {
             return false;
-
+            /* commented so vs doesn't yell at me
             if (adrenalineCharges < 1) return false; //If your soul charges are less than 1, you cant heal bud
 
-            return orig(self);
+            return orig(self);*/
         }
 
         private bool HeroController_CanDreamNail(On.HeroController.orig_CanDreamNail orig, HeroController self)
@@ -188,9 +187,9 @@ namespace HollowPoint
             return false;
         }
 
-        public string LanguageHook(string key, string sheet)
+        public string LanguageHook(string key, string sheet, string txt)
         {
-            string txt = Language.Language.GetInternal(key, sheet);
+            //string txt = Language.Language.GetInternal(key, sheet);
             //Modding.Logger.Log("KEY: " + key + " displays this text: " + txt);
 
             string nodePath = "/TextChanges/Text[@name=\'" + key + "\']";
@@ -643,9 +642,9 @@ namespace HollowPoint
 
         void OnDestroy()
         {
-            ModHooks.Instance.CharmUpdateHook -= CharmUpdate;
-            ModHooks.Instance.LanguageGetHook -= LanguageHook;
-            ModHooks.Instance.SoulGainHook -= Instance_SoulGainHook;
+            ModHooks.CharmUpdateHook -= CharmUpdate;
+            ModHooks.LanguageGetHook -= LanguageHook;
+            ModHooks.SoulGainHook -= Instance_SoulGainHook;
             On.HeroController.CanNailCharge -= HeroController_CanNailCharge;
             On.HeroController.CanDreamNail -= HeroController_CanDreamNail;
             Destroy(gameObject.GetComponent<Stats>());
