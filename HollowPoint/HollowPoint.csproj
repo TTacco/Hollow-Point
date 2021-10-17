@@ -96,6 +96,7 @@
   <ItemGroup>
     <Compile Include="AudioHandler.cs" />
     <Compile Include="BulletBehaviour.cs" />
+    <Compile Include="CustomWeapons.cs" />
     <Compile Include="DamageOverride.cs" />
     <Compile Include="HollowPointEnums.cs" />
     <Compile Include="HeatHandler.cs" />

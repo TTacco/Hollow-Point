@@ -50,11 +50,6 @@ namespace HollowPoint
             currentWeapon = WeaponType.Melee;
         }
 
-        public void Update()
-        {
-            return;
-        }
-
         public Gun EquipWeapon()
         {
             //List of charms with conversion kits attached to them
@@ -64,9 +59,35 @@ namespace HollowPoint
             //Check the list of intersecting charms, if theres more than 2 then the player is not allowed to fire
             List<int> equippedConversionCharms = conversionCharms.Intersect(equippedCharms).ToList();
             int intersectedCharmsCount = equippedConversionCharms.Count();
-            bool incompatibleCharmCombination = (intersectedCharmsCount >= 2)? true : false;
+            //bool incompatibleCharmCombination = (intersectedCharmsCount >= 2)? true : false;
 
-            if (incompatibleCharmCombination)
+            bool overridenOriginal = false;
+            int passedGuns = 0;
+            Gun customGun = default(Gun);
+
+            foreach (CustomGun gunSettings in CustomWeapons.CustomGuns)
+            {
+                switch (gunSettings.type)
+                {
+                    case CustomGunType.charm:
+                        if (!equippedCharms.Contains(gunSettings.charmNum))
+                            continue;
+                        break;
+                    case CustomGunType.func:
+                        if (!gunSettings.useGun())
+                            continue;
+                        break;
+                }
+                passedGuns++;
+                if (overridenOriginal && !gunSettings.overrideOriginal)
+                    continue;
+                customGun = gunSettings.settings;
+                overridenOriginal = overridenOriginal || gunSettings.overrideOriginal;
+            }
+
+            bool incompatible = !overridenOriginal || passedGuns + intersectedCharmsCount > 1;
+
+            if (incompatible)
             {
                 //If the player has equipped one or more conversion kit, disable the gun from firing until they swap out, bumping soul cost is enough for this
                 currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.RIFLE];
@@ -75,39 +96,46 @@ namespace HollowPoint
             }
             else
             {
-                //Ensures first that the list contains intersected charms, otherwise [0] will throw an out of bounds exception
-                //having 0 count also means that the player has no conversion kits equipped, thus will retain the base "Rifle" gun
-                int charmEquipped = (intersectedCharmsCount > 0)? equippedConversionCharms[0] : 0;
-
-                switch (charmEquipped)
+                if (passedGuns > 0)
                 {
-                    case 11:
-                        //Fluke
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SHOTGUN];
-                        break;
-                    case 13:
-                        //Mark Of Pride
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.DMR];
-                        break;
-                    case 15:
-                        //Heavy Blow
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
-                        break;
-                    case 18:
-                        //Long Nail
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SNIPER];
-                        break;
-                    case 20:
-                        //Soul Catcher
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SMG];
-                        break;
-                    case 32:
-                        //Quick Slash
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.LMG];
-                        break;
-                    default:
-                        currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.RIFLE];
-                        break;
+                    currentEquippedGun = customGun;
+                }
+                else
+                {
+                    //Ensures first that the list contains intersected charms, otherwise [0] will throw an out of bounds exception
+                    //having 0 count also means that the player has no conversion kits equipped, thus will retain the base "Rifle" gun
+                    int charmEquipped = (intersectedCharmsCount > 0) ? equippedConversionCharms[0] : 0;
+
+                    switch (charmEquipped)
+                    {
+                        case 11:
+                            //Fluke
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SHOTGUN];
+                            break;
+                        case 13:
+                            //Mark Of Pride
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.DMR];
+                            break;
+                        case 15:
+                            //Heavy Blow
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.CARBINE];
+                            break;
+                        case 18:
+                            //Long Nail
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SNIPER];
+                            break;
+                        case 20:
+                            //Soul Catcher
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.SMG];
+                            break;
+                        case 32:
+                            //Quick Slash
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.LMG];
+                            break;
+                        default:
+                            currentEquippedGun = instance.weaponModifierDictionary[WeaponModifierName.RIFLE];
+                            break;
+                    }
                 }
 
                 ChangeWeaponSprite(currentWeapon);
