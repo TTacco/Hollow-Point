@@ -121,6 +121,7 @@ namespace HollowPoint
             //Log(am_instance.GetAttr<float>("Volume"));
 
             ModHooks.CharmUpdateHook += CharmUpdate;
+            ModHooks.GetPlayerIntHook += OverrideFocusCost;
             ModHooks.LanguageGetHook += LanguageHook;
             ModHooks.SoulGainHook += Instance_SoulGainHook;
             ModHooks.OnEnableEnemyHook += Instance_OnEnableEnemyHook;
@@ -319,8 +320,6 @@ namespace HollowPoint
             adrenalineChargeIcons?.Invoke("0");
             nailArtIcon?.Invoke("true");
 
-            PlayerData.instance.focusMP_amount = current_soulCostPerShot;
-
             //Minimum value setters, NOTE: soul cost doesnt like having it at 1 so i set it up as 2 minimum
             if (current_soulCostPerShot < 2) current_soulCostPerShot = 2;
             if (current_walkSpeed < 1) current_walkSpeed = 1;
@@ -331,7 +330,14 @@ namespace HollowPoint
             if (current_minWeaponSpreadFactor < 1) current_minWeaponSpreadFactor = 1;
         }
 
-
+        private int OverrideFocusCost(string name, int orig)
+        {
+            if (name == nameof(PlayerData.focusMP_amount))
+            {
+                return current_soulCostPerShot;
+            }
+            return orig;
+        }
 
         void Update()
         {
@@ -643,6 +649,7 @@ namespace HollowPoint
         void OnDestroy()
         {
             ModHooks.CharmUpdateHook -= CharmUpdate;
+            ModHooks.GetPlayerIntHook -= OverrideFocusCost;
             ModHooks.LanguageGetHook -= LanguageHook;
             ModHooks.SoulGainHook -= Instance_SoulGainHook;
             On.HeroController.CanNailCharge -= HeroController_CanNailCharge;
