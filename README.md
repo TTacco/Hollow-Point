@@ -1,6 +1,6 @@
 # HOLLOW POINT
 
-**I now defer ownership to Knightmere so uhh bother him**
+**Please check the Issues section if you are having healing issues, thanks.**
 
 A Hollow Knight mod that gives the Knight the ability to wield a modern day assault rifle.
 Why did I make this? I wish I knew too.
@@ -38,6 +38,7 @@ NOTE: These can all be easily installed using the Official HK Discord's Modding 
 - A legit copy of Hollow Knight on either GOG or Steam
 - Make sure the Modding API correct installs itself when running the installer
 - Install and Enable "ModCommon"
+- Install QOL (Quality of Life Mod) by 56 (shoutouts)
 - Install and Enable Hollow Point
 
 ## CONTROLS:
@@ -112,9 +113,14 @@ ________________________________________________________________________________
 MAJOR ISSUES:
 - **Backing up your save is highly recommended**, due to some code changes left over modifications stay on the save file and I dont have the time anymore to fix it in the near future. This is mostly related to the focusing cost so please, please, please backup your saves first before installing it in an existing save so you wont end up needing to modifying your save just to fix it. **If you have the focus bug on your save file with the mod uninstalled, you'll need to manually edit your save file to the default values.** 
 
-FIXX: To fix your file all you have to is use a save editor (search for one, but most quick and convenient would be Bloodorca's online save editor), find the line **focusMP_amount: ##** and make sure its set to 33, so **"focusMP_amount:" 33**, this should fix your focusing upon uninstalling.
+FIX: To fix your file all you have to is use a save editor (search for one, but most quick and convenient would be Bloodorca's online save editor), find the line **focusMP_amount: ##** and make sure its set to 33, so **"focusMP_amount:" 33**, this should fix your focusing upon uninstalling.
 
-- **This mod doesnt work on a new save**, To fix this you must first create the new save, quit to main menu, and load the save again. This will then make the mod work as intended, this applies to both Regular and Godmaster new saves. 
+OR
+
+Using QoL (Quality of Life) mod: - Go to your save files - Locate user#.json (with # being the save slot number) - CTRL+F "**focusMP_amount**" - Set the value to 33
+
+- **This mod doesnt work on a new save**, To fix this you must first create the new save, quit to main menu, and load the save again. This will then make the mod work as intended, this applies to both Regular and Godmaster new saves.
+ 
 - **This mod DOES work with Randomizer but be wary of the same issues above**, you first need create a Rando save with Hollow Point DISABLED, quit the game, ENABLE Hollow Point, start the game (with both Rando and Hollow Point enabled) and you can now load the Rando save with Hollow Point completely working. (Otherwise, creating a new Rando save with Hollow Point enabled tends to crash the game)
 
 MINOR ISSUES:
