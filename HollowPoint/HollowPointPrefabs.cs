@@ -7,7 +7,7 @@ using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
 using HutongGames.PlayMaker;
 using HutongGames.PlayMaker.Actions;
-using ModCommon.Util;
+using Vasi;
 
 
 namespace HollowPoint
@@ -36,7 +36,7 @@ namespace HollowPoint
         {
             StartCoroutine(CreateBulletPrefab());
             StartCoroutine(GetFSMPrefabsAndParticles());
-            ModHooks.Instance.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
+            ModHooks.ObjectPoolSpawnHook += Instance_ObjectPoolSpawnHook;
         }
 
         //On objects spawning on the world
@@ -322,7 +322,7 @@ if (go.name.Contains("Weaverling")) Destroy(go);
 
         public void OnDestroy()
         {
-            ModHooks.Instance.ObjectPoolSpawnHook -= Instance_ObjectPoolSpawnHook;
+            ModHooks.ObjectPoolSpawnHook -= Instance_ObjectPoolSpawnHook;
             Destroy(gameObject.GetComponent<HollowPointPrefabs>());
         }
 
@@ -338,6 +338,7 @@ if (go.name.Contains("Weaverling")) Destroy(go);
             catch (Exception e)
             {
                 Log("HP_Prefabs SpawnObjectFromDictionary(): Could not find GameObject with key " + key);
+                Log("Exception: " + e);
                 //Log("only available keys are");
 
                 //foreach (string keys in prefabDictionary.Keys) Log(keys);
@@ -358,6 +359,7 @@ if (go.name.Contains("Weaverling")) Destroy(go);
             catch (Exception e)
             {
                 Log("HP_Prefabs SpawnObjectFromDictionary(): Could not find GameObject with key " + key);
+                Log("Exception: " + e);
                 //Log("only available keys are");
 
                 //foreach (string keys in prefabDictionary.Keys) Log(keys);

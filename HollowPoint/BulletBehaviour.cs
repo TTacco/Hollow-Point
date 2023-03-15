@@ -3,7 +3,7 @@ using UnityEngine;
 using System.Collections;
 using static Modding.Logger;
 using static HollowPoint.HollowPointEnums;
-using ModCommon.Util;
+using Vasi;
 
 namespace HollowPoint
 {
@@ -114,6 +114,10 @@ namespace HollowPoint
             if (!bulletSprite.Equals(BulletSpriteType.soul))
             {
                 bulletSpriteRenderer.sprite = HollowPointPrefabs.projectileSprites["sprite_bullet_" + bulletSprite.ToString() + ".png"];
+            }
+            else if (CustomWeapons.CustomSprites.TryGetValue((int)Stats.instance.current_weapon, out var tuple) && tuple.Item2)
+            {
+                bulletSpriteRenderer.sprite = tuple.Item2;
             }
 
             //Particle Effects
@@ -308,8 +312,8 @@ namespace HollowPoint
                 playFireAnim = true;
             }
 
-            GameObject HitPrefab = hm.GetAttr<GameObject>("strikeNailPrefab");
-            Vector3? effectOrigin = hm.GetAttr<Vector3?>("effectOrigin");
+            GameObject HitPrefab = Mirror.GetField<HealthManager, GameObject>(hm, "strikeNailPrefab");
+            Vector3? effectOrigin = Mirror.GetField<HealthManager, Vector3?>(hm, "effectOrigin");
             if (HitPrefab != null && effectOrigin != null) HitPrefab.Spawn(hm.transform.position + (Vector3)effectOrigin, Quaternion.identity).transform.SetPositionZ(0.0031f);
  
             hm.hp -= damage * stack;
@@ -355,14 +359,18 @@ namespace HollowPoint
 
         void Update()
         {
-            if (parent == null && !toBeDestroyed)
+            if (parent == null)
             {
-                toBeDestroyed = true;
-                //Log("BulletBehaviour:FireballParticlesProperties Parent gone, behaviour will destroy itself in a bit");
-                particleSystem.Stop();
-                Destroy(gameObject, 2.7f);
+                if (!toBeDestroyed)
+                {
+                    toBeDestroyed = true;
+                    //Log("BulletBehaviour:FireballParticlesProperties Parent gone, behaviour will destroy itself in a bit");
+                    particleSystem.Stop();
+                    Destroy(gameObject, 2.7f);
+                }
             }
-            gameObject.transform.position = parent.transform.position;
+            else
+                gameObject.transform.position = parent.transform.position;
         }
 
         void OnDestroy()
@@ -375,7 +383,6 @@ namespace HollowPoint
     {
         public ExplosionType explosionType = ExplosionType.DungExplosion;
         public bool artilleryShell = false;
-        static UnityEngine.Random rand = new UnityEngine.Random();
         public enum ExplosionType
         {
             SporeGas,
